@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+# MUTLAK KURALLAR (ihlal edilemez)
+
+1. MEVCUT KODU ASLA BOZMA. Mevcut dosyaları silme, taşıma, yeniden adlandırma, baştan yazma. Mevcut bir dosyayı değiştirmen gerekiyorsa DUR, hangi dosyayı neden değiştireceğini yaz ve onayımı bekle. Onaysız mevcut dosyaya dokunma.
+2. Varsayılan olarak SADECE YENİ DOSYA ekle.
+3. Migration silme veya yeniden oluşturma. Mevcut migration'ı düzenleme. Yeni migration ekle ve migrate komutunu ben onaylamadan çalıştırma.
+4. Bağımlılık, settings veya proje yapısını onaysız değiştirme.
+5. Bir seferde en fazla BİR küçük adım yaz (en fazla 3 yeni dosya). Adım bitince DUR ve özet ver. Kendiliğinden sonraki adıma geçme.
+6. Emin olmadığında tahmin etme, soru sor.
+
+# BAĞLAM
+- Proje tanımı: docs/analiz_v3.md (tek doğruluk kaynağı). Çelişen kod yazma.
+- İlerleme günlüğü: docs/ILERLEME.md. Her sohbetin başında bunu oku. Her adım sonunda bu dosyaya şunu ekle: yapılan adım, eklenen dosyalar, sıradaki adım, bilinen sorunlar.
+- Yazmadan önce ilgili mevcut dosyaları oku ve isim, stil, yapı olarak onlara uy.
+
+# GIT KURALLARI
+- main veya master dalına ASLA doğrudan commit atma, push etme.
+- Her adım için ayrı dal: adim-<no>-<kisa-ad>
+- Adım bitince ve testler geçince: git add (sadece o adımın dosyaları), anlamlı commit mesajı, git push -u origin <dal>
+- Asla: git push --force, git reset --hard, git clean, git checkout -- . , git restore .
+- Git komutlarından önce git status çıktısını göster. Beklenmeyen değişmiş dosya varsa DUR ve bana sor.
+- Push başarısız olursa (uzak repo yok, yetki hatası) dur ve nedenini yaz, başka yöntem deneme.
+
+# KOD KURALLARI
+- Python, Django, PostgreSQL. Para, kur, gram hesabında yalnızca Decimal, float yasak. Yuvarlama yalnızca sonda.
+- İş mantığı models.py veya views içinde değil, servisler.py içinde.
+- Her servis için birim test. Testler geçmeden commit atma.
+- Tedarikçi bilgisi ve servis bedeli alıcıya giden hiçbir çıktıya sızmasın.
