@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+legacy_backup/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Django
+staticfiles/
+media/
+db.sqlite3
+.pytest_cache/
+.ruff_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local recovery / temp
+_recovery/
+*.log

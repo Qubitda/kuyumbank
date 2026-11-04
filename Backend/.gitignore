@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+legacy_backup/
+
+# Gizli dosyalar
+.env
+*.pem
+
+# Django
+staticfiles/
+media/
+db.sqlite3
+.pytest_cache/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
