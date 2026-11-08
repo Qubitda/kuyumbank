@@ -1,12 +1,11 @@
 """
 Verilen firma + kontrat tipi + tarih + metal + ayar için geçerli kalemi seçer.
 
-Sıra:
-1. Tarihe uyan AKTIF sözleşmeler
-2. Kalem düzeyinde ayar eşleşmesi (spesifik > None)
-3. Kanal önceliği (spesifik > None)
-4. Versiyon (yüksek > düşük)
-5. Aynı skorda iki kural varsa hata
+Öncelik (ADR-0007 §2.2 / görev dilim 3.2):
+1. Kanal eşleşmesi (spesifik > kanalsız fallback)
+2. Ayar eşleşmesi (spesifik > genel)
+3. Yüksek versiyon
+4. Eşit skor → hata; fiyat yok
 """
 
 from datetime import date
@@ -39,7 +38,6 @@ def cozumle(
     ayar=None,
     satis_kanali=None,
 ) -> FiyatSozlesmesiKalemi:
-    # 1) Tarihe uyan aktif sözleşmeler
     qs = FiyatSozlesmesi.objects.filter(
         firma=firma,
         kontrat_tipi=kontrat_tipi,
@@ -48,7 +46,7 @@ def cozumle(
         gecerlilik_bitis__gte=tarih,
     ).select_related("satis_kanali")
 
-    # Kanal filtresi: spesifik kanal önce, sonra None (tüm kanallar)
+    # Kanallı baskın; kanalsız diğer kanallara fallback (ADR-0007 §2.3 matris)
     kanal_specific = qs.filter(satis_kanali=satis_kanali) if satis_kanali else qs.none()
     kanal_general = qs.filter(satis_kanali__isnull=True)
     aday_sozlesmeler = list(kanal_specific) + list(kanal_general)
@@ -60,10 +58,9 @@ def cozumle(
 
     sozlesme_ids = [s.id for s in aday_sozlesmeler]
 
-    # 2) Kalem düzeyinde ayar eşleşmesi
     kalem_qs = FiyatSozlesmesiKalemi.objects.filter(
         sozlesme_id__in=sozlesme_ids, metal=metal
-    ).select_related("sozlesme")  # _skor() k.sozlesme erişimini N+1'den korur
+    ).select_related("sozlesme")
     if ayar is not None:
         kalem_qs = kalem_qs.filter(_ayar_or_none(ayar))
     else:
@@ -76,23 +73,17 @@ def cozumle(
             f"{firma} / {kontrat_tipi} / metal={metal} / ayar={ayar} için kalem yok."
         )
 
-    # 3) En spesifik ayar (dolu > None)
-    spesifik = [k for k in kalemler if k.ayar_id is not None]
-    if spesifik:
-        kalemler = spesifik
-
-    # 4) Spesifiklik skoru: (kanal-spesifik mi, versiyon)
     kanal_id = satis_kanali.id if satis_kanali else None
 
     def _skor(k):
         return (
-            k.sozlesme.satis_kanali_id == kanal_id and kanal_id is not None,
+            1 if (kanal_id is not None and k.sozlesme.satis_kanali_id == kanal_id) else 0,
+            1 if k.ayar_id is not None else 0,
             k.sozlesme.versiyon,
         )
 
     kalemler.sort(key=_skor, reverse=True)
 
-    # 5) Aynı skorda iki kural varsa hata
     if len(kalemler) > 1 and _skor(kalemler[0]) == _skor(kalemler[1]):
         raise CokluSozlesmeHatasi(
             f"{firma} / {kontrat_tipi} / {tarih} için birden fazla eşdeğer kalem: "

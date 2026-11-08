@@ -8,10 +8,9 @@ class FiyatSozlesmesiKalemi(models.Model):
     """
     Sözleşme kalemi: metal + (opsiyonel) ayar bazında marj/işçilik tanımı.
 
-    `ayar` boşsa "tüm ayarlar için geçerli" demektir. Aynı metal için hem
-    genel (ayar=None) hem de spesifik (ayar=24K) kalem olamaz; en spesifik
-    kazanır kuralı çözümleme motorunda uygulanır ve çakışma `clean()` ile
-    engellenir.
+    `ayar` boşsa "tüm ayarlar için geçerli" (fallback). Aynı metal için genel
+    ve spesifik kalemler birlikte olabilir (ADR-0007 §2.2 / K-007).
+    Tekillik: (sozlesme, metal, ayar) NULL-safe unique.
     """
 
     class MarjTipi(models.TextChoices):
@@ -38,12 +37,14 @@ class FiyatSozlesmesiKalemi(models.Model):
         blank=True,
         on_delete=models.PROTECT,
         related_name="sozlesme_kalemleri",
-        help_text="Boş = tüm ayarlar.",
+        help_text="Boş = tüm ayarlar (fallback).",
     )
     marj_tipi = models.CharField(max_length=16, choices=MarjTipi.choices)
     marj_degeri = models.DecimalField(max_digits=14, decimal_places=4)
     iscilik = models.DecimalField(
-        max_digits=14, decimal_places=2, default=Decimal("0"),
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0"),
         help_text="Parça başına işçilik. Marj yüzde ise tabanı etkiler.",
     )
     islcilik_dahil_mi = models.BooleanField(
@@ -67,6 +68,12 @@ class FiyatSozlesmesiKalemi(models.Model):
                 ),
                 name="kalem_marj_tipi_gecerli",
             ),
+            # K-007: PostgreSQL NULL'ları aynı kabul et (Django 6.1 nulls_distinct=False)
+            models.UniqueConstraint(
+                fields=["sozlesme", "metal", "ayar"],
+                nulls_distinct=False,
+                name="kalem_sozlesme_metal_ayar_uniq",
+            ),
         ]
 
     def __str__(self) -> str:
@@ -80,29 +87,29 @@ class FiyatSozlesmesiKalemi(models.Model):
         if self.marj_degeri is not None and self.marj_degeri < 0:
             raise ValidationError("Marj değeri negatif olamaz.")
 
-        if not self.sozlesme_id:
-            return
+        if self.sozlesme_id:
+            from fiyatlama.models import FiyatSozlesmesi
 
-        qs = FiyatSozlesmesiKalemi.objects.filter(
-            sozlesme_id=self.sozlesme_id, metal=self.metal
-        ).exclude(pk=self.pk)
+            # Bellekteki stale durum değil; DB'den oku (AKTIF immutability)
+            durum = (
+                FiyatSozlesmesi.objects.filter(pk=self.sozlesme_id)
+                .values_list("durum", flat=True)
+                .first()
+            )
+            if durum == FiyatSozlesmesi.Durum.AKTIF:
+                raise ValidationError(
+                    "AKTIF sözleşme kalemi değiştirilemez; yeni versiyon açın."
+                )
 
-        if self.ayar_id is None:
-            # Genel kalem (tüm ayarlar): aynı metal için başka bir genel kalem olmamalı.
-            if qs.filter(ayar__isnull=True).exists():
+            qs = FiyatSozlesmesiKalemi.objects.filter(
+                sozlesme_id=self.sozlesme_id,
+                metal=self.metal,
+                ayar=self.ayar,
+            ).exclude(pk=self.pk)
+            if qs.exists():
                 raise ValidationError(
-                    "Aynı metal için zaten bir 'tüm ayarlar' kalemi var."
+                    "Aynı sözleşme + metal + ayar için kalem zaten mevcut."
                 )
-        else:
-            # Spesifik ayar: aynı metal+ayar çifti bir kez olabilir.
-            # Genel kalem de aynı anda olamaz (çakışma çözümleme motorunu kırar).
-            if qs.filter(ayar__isnull=True).exists():
-                raise ValidationError(
-                    "Aynı metal için 'tüm ayarlar' kalemi zaten var; "
-                    "spesifik kalem eklemek için önce onu kaldırın."
-                )
-            if qs.filter(ayar=self.ayar).exists():
-                raise ValidationError("Aynı metal+ayar için kalem zaten mevcut.")
 
     def save(self, *args, **kwargs):
         self.full_clean()

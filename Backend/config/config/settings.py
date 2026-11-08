@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',  # ExclusionConstraint / btree_gist (ADR-0007 K-008)
 
     # modüller
     'import_export',

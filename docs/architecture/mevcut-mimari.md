@@ -12,7 +12,7 @@
 | `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `platform_kurulum`; `selectors/tenant`; komutlar: `bootstrap_platform`, `seed_role_permissions`, `audit_user_assignments` |
 | `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + `seed_tanimlar` / `seed_fiyat_gruplari`; domain servis yok; kur politikası Faz 3b (ADR-0008) |
 | `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant (`gram_bandi_*`), katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `kategori_servisi` (`kategori_tasi`), `seo_servisi` (teknik fallback), `gram_bandi`; `selectors/katalog_tenant` |
-| `fiyatlama` | Sözleşme, `TedarikciTeklif` (yaşam döngüsü + versiyon), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi`; `teklif_eslestirme_uygun_mu`; `fiyat_hesaplama` (saf); sözleşme durum servisi yok (3.2+ / ayrı dilim) |
+| `fiyatlama` | Sözleşme (K-007/K-008), `TedarikciTeklif` (yaşam döngüsü), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi`; `sozlesme_servisi` (`manage_sozlesme`, AKTIF immutability, exclusion); `teklif_eslestirme_uygun_mu`; `fiyat_hesaplama` (saf) |
 
 `AUTH_USER_MODEL = firmalar.Kullanici`. Paket düzeni: ADR-0004 (`models/`, `services/`, `selectors/`, `admin/`, `tests/`).
 

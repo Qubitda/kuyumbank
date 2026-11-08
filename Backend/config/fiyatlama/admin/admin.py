@@ -20,8 +20,20 @@ from fiyatlama.selectors.tenant import (
     user_may_see_fiyat_maliyet,
     user_may_see_teklif_maliyet,
 )
-from fiyatlama.services import teklif_servisi
+from fiyatlama.services import sozlesme_servisi, teklif_servisi
 from urunler.models import Varyant
+
+_SOZLESME_KILIT_ALANLARI = (
+    "firma",
+    "kontrat_tipi",
+    "satis_kanali",
+    "gecerlilik_baslangic",
+    "gecerlilik_bitis",
+    "versiyon",
+    "onceki_versiyon",
+    "durum",
+    "onaylayan_kullanici",
+)
 
 
 class FiyatSozlesmesiKalemiInline(admin.TabularInline):
@@ -41,6 +53,21 @@ class FiyatSozlesmesiKalemiInline(admin.TabularInline):
         qs = super().get_queryset(request)
         return scope_fiyat_sozlesmesi_kalemi_queryset(qs, request.user)
 
+    def has_add_permission(self, request, obj=None):
+        if obj is not None and obj.durum == FiyatSozlesmesi.Durum.AKTIF:
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        if obj is not None and getattr(obj, "durum", None) == FiyatSozlesmesi.Durum.AKTIF:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj is not None and getattr(obj, "durum", None) == FiyatSozlesmesi.Durum.AKTIF:
+            return False
+        return super().has_delete_permission(request, obj)
+
 
 @admin.register(FiyatSozlesmesi)
 class FiyatSozlesmesiAdmin(admin.ModelAdmin):
@@ -57,15 +84,78 @@ class FiyatSozlesmesiAdmin(admin.ModelAdmin):
     search_fields = ("firma__ad",)
     inlines = [FiyatSozlesmesiKalemiInline]
     readonly_fields = ("olusturma_tarihi", "guncelleme_tarihi")
+    actions = (
+        "action_aktif_yap",
+        "action_pasifle",
+        "action_yeni_versiyon",
+    )
 
     def get_queryset(self, request):
         return scope_fiyat_sozlesmesi_queryset(super().get_queryset(request), request.user)
 
+    def get_readonly_fields(self, request, obj=None):
+        ro = list(super().get_readonly_fields(request, obj))
+        if obj is not None and obj.durum == FiyatSozlesmesi.Durum.AKTIF:
+            for f in _SOZLESME_KILIT_ALANLARI:
+                if f not in ro:
+                    ro.append(f)
+        else:
+            if "durum" not in ro:
+                ro.append("durum")
+            if "onaylayan_kullanici" not in ro:
+                ro.append("onaylayan_kullanici")
+        return ro
+
+    def save_model(self, request, obj, form, change):
+        if change and obj.pk:
+            original = FiyatSozlesmesi.objects.get(pk=obj.pk)
+            if original.durum == FiyatSozlesmesi.Durum.AKTIF:
+                raise PermissionDenied(
+                    "AKTIF sözleşme değiştirilemez; yeni versiyon / servis kullanın."
+                )
+        if not change and not obj.olusturan_kullanici_id:
+            obj.olusturan_kullanici = request.user
+        super().save_model(request, obj, form, change)
+
+    @admin.action(description="Aktifleştir (servis)")
+    def action_aktif_yap(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                sozlesme_servisi.aktif_yap(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} sözleşme aktifleştirildi.")
+
+    @admin.action(description="Pasifleştir (servis)")
+    def action_pasifle(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                sozlesme_servisi.pasifle(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} sözleşme pasifleştirildi.")
+
+    @admin.action(description="Yeni versiyon (servis)")
+    def action_yeni_versiyon(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                sozlesme_servisi.yeni_versiyon_olustur(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} yeni versiyon oluşturuldu.")
+
     def get_list_display(self, request):
         display = list(super().get_list_display(request))
         if not user_may_see_fiyat_maliyet(request.user):
-            # Alıcı/tedarikçi: sözleşme varlığını görebilir (kendi firması) ama
-            # marj/maliyet odaklı alanlar kalem inline'da ayrıca kısıtlanır.
             pass
         return display
 
@@ -319,6 +409,21 @@ class FiyatSozlesmesiKalemiAdmin(admin.ModelAdmin):
         return scope_fiyat_sozlesmesi_kalemi_queryset(
             super().get_queryset(request), request.user
         )
+
+    def has_change_permission(self, request, obj=None):
+        if not super().has_change_permission(request, obj):
+            return False
+        if obj is not None and obj.sozlesme.durum == FiyatSozlesmesi.Durum.AKTIF:
+            return False
+        return True
+
+    def has_add_permission(self, request):
+        return super().has_add_permission(request)
+
+    def save_model(self, request, obj, form, change):
+        if obj.sozlesme_id and obj.sozlesme.durum == FiyatSozlesmesi.Durum.AKTIF:
+            raise PermissionDenied("AKTIF sözleşme kalemi değiştirilemez.")
+        super().save_model(request, obj, form, change)
 
     def get_list_display(self, request):
         display = list(super().get_list_display(request))

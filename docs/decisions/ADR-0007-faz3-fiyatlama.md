@@ -124,7 +124,7 @@ B-01 (hukuk / gizli hizmet payı) ve diğer dış doğrulamalar → ADR-0008 §6
 
 1. **3.0** Kabul; staging yok (uzak DB yok); yerel `btree_gist` 1.8 doğrulandı; üretim yetkisi DOĞRULANAMADI  
 2. **3.1** Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + eşleşme predicate — **uygulandı**  
-3. **3.2** K-007/K-008 — açık  
+3. **3.2** K-007/K-008 — **uygulandı**  
 
 Dilim **3.3–3.7** → ADR-0008.
 
@@ -143,6 +143,6 @@ Kur politikası, üç model quote hesabı, `PriceQuote` / trigger, alıcı gör�
 ## 10. Onay checklist
 
 - [x] Eşleşme kapısı (boş = kullanılmaz) + versiyon swap atomik *(dilim 3.1)*  
-- [ ] K-007/K-008 NULL-safe + btree_gist notu *(dilim 3.2)*  
+- [x] K-007/K-008 NULL-safe + btree_gist notu *(dilim 3.2)*  
 - [x] CASCADE→PROTECT + teklif durum servisi kapsamı *(dilim 3.1)*  
 - [x] Durum: **Kabul edildi** (yalnız ürün sahibi)

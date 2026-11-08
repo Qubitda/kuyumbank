@@ -119,7 +119,7 @@ class FiyatlamaAdminTenantTests(TestCase):
             kontrat_tipi=FiyatSozlesmesi.KontratTipi.TEDARIKCI,
             gecerlilik_baslangic="2026-01-01",
             gecerlilik_bitis="2026-12-31",
-            durum=FiyatSozlesmesi.Durum.AKTIF,
+            durum=FiyatSozlesmesi.Durum.TASLAK,
             olusturan_kullanici=cls.padmin,
         )
         cls.soz_b = FiyatSozlesmesi.objects.create(
@@ -127,7 +127,7 @@ class FiyatlamaAdminTenantTests(TestCase):
             kontrat_tipi=FiyatSozlesmesi.KontratTipi.TEDARIKCI,
             gecerlilik_baslangic="2026-01-01",
             gecerlilik_bitis="2026-12-31",
-            durum=FiyatSozlesmesi.Durum.AKTIF,
+            durum=FiyatSozlesmesi.Durum.TASLAK,
             olusturan_kullanici=cls.padmin,
         )
         cls.kalem_a = FiyatSozlesmesiKalemi.objects.create(
@@ -137,6 +137,12 @@ class FiyatlamaAdminTenantTests(TestCase):
             marj_degeri=Decimal("5"),
             iscilik=Decimal("10"),
         )
+        # Fixture: kalem sonrası AKTIF (immutability bypass — yalnız test kurulumu)
+        FiyatSozlesmesi.objects.filter(pk__in=[cls.soz_a.pk, cls.soz_b.pk]).update(
+            durum=FiyatSozlesmesi.Durum.AKTIF
+        )
+        cls.soz_a.refresh_from_db()
+        cls.soz_b.refresh_from_db()
         cls.log = PriceCalculationLog.objects.create(
             sozlesme=cls.soz_a,
             kalem=cls.kalem_a,

@@ -1,17 +1,25 @@
 from django.conf import settings
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateRangeField, RangeOperators
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import F, Func, Q, Value
+from django.db.models.functions import Coalesce
+
+
+class DateRange(Func):
+    """daterange(baslangic, bitis, '[]') — ADR-0007 §2.3."""
+
+    function = "DATERANGE"
+    output_field = DateRangeField()
 
 
 class FiyatSozlesmesi(models.Model):
     """
     Firma bazlı fiyat sözleşmesi.
 
-    - Sözleşme bir firmanın belirli bir dönem için geçerli marj/işçilik
-      kurallarını taşır. Aynı firma için farklı dönemler ayrı sözleşmelerdir.
-    - Şartlar değişince ESKİ SÖZLEŞME DEĞİŞTİRİLMEZ; yeni bir versiyon
-      (onceki_versiyon=eski) açılır.
-    - `kontrat_tipi` alıcı tarafı mı tedarikçi tarafı mı olduğunu belirler.
+    - AKTIF sonrası kalem/tarih değişmez; yeni versiyon açılır (ADR-0007 §2.3).
+    - Aynı firma+tip+kanal anahtarında AKTIF tarih aralıkları çakışmaz (K-008).
     """
 
     class KontratTipi(models.TextChoices):
@@ -36,7 +44,7 @@ class FiyatSozlesmesi(models.Model):
         blank=True,
         on_delete=models.PROTECT,
         related_name="fiyat_sozlesmeleri",
-        help_text="Boş = tüm kanallar.",
+        help_text="Boş = tüm kanallar (fallback).",
     )
     gecerlilik_baslangic = models.DateField()
     gecerlilik_bitis = models.DateField()
@@ -81,17 +89,36 @@ class FiyatSozlesmesi(models.Model):
                 ),
                 name="sozlesme_tarih_sirasi",
             ),
-            # Kanalsız (satis_kanali IS NULL): firma+tip+versiyon tekil
             models.UniqueConstraint(
                 fields=["firma", "kontrat_tipi", "versiyon"],
                 condition=models.Q(satis_kanali__isnull=True),
                 name="sozlesme_firma_tip_versiyon_kanalsiz_uniq",
             ),
-            # Kanallı (satis_kanali IS NOT NULL): firma+tip+kanal+versiyon tekil
             models.UniqueConstraint(
                 fields=["firma", "kontrat_tipi", "satis_kanali", "versiyon"],
                 condition=models.Q(satis_kanali__isnull=False),
                 name="sozlesme_firma_tip_kanal_versiyon_uniq",
+            ),
+            # K-008: AKTIF aralık çakışması (NULL kanal → COALESCE 0)
+            ExclusionConstraint(
+                name="sozlesme_aktif_tarih_cakisma",
+                expressions=[
+                    (F("firma"), RangeOperators.EQUAL),
+                    (F("kontrat_tipi"), RangeOperators.EQUAL),
+                    (
+                        Coalesce(F("satis_kanali_id"), Value(0)),
+                        RangeOperators.EQUAL,
+                    ),
+                    (
+                        DateRange(
+                            F("gecerlilik_baslangic"),
+                            F("gecerlilik_bitis"),
+                            Value("[]"),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+                condition=Q(durum="AKTIF"),
             ),
         ]
 
