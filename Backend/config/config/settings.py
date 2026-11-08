@@ -5,6 +5,7 @@ Gizli değerler (SECRET_KEY, DB şifresi vb.) koda yazılmaz, .env dosyasından
 veya ortam değişkenlerinden okunur.
 """
 
+from decimal import Decimal
 from pathlib import Path
 
 import environ
@@ -51,11 +52,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     # modüller
     'import_export',
-    'tanimlar',
-    'firmalar',
-    'urunler',
+    'tanimlar.apps.TanimlarConfig',
+    'firmalar.apps.FirmalarConfig',
+    'fiyatlama.apps.FiyatlamaConfig',
+    'urunler.apps.UrunlerConfig',
+
 ]
 
 AUTH_USER_MODEL = "firmalar.Kullanici"
@@ -75,7 +79,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -121,6 +125,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"  # collectstatic için (canlı)
 
+# --- Varsayılan PK tipi -----------------------------------------------------
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 # --- E-posta ----------------------------------------------------------------
 # Geliştirmede konsola yazar. Canlıda .env içinde SMTP backend'i verilir.
 EMAIL_BACKEND = env("EMAIL_BACKEND")
+
+# --- Marka / SEO (K-015, ADR-0005) ------------------------------------------
+# Boşsa SEO fallback yalnızca ürün/kategori adıdır; pazarlama metni üretilmez.
+PLATFORM_BRAND_NAME = env("PLATFORM_BRAND_NAME", default="")
+
+# --- Gram bandı varsayılanı (K3, ADR-0005) ----------------------------------
+# Varyant gram bandı yoksa teklif eşlemesinde kullanılan relatif tolerans.
+VARYANT_GRAM_BANDI_ORAN = Decimal(env("VARYANT_GRAM_BANDI_ORAN", default="0.05"))

@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from firmalar.kullanici import Kullanici
+from firmalar import roles
+from firmalar.models.kullanici import Kullanici
 
 
 class Command(BaseCommand):
@@ -15,14 +16,14 @@ class Command(BaseCommand):
                 reasons.append("firma atanmamış")
             if not user.rol:
                 reasons.append("rol atanmamış")
-            elif user.rol not in dict(Kullanici.ROL):
+            elif user.rol not in roles.ALL_ROLES:
                 reasons.append("geçersiz rol kodu")
             elif user.firma_id:
-                if user.rol in Kullanici.PLATFORM_ROLLERI and not user.firma.platform_mu:
+                if user.rol in roles.PLATFORM_ROLLERI and not user.firma.platform_mu:
                     reasons.append("platform rolü platform olmayan firmada")
-                elif user.rol in Kullanici.ALICI_ROLLERI and not user.firma.alici_mi:
+                elif user.rol in roles.ALICI_ROLLERI and not user.firma.alici_mi:
                     reasons.append("alıcı rolü alıcı olmayan firmada")
-                elif user.rol in Kullanici.TEDARIKCI_ROLLERI and not user.firma.tedarikci_mi:
+                elif user.rol in roles.TEDARIKCI_ROLLERI and not user.firma.tedarikci_mi:
                     reasons.append("tedarikçi rolü tedarikçi olmayan firmada")
             if reasons:
                 problems += 1

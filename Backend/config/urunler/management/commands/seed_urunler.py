@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -72,10 +74,25 @@ class Command(BaseCommand):
                 _, olustu = model.objects.get_or_create(kod=kodla(ad), defaults={"ad": ad, "sira": sira})
                 yeni += olustu
 
+        # Değerli taş tiplerini işaretle (karat kontrolü için gerekli)
+        DEGERLI_TAS_TIPLERI = {"PIRLANTA", "SAFIR", "YAKUT", "ZUMRUT", "INCI", "AMETIST", "TOPAZ"}
+        guncellenen = TasTipi.objects.filter(kod__in=DEGERLI_TAS_TIPLERI, degerli=False).update(degerli=True)
+        if guncellenen:
+            self.stdout.write(f"  {guncellenen} taş tipi 'değerli' olarak işaretlendi.")
+
         for tip, degerler in OLCULER:
             for deger in degerler:
-                sira = int("".join(c for c in deger if c.isdigit()))
-                _, olustu = OlcuDegeri.objects.get_or_create(tip=tip, deger=deger, defaults={"sira": sira})
+                # Sayısal değeri metinden çıkar (ör. "19 cm" → 19, "14" → 14)
+                rakamlar = "".join(c for c in deger if c.isdigit() or c == ".")
+                sayisal = Decimal(rakamlar) if rakamlar else None
+                if sayisal is None:
+                    self.stdout.write(self.style.WARNING(f"Sayısal değer çıkarılamadı: {deger!r}, atlanıyor."))
+                    continue
+                _, olustu = OlcuDegeri.objects.get_or_create(
+                    tip=tip,
+                    deger=deger,
+                    defaults={"sira": int(sayisal), "sayisal_deger": sayisal},
+                )
                 yeni += olustu
 
         gruplar = {g.kod: g for g in FiyatGrubu.objects.all()}

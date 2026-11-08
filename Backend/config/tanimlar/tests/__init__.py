@@ -1,0 +1,1 @@
+"""Tanımlar uygulaması test paketi."""

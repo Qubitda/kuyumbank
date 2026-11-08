@@ -12,15 +12,15 @@ METALLER = [
 ]
 
 AYARLAR = [
-    # (metal_kodu, ayar_kodu, milyem)
-    ("ALTIN", "8K", 333),
-    ("ALTIN", "14K", 585),
-    ("ALTIN", "18K", 750),
-    ("ALTIN", "22K", 916),
-    ("ALTIN", "24K", 995),
-    ("GUMUS", "925", 925),
-    ("PLATIN", "950", 950),  # dokümanda yok, standart platin ayarı olarak eklendi
-    ("CELIK", "Ayarsız", 0),
+    # (metal_kodu, ayar_kodu, ayar_degeri, milyem)  — milyem 0.0-1.0 oranı
+    ("ALTIN", "8K",      8,   0.333),
+    ("ALTIN", "14K",    14,   0.585),
+    ("ALTIN", "18K",    18,   0.750),
+    ("ALTIN", "22K",    22,   0.916),
+    ("ALTIN", "24K",    24,   0.995),
+    ("GUMUS", "925",   925,   0.925),
+    ("PLATIN", "950",  950,   0.950),
+    ("CELIK", "Ayarsız", 0,   0.000),
 ]
 
 KANALLAR = [
@@ -47,11 +47,11 @@ class Command(BaseCommand):
             metaller[kod] = metal
             yeni += olustu
 
-        for metal_kodu, ayar_kodu, milyem in AYARLAR:
+        for metal_kodu, ayar_kodu, ayar_degeri, milyem in AYARLAR:
             _, olustu = AyarMilyem.objects.get_or_create(
                 metal=metaller[metal_kodu],
                 ayar_kodu=ayar_kodu,
-                defaults={"milyem": milyem},
+                defaults={"ayar_degeri": ayar_degeri, "milyem": milyem},
             )
             yeni += olustu
 
