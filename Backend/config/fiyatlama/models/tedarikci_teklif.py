@@ -38,8 +38,8 @@ class TedarikciTeklif(models.Model):
         ESDEGER = "esdeger", "Eşdeğer"
 
     varyant = models.ForeignKey(
-        "urunler.Varyant",          # ← DÜZELTİLDİ: UrunVaryant → Varyant
-        on_delete=models.CASCADE,
+        "urunler.Varyant",
+        on_delete=models.PROTECT,
         related_name="teklifler",
     )
     tedarikci = models.ForeignKey(
@@ -48,6 +48,17 @@ class TedarikciTeklif(models.Model):
         related_name="teklifler",
     )
     tedarikci_kodu = models.CharField(max_length=64, blank=True)
+    # VARSAYIM (ADR-0007 §2.1 Netleştirme): versiyon + onceki_teklif adlandırılmamıştı.
+    versiyon = models.PositiveIntegerField(default=1)
+    onceki_teklif = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="sonraki_versiyonlar",
+    )
+    gecerlilik_baslangic = models.DateField(null=True, blank=True)
+    gecerlilik_bitis = models.DateField(null=True, blank=True)
     fiyat_modeli = models.CharField(max_length=16, choices=FiyatModeli.choices)
     gram = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
     gram_tolerans = models.DecimalField(
@@ -124,10 +135,17 @@ class TedarikciTeklif(models.Model):
             ("approve_eslestirme", "Teklif-katalog eşleştirmesini onaylayabilir"),
         ]
         constraints = [
+            # VARSAYIM: eski teklif_tedarikci_kod_uniq (tüm durumlar) kaldırıldı —
+            # aynı kodlu versiyon satırlarına izin; aktif çakışma yalnız YAYINDA.
             models.UniqueConstraint(
-                fields=["tedarikci", "tedarikci_kodu"],
-                condition=~models.Q(tedarikci_kodu=""),
-                name="teklif_tedarikci_kod_uniq",
+                fields=["tedarikci", "varyant", "tedarikci_kodu"],
+                condition=models.Q(durum="YAYINDA") & ~models.Q(tedarikci_kodu=""),
+                name="teklif_yayinda_kodlu_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["tedarikci", "varyant"],
+                condition=models.Q(durum="YAYINDA", tedarikci_kodu=""),
+                name="teklif_yayinda_kodsuz_uniq",
             ),
             models.CheckConstraint(
                 condition=(
@@ -140,6 +158,14 @@ class TedarikciTeklif(models.Model):
                     | models.Q(fiyat_modeli="SABIT_PARCA", birim_fiyat__isnull=False)
                 ),
                 name="teklif_fiyat_modeli_alanlari_dolu",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(gecerlilik_baslangic__isnull=True)
+                    | models.Q(gecerlilik_bitis__isnull=True)
+                    | models.Q(gecerlilik_bitis__gte=models.F("gecerlilik_baslangic"))
+                ),
+                name="teklif_gecerlilik_tarih_sirasi",
             ),
         ]
 
@@ -161,4 +187,17 @@ class TedarikciTeklif(models.Model):
         ):
             raise ValidationError(
                 {"birim_fiyat": "SABIT_PARCA teklifte birim fiyat zorunlu."}
+            )
+        if self.durum == self.Durum.YAYINDA:
+            if self.gecerlilik_baslangic is None or self.gecerlilik_bitis is None:
+                raise ValidationError(
+                    "YAYINDA teklifte geçerlilik başlangıç ve bitiş zorunludur."
+                )
+        if (
+            self.gecerlilik_baslangic
+            and self.gecerlilik_bitis
+            and self.gecerlilik_bitis < self.gecerlilik_baslangic
+        ):
+            raise ValidationError(
+                {"gecerlilik_bitis": "Bitiş, başlangıçtan önce olamaz."}
             )

@@ -19,6 +19,23 @@ def scope_teklif_queryset(qs, user):
     return qs.filter(tedarikci_id=firma_id)
 
 
+def teklif_eslestirme_uygun_mu(teklif) -> bool:
+    """ADR-0007 §2.1 kapı predicate — quote çağrısı yok (3a).
+
+    True yalnız eslestirme_durumu=onaylandi ve hedef_urun dolu + tutarlı.
+    """
+    if getattr(teklif, "eslestirme_durumu", "") != "onaylandi":
+        return False
+    hedef_id = getattr(teklif, "hedef_urun_id", None)
+    if not hedef_id:
+        return False
+    varyant = getattr(teklif, "varyant", None)
+    if varyant is None:
+        return False
+    urun_id = getattr(varyant, "urun_id", None)
+    return urun_id == hedef_id
+
+
 def scope_teklif_varyant_queryset(qs, user):
     """Teklif formu varyant FK — tek selector (ADR-0006 B1).
 

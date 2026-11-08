@@ -1,5 +1,5 @@
-from django.contrib import admin
-from django.core.exceptions import PermissionDenied
+from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied, ValidationError
 
 from firmalar.models import Firma
 from firmalar.services.yetki_servisi import can_view_all_tenants
@@ -19,6 +19,7 @@ from fiyatlama.selectors.tenant import (
     scope_teklif_varyant_queryset,
     user_may_see_fiyat_maliyet,
 )
+from fiyatlama.services import teklif_servisi
 from urunler.models import Varyant
 
 
@@ -94,11 +95,13 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
     search_fields = ("tedarikci__ad", "varyant__sku", "tedarikci_kodu")
     inlines = [UrunTasiInline]
     _maliyet_fields = ("birim_fiyat", "iscilik_override")
-    # Durum / eşleştirme yalnız servis (ADR-0006 B1)
+    # Durum / eşleştirme / versiyon yalnız servis (ADR-0006 B1, ADR-0007 §2.1)
     _servis_alanlari = (
         "durum",
         "onaylayan",
         "onay_zamani",
+        "versiyon",
+        "onceki_teklif",
         "eslestirme_durumu",
         "eslestirme_guveni",
         "eslestiren_kullanici",
@@ -106,6 +109,60 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         "hedef_urun",
         "esdegerlik_seviyesi",
     )
+    actions = (
+        "action_onaya_gonder",
+        "action_yayina_al",
+        "action_pasifle",
+        "action_yeniden_yayinla",
+    )
+
+    @admin.action(description="Onaya gönder (servis)")
+    def action_onaya_gonder(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                teklif_servisi.onaya_gonder(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} teklif onaya gönderildi.")
+
+    @admin.action(description="Yayına al (servis)")
+    def action_yayina_al(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                teklif_servisi.yayina_al(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} teklif yayına alındı.")
+
+    @admin.action(description="Pasifleştir (servis)")
+    def action_pasifle(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                teklif_servisi.pasifle(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} teklif pasifleştirildi.")
+
+    @admin.action(description="Yeniden yayınla (servis)")
+    def action_yeniden_yayinla(self, request, queryset):
+        ok = 0
+        for obj in queryset:
+            try:
+                teklif_servisi.yeniden_yayinla(obj, request.user)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{obj.pk}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} teklif yeniden yayınlandı.")
 
     def get_queryset(self, request):
         return scope_teklif_queryset(super().get_queryset(request), request.user)

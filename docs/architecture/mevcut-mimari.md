@@ -1,9 +1,9 @@
-# Mevcut mimari (Faz 2.1 sonrası envanter)
+# Mevcut mimari (Faz 3.1 sonrası envanter)
 
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `Backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Kabul**); 0008 Faz 3b kur/quote (**Taslak**)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Kabul**; dilim 3.1 uygulandı); 0008 Faz 3b kur/quote (**Taslak**)
 
 ## Uygulama haritası
 
@@ -12,7 +12,7 @@
 | `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC seed | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `selectors/tenant` |
 | `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + seed; kur politikası Faz 3b (ADR-0008) |
 | `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant, katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `katalog_tenant`, gram bandı |
-| `fiyatlama` | Sözleşme, `TedarikciTeklif` (3 fiyat modeli), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `fiyat_hesaplama` (saf; yalnız metal formülü); teklif/sözleşme **durum servisi yok** (ADR-0006 bilinçli sınır → Faz 3) |
+| `fiyatlama` | Sözleşme, `TedarikciTeklif` (yaşam döngüsü + versiyon), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi` (durum/sahiplik/dört göz/swap); `teklif_eslestirme_uygun_mu` predicate; `fiyat_hesaplama` (saf; quote yok); sözleşme durum servisi henüz yok |
 
 `AUTH_USER_MODEL = firmalar.Kullanici`. Paket düzeni: ADR-0004 (`models/`, `services/`, `selectors/`, `admin/`, `tests/`).
 
@@ -34,7 +34,7 @@
 - Kimlik unique: A/B + dolu anahtar + `onay_durumu != reddedildi` (0007).
 - Eşleştirme: tedarikçi önerir, platform onaylar; `eslestirme_durumu` boş = fiyat motoru kapısı (ADR-0007); quote ADR-0008.
 
-## Fiyatlama (mevcut — Faz 3 öncesi)
+## Fiyatlama (mevcut — dilim 3.1)
 
 ```mermaid
 flowchart TD
@@ -43,6 +43,7 @@ flowchart TD
   Urun[Urun olusturan_firma]
   Varyant[Varyant]
   Teklif[TedarikciTeklif]
+  Servis[teklif_servisi]
   Sozlesme[FiyatSozlesmesi]
   Hesapla[hesapla metal formulu]
   Log[PriceCalculationLog]
@@ -50,14 +51,19 @@ flowchart TD
   Urun -->|"olusturan_firma"| Firma
   Urun --> Varyant
   Teklif -->|"PROTECT tedarikci"| Firma
-  Teklif -->|"CASCADE varyant — Faz3 PROTECT"| Varyant
+  Teklif -->|"PROTECT varyant"| Varyant
+  Servis -->|"durum geçişleri"| Teklif
   Sozlesme --> Firma
   Hesapla -.->|"orkestrasyon yok"| Log
 ```
 
-- Üç teklif modeli: `METAL_BAZLI`, `GRAM_BIRIM`, `SABIT_PARCA` — quote eşlemesi ADR-0008.
+- Teklif durumları: `TASLAK` → `ONAY_BEKLIYOR` → `YAYINDA` ↔ `PASIF`; geçiş yalnız `teklif_servisi`.
+- Versiyon: `versiyon` + `onceki_teklif`; onayda eski PASIF → yeni YAYINDA (tek `domain_atomic`).
+- Aktif çakışma: aynı tedarikçi+varyant(+kod) için tek `YAYINDA` (partial unique).
+- Eşleşme kapısı: `teklif_eslestirme_uygun_mu` — quote ADR-0008.
+- Üç teklif modeli: `METAL_BAZLI`, `GRAM_BIRIM`, `SABIT_PARCA`.
 - Faz 3 çıktısı proforma; KDV/vergi yok (ADR-0008 §2.9).
-- `PriceQuote` / `PricingService` yok; admin’de teklif `durum` salt okunur.
+- `PriceQuote` / `PricingService` yok; admin’de teklif `durum` salt okunur + action→servis.
 
 ## Bilinçli hedef (rapor §10)
 
