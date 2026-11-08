@@ -3,14 +3,14 @@
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `Backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3 fiyatlama (**Taslak**)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Taslak**); 0008 Faz 3b kur/quote (**Taslak**)
 
 ## Uygulama haritası
 
 | App | Sorumluluk | Servis / selector |
 |-----|------------|-------------------|
 | `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC seed | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `selectors/tenant` |
-| `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + seed; kur politikası Faz 3 (ADR-0007) |
+| `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + seed; kur politikası Faz 3b (ADR-0008) |
 | `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant, katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `katalog_tenant`, gram bandı |
 | `fiyatlama` | Sözleşme, `TedarikciTeklif` (3 fiyat modeli), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `fiyat_hesaplama` (saf; yalnız metal formülü); teklif/sözleşme **durum servisi yok** (ADR-0006 bilinçli sınır → Faz 3) |
 
@@ -32,7 +32,7 @@
 - Katalog ürünü **platforma** aittir; `Urun.tedarikci` **kaldırıldı** → `olusturan_firma` (alıcıya gösterilmez).
 - Onay akışı serviste; tedarikçi `onay_bekliyor` düzenleyemez; `geri_cek` / `taslaga_al`; dört göz onay.
 - Kimlik unique: A/B + dolu anahtar + `onay_durumu != reddedildi` (0007).
-- Eşleştirme: tedarikçi önerir, platform onaylar; `eslestirme_durumu` boş = quote için yetersiz (ADR-0007 taslak).
+- Eşleştirme: tedarikçi önerir, platform onaylar; `eslestirme_durumu` boş = fiyat motoru kapısı (ADR-0007); quote ADR-0008.
 
 ## Fiyatlama (mevcut — Faz 3 öncesi)
 
@@ -55,8 +55,8 @@ flowchart TD
   Hesapla -.->|"orkestrasyon yok"| Log
 ```
 
-- Üç teklif modeli: `METAL_BAZLI`, `GRAM_BIRIM`, `SABIT_PARCA` — quote eşlemesi ADR-0007.
-- Faz 3 çıktısı proforma; KDV/vergi yok.
+- Üç teklif modeli: `METAL_BAZLI`, `GRAM_BIRIM`, `SABIT_PARCA` — quote eşlemesi ADR-0008.
+- Faz 3 çıktısı proforma; KDV/vergi yok (ADR-0008 §2.9).
 - `PriceQuote` / `PricingService` yok; admin’de teklif `durum` salt okunur.
 
 ## Bilinçli hedef (rapor §10)

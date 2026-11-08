@@ -11,7 +11,8 @@ Onaylanmış kararlar burada tutulur. Agent varsayım yaptığında geri dönü�
 | [ADR-0003 addendum](ADR-0003-addendum-view-all-scope.md) | `view_all_tenants` quality/logistics/support’tan çıkarıldı | Kabul |
 | [ADR-0005](ADR-0005-katalog-platform-ownership.md) | Katalog platform ownership (Faz 2) | Kabul |
 | [ADR-0006](ADR-0006-faz2-1-kararlar.md) | Faz 2.1 düzeltme kararları (B1–O6) | Kabul |
-| [ADR-0007](ADR-0007-faz3-fiyatlama.md) | Faz 3: teklif, fiyatlama, PriceQuote snapshot | **Taslak** |
+| [ADR-0007](ADR-0007-faz3-fiyatlama.md) | Faz 3a: teklif yaşam döngüsü, K-007/K-008 | **Taslak** |
+| [ADR-0008](ADR-0008-faz3b-kur-fiyatlama-quote.md) | Faz 3b: kur, fiyat hesabı, PriceQuote, görünürlük | **Taslak** |
 
 Uygulama tasarımı: [`docs/architecture/faz1-kimlik-gecis-tasarimi.md`](../architecture/faz1-kimlik-gecis-tasarimi.md)  
 Doğrulama: [`docs/architecture/faz1-dogrulama-raporu.md`](../architecture/faz1-dogrulama-raporu.md)  

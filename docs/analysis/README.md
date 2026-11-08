@@ -21,4 +21,6 @@ Agent ve geliştirici önce bu dizini, ardından mimari ve ADR’leri okur. Rapo
 - Faz 1 tasarım (kodsuz): [`../architecture/faz1-kimlik-gecis-tasarimi.md`](../architecture/faz1-kimlik-gecis-tasarimi.md)
 - Faz 1 teknik inceleme: [`../architecture/faz1-teknik-inceleme.md`](../architecture/faz1-teknik-inceleme.md)
 - Faz 1 kararları: [`../decisions/ADR-0003-faz1-kimlik-rbac.md`](../decisions/ADR-0003-faz1-kimlik-rbac.md)
+- Faz 3a (teklif/sözleşme): [`../decisions/ADR-0007-faz3-fiyatlama.md`](../decisions/ADR-0007-faz3-fiyatlama.md) (**Taslak**)
+- Faz 3b (kur/quote): [`../decisions/ADR-0008-faz3b-kur-fiyatlama-quote.md`](../decisions/ADR-0008-faz3b-kur-fiyatlama-quote.md) (**Taslak**)
 - Kararlar: [`../decisions/`](../decisions/)

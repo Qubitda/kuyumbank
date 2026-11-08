@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-11-08  
 **Kapsam:** Salt okunur kod incelemesi; kod/migration değişmedi.  
-**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 (Taslak).
+**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a / ADR-0008 Faz 3b (**Taslak**).
 
 Etiketler: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
 
@@ -18,11 +18,11 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 
 | Bileşen | Kanıt | Not |
 |---------|-------|-----|
-| `hesapla()` saf Decimal | `fiyatlama/services/fiyat_hesaplama.py:25–82` | Yalnız metal formülü; GRAM_BIRIM/SABIT_PARCA quote’a ADR-0007 §2.1.1 ile bağlanır. **DOĞRULANDI** |
+| `hesapla()` saf Decimal | `fiyatlama/services/fiyat_hesaplama.py:25–82` | Yalnız metal formülü; GRAM_BIRIM/SABIT_PARCA quote’a ADR-0008 §2.1.1 ile bağlanır. **DOĞRULANDI** |
 | `cozumle()` skor + belirsizlik hatası | `fiyatlama/models/sozlesme_cozumleme.py:33–101` | K-007 sonrası kalem unique ile uyumlu hale getirilecek. **DOĞRULANDI** |
 | `FiyatSozlesmesi` versiyon / PROTECT | `fiyat_sozlesmesi.py:58–65`, `:77–95` | Yayın immutability servisle zorlanacak. **DOĞRULANDI** |
 | `TedarikciTeklif` fiyat modeli + constraint | `tedarikci_teklif.py:9–71`, `:126–143` | Durum servisi + versiyon/geçerlilik eksik. **DOĞRULANDI** |
-| Eşleştirme (Faz 2) | `urunler/services/eslestirme_servisi.py` | Boş `eslestirme_durumu` = bekliyor = quote yok (ADR-0007; C istisnası yok). **DOĞRULANDI** (alan default `''`) |
+| Eşleştirme (Faz 2) | `urunler/services/eslestirme_servisi.py` | Boş `eslestirme_durumu` = bekliyor = fiyat motorunda yok (ADR-0007 kapı; quote ADR-0008; C istisnası yok). **DOĞRULANDI** (alan default `''`) |
 | Teklif admin readonly durum | `fiyatlama/admin/admin.py:98–115` | ADR-0006 bilinçli sınır; Faz 3 servis açacak. **DOĞRULANDI** |
 | Tenant selectors | `fiyatlama/selectors/tenant.py` | Teklif/sözleşme scope kalır. **DOĞRULANDI** |
 | `approve_teklif` / `manage_sozlesme` seed | `firmalar/role_permissions.py` + Meta permissions | Serviste henüz `require_perm` yok (ADR-0006 O6). **DOĞRULANDI** |
@@ -39,7 +39,7 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | `durum` alanları var; geçiş servisi yok | DOĞRULANDI | `tedarikci_teklif.py:19–23`, `:69–71`; admin readonly `:98–99` |
 | `approve_teklif` yalnız Meta/seed | DOĞRULANDI | `tedarikci_teklif.py:123`; grep servis kullanımı yok |
 | `valid_from` / `valid_until` / teklif `versiyon` yok | DOĞRULANDI | Model alan listesi `:40–115` — yok |
-| `varyant` FK **CASCADE** | DOĞRULANDI | `tedarikci_teklif.py:40–43` → PROTECT/arşiv (ADR-0007) |
+| `varyant` FK **CASCADE** | DOĞRULANDI | `tedarikci_teklif.py:40–43` → PROTECT/arşiv (ADR-0007 / dilim 3.1) |
 | `tedarikci_mi` doğrulaması yok | DOĞRULANDI | Model `clean()` fiyat modeli dışında; admin save yalnız firma atar |
 | Aktif teklif çakışma (firma+varyant+SKU) yok | DOĞRULANDI | Unique yalnız `tedarikci`+`tedarikci_kodu` dolu iken `:127–130` |
 | K-006 eski “ürün sahibi = tedarikçi” kanıtı | PLANLAMA BULGUSU | ADR-0005 sonrası katalog platform; teklif↔varyant sahipliği yeniden tanımlanır |
@@ -52,7 +52,7 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | `cozumle()` spesifik > genel hedefler | DOĞRULANDI | `sozlesme_cozumleme.py:79–82` |
 | DB unique (sozlesme+metal+ayar) yok; NULL unique tuzağı | DOĞRULANDI | Meta `:61–69`; ADR-0007: `nulls_distinct=False` veya partial unique seti |
 
-**Karar (ADR-0007):** clean çelişkisini kaldır; unique `(sozlesme, metal, ayar)` (ayar NULL dahil partial); cozumle fallback koru.
+**Karar (ADR-0007 / 3.2):** clean çelişkisini kaldır; unique `(sozlesme, metal, ayar)` (ayar NULL dahil partial); cozumle fallback koru.
 
 ### 3.3 K-008 aktif tarih çakışması
 
@@ -69,7 +69,7 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | `PricingService.quote` / `PriceQuote` yok | DOĞRULANDI | `fiyatlama/services/` yalnız `fiyat_hesaplama.py` |
 | `PriceCalculationLog` teknik log; teklif FK yok | DOĞRULANDI | `price_calculation_log.py:6–9`, `:17–32` |
 | `hesapla` çıktısında para birimi / kur / sözleşme yok | DOĞRULANDI | `fiyat_hesaplama.py:72–82` |
-| Formülde `ek_bedel`, platform servis yok; vergi yok | DOĞRULANDI | `toplam = metal+iscilik+marj+tas` `:67` vs rapor §5.4 (`+ vergiler`). **Ürün sahibi (2026-11-08):** Faz 3 proforma; KDV/vergi hesaplanmaz (ADR-0007 §2.9; B-06 ertelendi). |
+| Formülde `ek_bedel`, platform servis yok; vergi yok | DOĞRULANDI | `toplam = metal+iscilik+marj+tas` `:67` vs rapor §5.4 (`+ vergiler`). **Ürün sahibi (2026-11-08):** Faz 3 proforma; KDV/vergi hesaplanmaz (ADR-0008 §2.9; B-06 ertelendi). |
 | Log’da `kilit_bitis` var ama kilit servisi yok | DOĞRULANDI | `price_calculation_log.py:56` |
 
 ### 3.5 K-011 iki UrunTasi
@@ -120,10 +120,13 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 
 ## 5. Faz 3 dilim önerisi (sıra)
 
-Bkz. ADR-0007 § dilimler. Özet: (1) teklif yaşam döngüsü + CASCADE, (2) K-007/K-008 sözleşme, (3) kur/döviz politikası iskeleti, (4) PricingService.quote + PriceQuote, (5) görünürlük/kör havuz + test §12.3.
+| Dilim | ADR | Konu |
+|-------|-----|------|
+| **3.0–3.2** | ADR-0007 (3a) | Staging + `btree_gist`; teklif yaşam döngüsü + CASCADE; K-007/K-008 |
+| **3.3–3.7** | ADR-0008 (3b) | Kur politikası; üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
 
 ---
 
 ## 6. Sonraki adım
 
-ADR-0007 ürün sahibi **Kabul** → kodlama talimatı. Faz 4 (stok/sipariş) bu ADR kabulünden bağımsız başlamaz.
+ADR-0007 (3a) ürün sahibi **Kabul** → dilim 3.0–3.2. ADR-0008 (3b) ayrı Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
