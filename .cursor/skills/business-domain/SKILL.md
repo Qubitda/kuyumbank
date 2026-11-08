@@ -56,12 +56,12 @@ Separate (DOĞRULANDI):
 
 Birim (U-002): teklif `fiyat_modeli` → ADET/GRAM; **dönüşüm yok**.  
 Legacy `Varyant.stok` / `TedarikciTeklif.stok_adet` dual borç (F4-070).  
-`siparis`: Cart/CartLine → CheckoutAttempt (lock+rezerv) → Order/OrderLine (tüket SATIS) → iptal (IADE); durum yalnız `order_servisi`.
+`siparis`: Cart/CartLine → CheckoutAttempt (lock+rezerv) → Order/OrderLine (tüket SATIS) → iptal (IADE); Quick Reorder → güncel quote+ATP (`reorder_servisi`).
 
 ## Commerce / ops state
 
-Cart/Checkout/Order **UYGULANDI** (`siparis`); transitions yalnız servis + audit.  
-QC / finance ledger → Faz 5–6 (ADR-0012 cari/FX Taslak; F5-010/011). Ödeme iadesi yok (U-004).
+Cart/Checkout/Order/Reorder **UYGULANDI** (`siparis`); ince PRE HTTP (`api`, okuma iskeleti). Transitions yalnız servis + audit.  
+QC / finance → Faz 5–6 (ADR-0012 Taslak). Ödeme iadesi yok (U-004). Sıradaki: master §12.3.
 
 ## When implementing
 

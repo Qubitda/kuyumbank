@@ -32,7 +32,7 @@ Ayrıntı ve test komutları: [`backend/README.md`](backend/README.md).
 ## Teknoloji
 
 - Python 3.12–3.14 · Django **6.1.2** · PostgreSQL · `psycopg`
-- HTTP yüzeyi: yalnız Django Admin (`/admin/`) — DRF yok
-- Uygulamalar: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis`
+- HTTP: Django Admin (`/admin/`) + ince PRE API (`/api/v1/`) — DRF 3.18.3
+- Uygulamalar: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis`, `api`
 
 Güncel faz / sıradaki iş: master **§12**.

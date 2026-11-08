@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/KUYUMBANK_MASTER.md`  
 **Rol:** Kuyumbank’ın **tek kanonik** ürün, mimari, karar, tarihçe, yol haritası ve iş havuzu kaynağı.  
-**Güncelleme:** 2026-11-08 — kod↔docs senkron (F4 dilim 1–7; suite 337 OK)  
+**Güncelleme:** 2026-11-08 — tam kod↔docs senkron (suite **348 OK**; YAPILDI / SIRADA §12)  
 **Dal:** `adim-1-ilerleme`  
 **Doküman kökü:** `docs/` altında **yalnız bu dosya**.
 
@@ -81,16 +81,16 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 |---------|-------|--------|
 | Django 6.1.2 modular monolith | `requirements.txt` pin | UYGULANDI |
 | PostgreSQL + psycopg | varsayılan DB | UYGULANDI |
-| django-environ, import-export, Pillow | requirements | UYGULANDI |
-| DRF / Celery / Redis / Next.js | requirements’ta yok (bilinçli) | PLANLANDI |
+| django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
+| Celery / Redis / Next.js | requirements’ta yok (bilinçli) | PLANLANDI |
 | HTTP yüzeyi | yalnız `admin/` | KISMİ |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
-`INSTALLED_APPS` (DOĞRULANDI `config/settings.py`): `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`.  
-Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tests/`.  
-**Yok:** `finans`, DRF app, Celery.  
-**HTTP:** yalnız `config/urls.py` → `admin/` (DOĞRULANDI).
+`INSTALLED_APPS` (DOĞRULANDI `config/settings.py`): `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `api` (+ `rest_framework`).  
+Domain app’ler: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tests/`.  
+**Yok:** `finans`, Celery.  
+**HTTP:** `admin/` + `/api/v1/` (DOĞRULANDI).
 
 ### 2.3 Modül uygulama durumu (kod gerçeği)
 
@@ -107,7 +107,8 @@ Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tes
 | Checkout (aday) | **Tamamlanmış** | F4-040/041 |
 | Order / OrderLine | **Tamamlanmış** | F4-050…053 (iptal = stok IADE) |
 | FX pozisyon / hedge / cari | **Yalnız tasarım** | ADR-0012 Taslak; F5 |
-| DRF / ödeme / QC / kargo | **Uygulanmamış** | |
+| İnce PRE API | **Tamamlanmış** | PRE-001…004; PRE-005 idempotency yok |
+| Ödeme / QC / kargo / tam Prosperer API | **Uygulanmamış** | |
 
 ### 2.4 Veri modelleri (özet — dosyada var)
 
@@ -137,7 +138,8 @@ Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tes
 | `fiyatlama`: teklif / sozlesme / fiyat_hesaplama / fiyat_motoru / pricing_service | teklif+quote+lock | UYGULANDI |
 | `fiyatlama.selectors.buyer_quote` | B-02 alıcı yüzeyi | UYGULANDI |
 | `stok`: warehouse / ledger / reservation / birim / dual_stock_envanter | F4 stok | UYGULANDI |
-| `siparis`: `cart_servisi` / `checkout_servisi` / `order_servisi` | sepet; checkout; order+tüket+iptal | UYGULANDI |
+| `siparis`: cart / checkout / order / `reorder_servisi` | sepet; checkout; order; quick reorder | UYGULANDI |
+| `api`: health / me / cart / order / schema views | ince PRE HTTP | UYGULANDI |
 | tenant selectors (`firmalar`/`urunler`/`stok`/`siparis`/…) | firma scope | UYGULANDI |
 
 ### 2.6 Güvenlik (kodda karşılığı olan)
@@ -147,21 +149,21 @@ Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tes
 - Kör havuz: buyer_quote maske; IDOR → DoesNotExist.  
 - Quote/Lock: app immutability + PG trigger (mig 0007 / 0010–0011).  
 - PriceLock create: `lock_quote` / `lock_quote_on_behalf`; `view_all_tenants` create vermez.  
-- Stok: movement immutable; reservation create/cancel/expire fiziksel movement yazmaz; consume → SATIS.  
-- **Yok (henüz):** DRF object-level API perm; AuditOlay QuerySet immutability (AUD-001).
+- Stok: movement immutable; reservation create/cancel/expire fiziksel movement yazmaz; consume → SATIS; iptal → IADE.  
+- API: ince PRE tenant 404 (cart/order); client `firma_id` yok sayılır.  
+- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; AuditOlay QuerySet immutability (AUD-001); Idempotency-Key (PRE-005).
 
 ### 2.7 Test / migration
 
 | Madde | Durum |
 |-------|--------|
-| Birleşik suite `firmalar\|urunler\|fiyatlama\|tanimlar\|stok\|siparis.tests` | **337 OK** (PG, 2026-11-08, F4-053 sonrası) — TEST EDİLDİ |
-| `stok` odak | warehouse + ledger + reservation |
-| `siparis` odak | cart+checkout+order+iptal **25 OK** |
-| `fiyatlama.0007`–`0012` | Quote/Lock/K-011/L-04/L-07 |
-| `fiyatlama.0013` + `urunler.0008` | dual-stock help_text (veri kaybı yok) |
+| Birleşik suite `firmalar\|urunler\|fiyatlama\|tanimlar\|stok\|siparis\|api.tests` | **348 OK** (PG `--keepdb`, 2026-11-08) — TEST EDİLDİ |
+| `siparis` odak | **29 OK** |
+| `api` odak | **7 OK** |
+| `fiyatlama.0007`–`0013` / `urunler.0008` | Quote/Lock/K-011 + dual-stock help_text |
 | `stok.0001`–`0003` | Warehouse → Movement/Balance → Reservation |
 | `siparis.0001`–`0003` | Cart + CheckoutAttempt + Order/OrderLine |
-| DRF API testleri | Yok — PLANLANDI |
+| `makemigrations --check` | temiz (pending yok) |
 
 ### 2.8 Özellik matrisi (çekirdek)
 
@@ -184,7 +186,9 @@ Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tes
 | Checkout adayı | UYGULANDI · TEST EDİLDİ (F4-040/041) |
 | Order + L-11 snapshot + consume | UYGULANDI · TEST EDİLDİ (F4-050/051/052) |
 | Sipariş iptal (stok IADE) | UYGULANDI · TEST EDİLDİ (F4-053) |
-| Ödeme / DRF | PLANLANDI |
+| Quick Reorder | UYGULANDI · TEST EDİLDİ (F4-080) |
+| İnce PRE API (health/me/cart/order/schema) | UYGULANDI · TEST EDİLDİ (PRE-001…004) |
+| PRE-005 Idempotency / ödeme / tam API | PLANLANDI |
 | Prosperer özellik parity | DOĞRULANAMADI (hedef kıyas) |
 
 ---
@@ -210,7 +214,7 @@ Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tes
 | Yazım | `domain_atomic`; fail audit durable dışı | audit_servisi |
 | Concurrency | `select_for_update` + DB kısıt | standart |
 | Migration | Üretim migrate onaysız yok; satır silerek NOT NULL yok | AGENTS |
-| API | Henüz yok; gelecek DRF + object-level perm | PLANLANDI |
+| API | İnce PRE (`/api/v1/`); tam Prosperer yok | PRE-001…004 UYGULANDI |
 | Test | Risk bazlı; PG constraint SQLite ile “geçti” sayılmaz | AGENTS Ek C |
 
 ### 3.2 Agent / dokümantasyon kuralı
@@ -230,7 +234,7 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 | PriceLock | Kilit TTL; sipariş bağ | `PriceLock` + `OrderLine.price_lock` | UYGULANDI (L-11) | — | Pricing |
 | RFQ & Quotation | RFQ müzakere | — | PLANLANDI | Tümü | Pricing |
 | Cart & Checkout | Sepet, checkout | Cart + CheckoutAttempt | UYGULANDI | — | Lock, Inventory |
-| Order Mgmt | SM, snapshot | Order + OrderLine + iptal | UYGULANDI (SM dar) | F4-080 reorder / PRE | Cart |
+| Order Mgmt | SM, snapshot | Order + OrderLine + iptal + reorder | UYGULANDI (SM dar) | F4-081 bulk | Cart |
 | Inventory & WH | WH + ledger + rezervasyon | `stok` (+ dual alan borç) | UYGULANDI (F4.1–4.3) | F4-070 dual kapatma | Supplier |
 | Payments & Finance | Ödeme, cari | — | PLANLANDI | U-* | Order |
 | Quality | QC, gram | — | PLANLANDI | Tümü | Order |
@@ -252,7 +256,7 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 | Capability | İş değeri (Kuyumbank) | Kod durumu | Hedef domain | Önerilen faz |
 |------------|----------------------|------------|--------------|--------------|
 | Account Hierarchy | Kurumsal alıcı şube/yetki; tenant’ı yeniden yazmamak | PLANLANDI | Identity / Org | **F10** (+ U-014); F4’te yalnız geriye uyumlu rezerv |
-| Quick Reorder | Tekrar sipariş hızı | PLANLANDI | Order | F4 sonrası (F4-080) |
+| Quick Reorder | Tekrar sipariş hızı | UYGULANDI (svc) | Order | F4-081 bulk / API |
 | Bulk Order / CSV | Toplu alım operasyonu | PLANLANDI | Order / Cart | F4 sonrası (F4-081) |
 | Approval Workflow | Limit üstü onay | KISMİ (katalog/teklif SM) | Workflow + Org | F10 (F10-012/013) |
 | Contract Release Plan | Sözleşmeli miktar serbest bırakma | PLANLANDI | Pricing + Order | F5+ (F5-041); FiyatSozlesmesi üzerine |
@@ -384,8 +388,10 @@ L-01…L-11 kodda **UYGULANDI** (L-11 = F4-051 `OrderLine.price_lock`).
 5. **F4-040/041 — UYGULANDI:** CheckoutAttempt + lock + rezervasyon; fail durable  
 6. **F4-050/051/052 — UYGULANDI:** Order/OrderLine + L-11 snapshot + rezervasyon tüket  
 7. **F4-053 — UYGULANDI:** sipariş iptal + stok IADE (finans yok)  
-8. PRE ince API (U-012 A) / F4-080 reorder ← **sıradaki**  
-9. F4-070 legacy stok kapatma / F4-090 outbox  
+8. **F4-080 — UYGULANDI:** Quick Reorder (güncel quote; ATP fail-closed)  
+9. **PRE-001…004 — UYGULANDI:** DRF pin + health/me/cart/order + OpenAPI schema  
+10. PRE-005 idempotency / F4-081 bulk ← **sıradaki**  
+11. F4-070 legacy stok / F4-090 outbox  
 
 **Kabul kriterleri (özet):** oversell yok; expired lock checkout fail; OrderLine tutarı kurdan etkilenmez; tenant IDOR yok.
 
@@ -1638,8 +1644,13 @@ Tam madde listesi §6.1. **Güncel:** ADR-0010 **Kabul**; L-01…L-11 UYGULANDI.
 ### Faz 4 iptal dilimi (F4-053)
 - `order_servisi.iptal_siparis`: OLUSTURULDU→IPTAL; satır başına `StockMovement.IADE` (+on_hand); ödeme iadesi yok (U-004).  
 - Idempotent yeniden iptal; tenant fail durable audit.  
-- Test cancel **4 OK**; `siparis` suite **25 OK**.  
-- Devir: **F4-080/PRE** veya F4-070. (F4.5 outbox F4-090 ayrı.)
+- Test cancel **4 OK**.
+
+### Faz 4 reorder (F4-080)
+- `reorder_servisi.sepete_aktar`: Order satırları → güncel `pricing_service.quote` → Cart; eski lock yeniden kullanılmaz.  
+- ATP fail-closed; birim uyumu; tenant IDOR; `replace_cart` varsayılan True.  
+- Test reorder **4 OK**; `siparis` suite **29 OK**.  
+- Devir: **PRE** veya F4-081. (F4.5 outbox F4-090 ayrı.)
 
 ### Açık temalar
 B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-014/015.
@@ -1680,7 +1691,7 @@ Prosperer / SAP B2B sütunları: hedef kıyas (**DOĞRULANAMADI** harici runtime
 |------|---------------------|------|------------|
 | Account Hierarchy | `Kullanici.firma` tek FK + tek `rol` | Şube üyeliği ADR-0003’ü kırabilir | **U-014**; F10-001; F4’te yalnız nullable rezerv alan |
 | Approval | Ürün/teklif SM var; genel motor yok | Order/limit/org yokken erken motor | F10-012/013; Order + org sonrası |
-| Quick/Bulk Reorder | Order var; reorder API yok | — | F4-080/081 |
+| Quick/Bulk Reorder | Quick Reorder UYGULANDI; bulk yok | — | F4-081 (+ PRE-005) |
 | Bulk idempotency | PRE-005 iskelet plan | Çift sipariş | Idempotency-Key + satır hash; PG unique |
 | Outbox | Yok; audit durable ayrı bağlantı | Aynı atomic’te mail = kayıp | F4-090: domain tx içinde outbox satırı; worker sonra |
 | Celery/Redis | requirements’ta yok | Erken altyapı maliyeti | F4-022/F4-090 management command veya sync; **Celery ≥ F8** |
@@ -1715,7 +1726,7 @@ Prosperer / SAP B2B sütunları: hedef kıyas (**DOĞRULANAMADI** harici runtime
 | 20 | Quick/Bulk reorder | Yok | Tekrar + CSV | F4-080/081 | Buyer | Idempotency | P1 | Order | Çift sipariş yok |
 | 21 | Dynamic pricing | Yok (snapshot kuralı var) | Koşullu fiyat | U-015 | — | Lock bütünlüğü | P2 | Pricing | Snapshot bozulmaz |
 
-**En kritik gap sırası (güncel):** PRE/API veya Quick/Bulk reorder → Outbox iskelet → Finance/Credit → EDI → Org Hierarchy + Approval → Analytics. (Cart/Checkout/Order+iptal UYGULANDI.)
+**En kritik gap sırası (güncel):** PRE-005 Idempotency → Bulk (F4-081) → Outbox → Finance → EDI → Org. (Cart…Reorder + PRE-001…004 UYGULANDI.)
 
 ---
 
@@ -1726,11 +1737,11 @@ Prosperer / SAP B2B sütunları: hedef kıyas (**DOĞRULANAMADI** harici runtime
 ### Gate (Faz 4 öncesi)
 G0 3.7 commit **kapandı** (`2979e25`) · G1 ADR-0010 Kabul · G2 ADR-0011 Kabul · G3 U-002 (+ U-008 kapsam dışı teyit) · G4 U-012 ince PRE-API.
 
-### PRE — API iskeleti
-Amaç: DRF pin, `/api/v1/health`, perm/tenant test iskeleti, OpenAPI, Idempotency.  
+### PRE — İnce API iskeleti
+Amaç: DRF pin, `/api/v1/health`, auth, tenant 404, OpenAPI, Idempotency.  
 Kapsam dışı: Tam Prosperer API.  
-İşler: PRE-001…005.  
-Durum: PLANLANDI.
+**UYGULANDI:** PRE-001…004 (`api` app).  
+**Backlog:** PRE-005 Idempotency-Key.
 
 ### Faz 4 — Ticari işlem çekirdeği
 Amaç: Ledger → rezervasyon → cart → checkout/lock → order+snapshot.  
@@ -1738,7 +1749,7 @@ Kapsam dışı: Ödeme, QC, kargo, RFQ, B-01/B-06, Account Hierarchy uygulaması
 Önkoşul: G0–G2.  
 Alt: F4-001…070 (+ F4-080/081 Order sonrası; F4-090 outbox iskelet).  
 Kabul: Oversell yok; expired lock checkout fail; sipariş fiyatı kurdan etkilenmez.  
-Durum: **KISMİ** — dilim 1–7 (…+Order+iptal) UYGULANDI; **sıradaki F4-080/PRE** (veya F4-070).  
+Durum: **KISMİ** — dilim 1–8 + **PRE-001…004** UYGULANDI; **sıradaki PRE-005 veya F4-081**.  
 **Org rezervi:** Order tenant = `alici_firma`; nullable şube FK U-014/F10 — F4’ü bloklamaz.
 
 ### Faz 4.5 — Outbox / bildirim iskeleti (Order sonrası)
@@ -2154,11 +2165,11 @@ Toplam benzersiz iş/karar kartı: **124** (B2B capability +11 iş + U-014/U-015
 ### [F4-080] Quick Reorder (önceki siparişten)
 
 - **Faz:** Faz 4 (Order sonrası)
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `reorder_servisi.sepete_aktar`; test `siparis.tests.test_reorder_f4_080` **4 OK**
 - **Bağımlılıklar:** F4-050, F4-051, F4-030
-- **Amaç:** Geçmiş OrderLine → yeni Cart (güncel quote/lock checkout’ta)
-- **Kapsam dışı:** Eski fiyatı körlemesine kilitlemek; Dynamic Pricing
-- **Kabul kriterleri:** Tenant IDOR yok; ADET/GRAM karışmaz; stok/ATP fail-closed
+- **Davranış:** Güncel quote; ATP fail-closed; birim eşleşmesi; varsayılan sepet replace
+- **Kapsam dışı:** Eski lock yeniden kullanım; Dynamic Pricing; HTTP API
 
 ### [F4-081] Bulk Order / CSV import
 
@@ -2400,32 +2411,29 @@ Toplam benzersiz iş/karar kartı: **124** (B2B capability +11 iş + U-014/U-015
 ### [PRE-001] DRF bağımlılık pin + INSTALLED_APPS
 
 - **Faz:** PRE
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Infrastructure
-- **Bağımlılıklar:** ADR-0002 süreci
-- **Amaç:** Kodun import ettiği paket requirements’a girer
-- **Kapsam dışı:** Celery zorunluluğu
-- **Kabul kriterleri:** `makemigrations`/test yeşil; kullanılmayan paket yok
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `djangorestframework==3.18.3` requirements; `rest_framework` + `api` INSTALLED_APPS
+- **Kapsam dışı:** Celery
 
 ### [PRE-002] `/api/v1/health` + auth iskeleti
 
 - **Faz:** PRE
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** PRE-001
-- **Kabul kriterleri:** Unauth health public; korumalı route 401
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `GET /api/v1/health/` public; `GET /api/v1/me/` unauth **401**
+- **Auth:** Basic (+ Session); AnonymousUser session 401 düzeltmesi `api.authentication`
 
 ### [PRE-003] API permission + tenant test iskeleti
 
 - **Faz:** PRE
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Security
-- **Bağımlılıklar:** PRE-002
-- **Kabul kriterleri:** Örnek endpoint’te çapraz firma fail
+- **Durum:** **UYGULANDI**
+- **Kanıt:** cart/order detay çapraz tenant **404**; `?firma_id=` yok sayılır
+- **Test:** `api.tests.test_pre_api` tenant sınıfı
 
 ### [PRE-004] OpenAPI şema yayını (taslak)
 
 - **Faz:** PRE
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** PRE-002
-- **Kabul kriterleri:** schema endpoint üretir
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `GET /api/v1/schema/` public OpenAPI
 
 ### [PRE-005] Idempotency-Key sözleşme notu + middleware iskelet
 
@@ -2804,19 +2812,58 @@ Toplam benzersiz iş/karar kartı: **124** (B2B capability +11 iş + U-014/U-015
 
 ## 12. Güncel proje durumu ve sıradaki adım
 
+### 12.1 Özet
+
 | Madde | Değer |
 |-------|--------|
-| Faz | **4 dilim 1–7 KISMİ** — WH…ledger…rezerv…cart…checkout…order…**iptal/IADE** UYGULANDI |
-| ADR | 0010 **Kabul** (L-01…L-11 UYGULANDI) · 0011 **Kabul** · **0012 Taslak** |
-| Test | birleşik suite **337 OK** (PG `--keepdb`, 2026-11-08); `siparis` **25 OK** |
-| Migration | `stok.0001–0003` + `siparis.0001–0003` — üretim migrate **yok**; `makemigrations --check` temiz |
-| Apps | `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis` (`INSTALLED_APPS`) |
-| HTTP | yalnız `/admin/` — DRF yok |
-| Sıradaki (uygulama) | **F4-080** reorder veya **PRE** ince API (U-012) |
-| Stratejik (tasarım) | Order nullable şube (U-014); Hierarchy **F10** |
-| Sonraki capability | F4-080/081 → F4-090 → F5 → F7 EDI → F10 org |
-| F4’ü bloklamayan | CAP-COMPARE/ALERT/DYNPRICE; Account Hierarchy kodu |
+| Dal | `adim-1-ilerleme` |
+| Faz | **4 KISMİ** + **PRE-001…004** — çekirdek ticaret + ince API |
+| ADR | 0010 **Kabul** (L-01…L-11) · 0011 **Kabul** · **0012 Taslak** |
+| Test | birleşik **348 OK** (PG `--keepdb`, 2026-11-08) |
+| Migration | `stok.0001–0003` + `siparis.0001–0003`; üretim migrate **yok**; check temiz |
+| Apps | `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `api` (+ `rest_framework`) |
+| HTTP | `/admin/` + `/api/v1/` (health, me, carts, orders, schema) |
+| `docs/` | yalnız bu master (ikinci yol haritası / modül md **üretilmez**) |
+
+### 12.2 YAPILDI (kodda var — DOĞRULANDI)
+
+| ID | Ne | Kanıt (özet) |
+|----|-----|----------------|
+| F1–F3 | Firma/RBAC, katalog, teklif, sözleşme, kur, quote, PriceLock L-01…L-10 | suite + mig’ler |
+| F4-010…013 | Warehouse, Movement, Balance, düzeltme | `stok` |
+| F4-020/021 | StockReservation TTL/oversell/consume | `reservation_servisi` |
+| F4-030/031 | Cart / CartLine | `siparis` + `0001` |
+| F4-040/041 | CheckoutAttempt + lock + rezerv + fail durable | `0002` |
+| F4-050…052 | Order / OrderLine + L-11 snapshot + SATIS tüket | `0003` |
+| F4-053 | Sipariş iptal + IADE (finans yok) | `order_servisi.iptal_siparis` |
+| F4-080 | Quick Reorder → güncel quote + ATP | `reorder_servisi` |
+| PRE-001 | DRF 3.18.3 pin + INSTALLED_APPS | `requirements.txt` |
+| PRE-002 | health public; me 401 | `/api/v1/health/`, `/me/` |
+| PRE-003 | cart/order tenant 404; `firma_id` query yok sayılır | `api.tests` |
+| PRE-004 | OpenAPI schema | `/api/v1/schema/` |
+
+### 12.3 SIRADA (kodda yok — uygulama sırası)
+
+| Öncelik | ID | Ne | Bağımlılık / not |
+|---------|-----|-----|------------------|
+| **1** | **PRE-005** | Idempotency-Key middleware + en az bir POST örneği | PRE-002 |
+| **2** | **F4-081** | Bulk Order / CSV (kısmi hata raporu) | PRE-005 önerilir |
+| **3** | **F4-022** | Reservation expire job/command | F4-020 |
+| **4** | **F4-070** | Legacy `Varyant.stok` / `Teklif.stok_adet` kapatma | F4-012 |
+| **5** | **F4-090** | Transactional outbox iskeleti | F4-050 |
+| **6** | F4-060/061 | Buyer/ops order HTTP (PRE üzerine) | PRE-003 |
+| **7** | F5-* | Finans / cari / FX (ADR-0012 **Taslak** → Kabul şart) | U-003…007, U-005 |
+| — | AUD-001 | AuditOlay QuerySet immutability | — |
+| — | B-01 / B-06 | Platform pay / KDV | hukuk |
+| — | U-014 / F10 | Account Hierarchy | karar Bekliyor |
+| — | CAP-PIYASA | Canlı altın/döviz beslemesi (Binance/TV tasarım notu) | kod **yok**; `tanimlar` kur servisi ayrı; ADR-0008 B-04/B-05 |
+
+**Önerilen bir sonraki dilim:** PRE-005 → (hemen ardından) F4-081.
+
+### 12.4 Bilinçli kapsam dışı (şimdi yok)
+
+Celery/Redis · ödeme · QC/kargo · tam Prosperer API · finans ledger · RFQ · EDI · org şube FK doldurma.
 
 ---
 
-*Son güncelleme: 2026-11-08 — kod↔docs senkron (suite 337).*
+*Son güncelleme: 2026-11-08 — tam senkron; suite 348 OK.*

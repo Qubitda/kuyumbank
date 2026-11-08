@@ -14,7 +14,7 @@ Django **6.1.2** modular monolith. Proje paketi: `config/` · `manage.py` bu diz
 
 - Python 3.12–3.14
 - PostgreSQL
-- Bağımlılıklar: [`config/requirements.txt`](config/requirements.txt) (DRF/Celery **yok**)
+- Bağımlılıklar: [`config/requirements.txt`](config/requirements.txt) (DRF var; Celery **yok**)
 
 ## Kurulum
 
@@ -33,7 +33,7 @@ python manage.py runserver
 ```
 
 Opsiyonel: `audit_user_assignments`, `seed_fiyat_gruplari`, `seed_urunler`.  
-Admin: http://127.0.0.1:8000/admin/ — **HTTP API yok** (yalnız admin).
+Admin: http://127.0.0.1:8000/admin/ · API: http://127.0.0.1:8000/api/v1/health/
 
 ## Kontroller ve testler
 
@@ -41,12 +41,12 @@ Admin: http://127.0.0.1:8000/admin/ — **HTTP API yok** (yalnız admin).
 cd backend\config
 python manage.py check
 python manage.py makemigrations --check --dry-run
-python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests stok.tests siparis.tests --verbosity=1
+python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests stok.tests siparis.tests api.tests --verbosity=1
 ```
 
 PostgreSQL kullan (varsayılan settings). Constraint/`select_for_update` testlerini SQLite ile doğrulanmış sayma.  
 Çıplak `manage.py test fiyatlama` yerine `*.tests` paketleri tercih et.  
-Baseline (2026-11-08, F4-053 sonrası): **337 OK** — master §12.
+Güncel sayı: master **§12**.
 
 ## Uygulamalar (kodda mevcut)
 
@@ -57,6 +57,7 @@ Baseline (2026-11-08, F4-053 sonrası): **337 OK** — master §12.
 | `urunler` | Katalog, eşleştirme, onay | UYGULANDI |
 | `fiyatlama` | Teklif, sözleşme, quote, PriceLock | UYGULANDI |
 | `stok` | Warehouse, Movement, Balance, Reservation | UYGULANDI (F4 dilim 1–3) |
-| `siparis` | Cart, CheckoutAttempt, Order/OrderLine (+ iptal/IADE) | UYGULANDI (F4 dilim 4–7) |
+| `siparis` | Cart, Checkout, Order (+ iptal/IADE/reorder) | UYGULANDI (F4 dilim 4–8) |
+| `api` | İnce PRE `/api/v1/` (health/me/cart/order/schema) | UYGULANDI (PRE-001…004) |
 
 Faz / sıradaki iş: master **§12**.

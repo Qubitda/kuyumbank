@@ -70,7 +70,7 @@ Kod: master §6’da ilgili ADR **Kabul** + açık talimat olmadan o fazın uygu
 5. Faz 4 — stok ledger → rezervasyon → cart → checkout/lock → order+iptal (ADR-0011 **Kabul**; dilim 1–7 uygulandı: WH…Order+IADE)
 6. Faz 5+ — finans, QC, API, ops, portal — master §9–§10
 
-Canlı durum: master **§2** ve **§12**. Faz 4 kalan: PRE/reorder/outbox/legacy stok. Finans Order + U-* sonrası. ADR-0012 (Medusa audit/FX/hedge/cari) **Taslak** — F4’ü kesmez.
+Canlı durum: master **§2** + **§12** (YAPILDI / SIRADA). Suite **348 OK**. Sıradaki: PRE-005 → F4-081. Finans ADR-0012 **Taslak**.
 
 ## Temel iş kuralları
 

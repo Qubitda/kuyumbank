@@ -16,9 +16,9 @@ This skill states **project** engineering rules. For framework behavior, read Dj
 ## Project layout
 
 - Settings: `backend/config/config/settings.py`
-- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis` under `backend/config/`
+- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis`, `api` under `backend/config/`
 - Manage: `backend/config/manage.py`
-- HTTP: yalnız admin (`config/urls.py`); DRF yok
+- HTTP: admin + ince PRE API `/api/v1/` (DRF); Celery yok
 - **Binding structure:** ADR-0004 — see `docs/KUYUMBANK_MASTER.md` §3 / §6
 
 ### ADR-0004 package layout (per app)

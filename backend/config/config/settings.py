@@ -56,14 +56,29 @@ INSTALLED_APPS = [
 
     # modüller
     'import_export',
+    'rest_framework',
     'tanimlar.apps.TanimlarConfig',
     'firmalar.apps.FirmalarConfig',
     'fiyatlama.apps.FiyatlamaConfig',
     'urunler.apps.UrunlerConfig',
     'stok.apps.StokConfig',
     'siparis.apps.SiparisConfig',
+    'api.apps.ApiConfig',
 
 ]
+
+# --- DRF (PRE ince API, U-012) ---------------------------------------------
+REST_FRAMEWORK = {
+    # Basic önce: WWW-Authenticate → unauth 401 (Session yalnız header üretmez → 403)
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "api.authentication.SessionAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
+}
 
 AUTH_USER_MODEL = "firmalar.Kullanici"
 

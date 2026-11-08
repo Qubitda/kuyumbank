@@ -1,9 +1,10 @@
 # Kuyumbank backend — doğrudan bağımlılıklar
 # Kural: yalnızca kodun import ettiği / INSTALLED_APPS’te olan paketler.
-# Ortamda yüklü olsa bile DRF, Celery, redis vb. burada yok (henüz kullanılmıyor).
+# Celery/Redis yok (F8). DRF: PRE ince API (U-012 / PRE-001).
 # Kaynak: docs/KUYUMBANK_MASTER.md §6 ADR-0002
 
 Django==6.1.2
+djangorestframework==3.18.3
 django-environ==0.12.0
 django-import-export==4.4.3
 psycopg[binary]==3.3.6
