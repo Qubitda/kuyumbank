@@ -1,6 +1,7 @@
-"""PricingService.quote — Dilim 3.5 (ADR-0008 §2.4).
+"""PricingService.quote / lock_quote — Dilim 3.5–3.7 (ADR-0008 §2.4, ADR-0010).
 
 Orkestrasyon: yayın → teklif seçimi → kur → sözleşme → hesap → immutable PriceQuote.
+PriceLock: geçerli quote referansını kilitler; yeniden hesap yok; sipariş FK yok.
 B-01 platform_servis yok. B-06 vergi yok.
 """
 
@@ -10,12 +11,20 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError
 from django.utils import timezone
 
-from firmalar.services.audit_servisi import domain_atomic, record_audit
+from firmalar.services.audit_servisi import (
+    domain_atomic,
+    record_audit,
+    record_audit_durable,
+)
+from firmalar.role_permissions import P
+from firmalar.services.yetki_servisi import has_perm, is_platform_firm_user
 from fiyatlama.models import (
     FiyatSozlesmesi,
+    PriceLock,
     PriceQuote,
     PriceQuoteLine,
     TedarikciTeklif,
@@ -496,3 +505,310 @@ def quote(
             )
 
     return pq
+
+
+ON_BEHALF_GEREKCE_MIN_LEN = 10
+
+
+def _resolve_lock_mode(kullanici, quote: PriceQuote) -> str:
+    """L-07: 'on_behalf' | 'buyer'. view_all_tenants create yetkisi vermez."""
+    if kullanici is None or not getattr(kullanici, "is_authenticated", False):
+        raise PermissionDenied("PriceLock için kimlik doğrulama gerekli.")
+
+    if is_platform_firm_user(kullanici) and has_perm(
+        kullanici, P["lock_quote_on_behalf"]
+    ):
+        return "on_behalf"
+
+    firma = getattr(kullanici, "firma", None)
+    firma_id = getattr(kullanici, "firma_id", None)
+    if firma is None or not firma_id:
+        raise PermissionDenied("PriceLock için firma bağlamı gerekli.")
+    if getattr(firma, "tedarikci_mi", False) and not getattr(firma, "alici_mi", False):
+        raise PermissionDenied("Tedarikçi PriceLock oluşturamaz.")
+    if (
+        getattr(firma, "alici_mi", False)
+        and firma_id == quote.alici_firma_id
+        and has_perm(kullanici, P["lock_quote"])
+    ):
+        return "buyer"
+    raise PermissionDenied("Bu PriceQuote için kilit yetkisi yok.")
+
+
+def _normalize_on_behalf_gerekce(gerekce: str | None) -> str:
+    return (gerekce or "").strip()
+
+
+def sync_lock_expiration(lock: PriceLock, *, now=None) -> PriceLock:
+    """AKTIF + süre dolmuş → SURESI_DOLDU (L-05). Testte `now` enjekte edilir."""
+    now = now or timezone.now()
+    if lock.durum != PriceLock.Durum.AKTIF:
+        return lock
+    if now < lock.gecerlilik_sonu:
+        return lock
+
+    with domain_atomic():
+        locked = (
+            PriceLock.objects.select_for_update()
+            .filter(pk=lock.pk, durum=PriceLock.Durum.AKTIF)
+            .first()
+        )
+        if locked is None:
+            lock.refresh_from_db()
+            return lock
+        if now < locked.gecerlilik_sonu:
+            return locked
+        locked.durum = PriceLock.Durum.SURESI_DOLDU
+        locked._allow_expire_transition = True
+        try:
+            locked.save(update_fields=["durum"])
+        finally:
+            locked._allow_expire_transition = False
+        record_audit(
+            actor=None,
+            action="price_lock.expire",
+            entity_type="PriceLock",
+            entity_id=str(locked.pk),
+            success=True,
+            detail={
+                "quote_id": locked.quote_id,
+                "gecerlilik_sonu": locked.gecerlilik_sonu.isoformat(),
+                "now": now.isoformat(),
+            },
+        )
+    lock.refresh_from_db()
+    return lock
+
+
+def is_lock_gecerli(lock: PriceLock, *, now=None) -> bool:
+    """Süre/durum tutarlılığı: gerekirse expire senkronlar, sonra geçerlilik."""
+    now = now or timezone.now()
+    sync_lock_expiration(lock, now=now)
+    lock.refresh_from_db()
+    return lock.is_gecerli(now=now)
+
+
+def assert_lock_gecerli(lock: PriceLock, *, now=None) -> PriceLock:
+    if not is_lock_gecerli(lock, now=now):
+        raise ValidationError("PriceLock aktif/geçerli değil.")
+    return lock
+
+
+def lock_quote(
+    quote: PriceQuote,
+    *,
+    kullanici,
+    now=None,
+    idempotency_key: str | None = None,
+    gerekce: str | None = None,
+) -> PriceLock:
+    """
+    Geçerli PriceQuote için PriceLock üretir (yeniden hesap yok).
+
+    Idempotent: aynı quote tekrar kilitlenirse mevcut satır döner.
+    Sipariş FK yok (Faz 4).
+    L-07: buyer → lock_quote; platform → lock_quote_on_behalf + gerekçe.
+    """
+    now = now or timezone.now()
+    key = (idempotency_key or "").strip() or None
+    on_behalf = False
+    gerekce_trimmed: str | None = None
+
+    try:
+        mode = _resolve_lock_mode(kullanici, quote)
+    except PermissionDenied as exc:
+        record_audit_durable(
+            actor=kullanici,
+            action="price_lock.create",
+            entity_type="PriceQuote",
+            entity_id=str(getattr(quote, "pk", "") or ""),
+            success=False,
+            reason=str(exc),
+            detail={"alici_firma_id": getattr(quote, "alici_firma_id", None)},
+        )
+        raise
+
+    if mode == "on_behalf":
+        on_behalf = True
+        gerekce_trimmed = _normalize_on_behalf_gerekce(gerekce)
+        if len(gerekce_trimmed) < ON_BEHALF_GEREKCE_MIN_LEN:
+            record_audit_durable(
+                actor=kullanici,
+                action="price_lock.create",
+                entity_type="PriceQuote",
+                entity_id=str(quote.pk),
+                success=False,
+                reason=(
+                    "On-behalf PriceLock için gerekçe en az "
+                    f"{ON_BEHALF_GEREKCE_MIN_LEN} karakter olmalıdır."
+                ),
+                detail={
+                    "alici_firma_id": quote.alici_firma_id,
+                    "on_behalf": True,
+                    "gerekce_len": len(gerekce_trimmed),
+                },
+            )
+            raise ValidationError(
+                "On-behalf PriceLock için gerekçe en az "
+                f"{ON_BEHALF_GEREKCE_MIN_LEN} karakter olmalıdır."
+            )
+
+    if quote.gecerlilik_sonu <= now:
+        record_audit_durable(
+            actor=kullanici,
+            action="price_lock.create",
+            entity_type="PriceQuote",
+            entity_id=str(quote.pk),
+            success=False,
+            reason="Quote süresi dolmuş; kilit üretilemez.",
+            detail={
+                "gecerlilik_sonu": quote.gecerlilik_sonu.isoformat(),
+                "on_behalf": on_behalf,
+            },
+        )
+        raise ValidationError("Quote süresi dolmuş; kilit üretilemez.")
+
+    def _return_or_reject_existing(lock: PriceLock) -> PriceLock:
+        sync_lock_expiration(lock, now=now)
+        lock.refresh_from_db()
+        if lock.is_gecerli(now=now):
+            return lock
+        raise ValidationError(
+            "Bu quote için kilit süresi dolmuş; yeni quote gerekli."
+        )
+
+    if key is not None:
+        existing_key = PriceLock.objects.filter(
+            alici_firma_id=quote.alici_firma_id,
+            idempotency_key=key,
+        ).first()
+        if existing_key is not None:
+            if existing_key.quote_id != quote.pk:
+                raise ValidationError(
+                    {
+                        "idempotency_key": (
+                            "Bu anahtar başka bir quote kilidine bağlı."
+                        )
+                    }
+                )
+            try:
+                return _return_or_reject_existing(existing_key)
+            except ValidationError as exc:
+                record_audit_durable(
+                    actor=kullanici,
+                    action="price_lock.create",
+                    entity_type="PriceQuote",
+                    entity_id=str(quote.pk),
+                    success=False,
+                    reason=str(exc),
+                    detail={"on_behalf": on_behalf},
+                )
+                raise
+
+    # Fast path: mevcut kilit (expire senkronu create atomic dışında)
+    mevcut_dis = PriceLock.objects.filter(quote_id=quote.pk).first()
+    if mevcut_dis is not None:
+        try:
+            return _return_or_reject_existing(mevcut_dis)
+        except ValidationError as exc:
+            record_audit_durable(
+                actor=kullanici,
+                action="price_lock.create",
+                entity_type="PriceQuote",
+                entity_id=str(quote.pk),
+                success=False,
+                reason=str(exc),
+                detail={"on_behalf": on_behalf},
+            )
+            raise
+
+    try:
+        with domain_atomic():
+            # Quote satır kilidi — eşzamanlı lock yarışını serileştir
+            pq = (
+                PriceQuote.objects.select_for_update()
+                .select_related("alici_firma")
+                .get(pk=quote.pk)
+            )
+            if pq.gecerlilik_sonu <= now:
+                raise ValidationError("Quote süresi dolmuş; kilit üretilemez.")
+
+            mevcut = (
+                PriceLock.objects.select_for_update()
+                .filter(quote_id=pq.pk)
+                .first()
+            )
+            if mevcut is not None:
+                # Başka işlem kazandı; expire yazma (outer rollback riski yok —
+                # yalnızca okuma + karar). Expire atomic dışında yapılır.
+                if (
+                    mevcut.durum == PriceLock.Durum.AKTIF
+                    and now < mevcut.gecerlilik_sonu
+                ):
+                    return mevcut
+                raise ValidationError(
+                    "Bu quote için kilit süresi dolmuş; yeni quote gerekli."
+                )
+
+            lock = PriceLock(
+                quote=pq,
+                alici_firma_id=pq.alici_firma_id,
+                toplam_vergisiz=pq.toplam_vergisiz,
+                para_birimi=pq.para_birimi,
+                kilit_zamani=now,
+                gecerlilik_sonu=pq.gecerlilik_sonu,
+                durum=PriceLock.Durum.AKTIF,
+                idempotency_key=key,
+                olusturan=kullanici,
+            )
+            lock.save()
+            audit_detail = {
+                "quote_id": pq.pk,
+                "alici_firma_id": pq.alici_firma_id,
+                "toplam_vergisiz": str(lock.toplam_vergisiz),
+                "para_birimi": lock.para_birimi,
+                "gecerlilik_sonu": lock.gecerlilik_sonu.isoformat(),
+                "idempotency_key": key,
+                "on_behalf": on_behalf,
+                "kilit_zamani": lock.kilit_zamani.isoformat(),
+                "actor_id": getattr(kullanici, "pk", None),
+            }
+            if on_behalf:
+                audit_detail["gerekce"] = gerekce_trimmed
+            record_audit(
+                actor=kullanici,
+                action="price_lock.create",
+                entity_type="PriceLock",
+                entity_id=str(lock.pk),
+                success=True,
+                detail=audit_detail,
+            )
+            return lock
+    except IntegrityError:
+        mevcut = PriceLock.objects.filter(quote_id=quote.pk).first()
+        if mevcut is not None:
+            return _return_or_reject_existing(mevcut)
+        if key is not None:
+            mevcut = PriceLock.objects.filter(
+                alici_firma_id=quote.alici_firma_id,
+                idempotency_key=key,
+            ).first()
+            if mevcut is not None:
+                return _return_or_reject_existing(mevcut)
+        raise
+    except ValidationError as exc:
+        # Yarışta süresi dolmuş kilit görüldüyse durum senkronunu atomic dışında yap
+        stale = PriceLock.objects.filter(quote_id=quote.pk).first()
+        if stale is not None:
+            sync_lock_expiration(stale, now=now)
+        record_audit_durable(
+            actor=kullanici,
+            action="price_lock.create",
+            entity_type="PriceQuote",
+            entity_id=str(quote.pk),
+            success=False,
+            reason=str(exc),
+            detail={"on_behalf": on_behalf},
+        )
+        raise
+

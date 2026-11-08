@@ -18,15 +18,25 @@ Framework sürüm matrisi: [Django 6.1 FAQ — install](https://docs.djangoproje
 
 ## Kaynak önceliği
 
-1. Bu `AGENTS.md`
-2. `docs/analysis/` ve kanonik rapor: `docs/Kuyumbank_Is_Analizi_Teknik_Analiz_Raporu.md`
-3. `docs/architecture/`
-4. `docs/decisions/` (onaylı ADR’ler; faz kodu ilgili ADR **Kabul** + açık talimat olmadan başlamaz — örn. Faz 1: ADR-0003, Faz 2: ADR-0005/0006, Faz 3a: ADR-0007; dosya organizasyonu ADR-0004)
-5. Django 6.1 resmi dokümantasyonu: https://docs.djangoproject.com/en/6.1/
-6. Django kaynak kodu: https://github.com/django/django
-7. Üçüncü taraf kütüphanelerin resmi dokümantasyonu
+1. Bu `AGENTS.md` (agent çalışma kuralları)
+2. **`docs/KUYUMBANK_MASTER.md` — tek kanonik proje bağlamı** (vizyon, mevcut durum, kararlar/ADR kayıtları, faz tarihçesi, yol haritası, iş havuzu, U-* kararlar, §12 güncel durum)
+3. Django 6.1 resmi dokümantasyonu: https://docs.djangoproject.com/en/6.1/
+4. Django kaynak kodu: https://github.com/django/django
+5. Üçüncü taraf kütüphanelerin resmi dokümantasyonu
+
+**Kuyumbank’ın proje bağlamı için tek kanonik kaynak `docs/KUYUMBANK_MASTER.md` dosyasıdır.** Dağınık faz raporu, handoff, ikinci yol haritası veya ayrı backlog dosyası üretilmez; bilgi master’a işlenir.
+
+Faz kodu: master §6’da ilgili ADR **Kabul** + açık talimat olmadan başlamaz (ör. Faz 3a: ADR-0007; Faz 3b: ADR-0008; PriceLock varsayımları ADR-0010 hâlâ **Taslak**).
 
 Rastgele blog, AI skill veya kod örneğini otorite kabul etme. Django dokümantasyonunda olmayan özelliği varmış gibi davranma.
+
+### Master doküman güncelleme (her geliştirme dilimi)
+
+1. İşe başlamadan master §2 / §10 / §11 / §12 oku; ilgili iş kartı ve kararları kontrol et.
+2. Geliştirme bitince master’ı güncelle: uygulanan iş, testler, migration, açık riskler, faz durumu, sıradaki adım (§12).
+3. Yeni teknik karar → §6’ya ADR ID ile ekle (durumu Kabul etmeden Taslak kaydet; ürün sahibi onayı olmadan Kabul yazma).
+4. Aynı bilgiyi tekrarlayan yeni faz raporu / alternatif yol haritası / parçalı backlog **oluşturma**.
+5. Dokümantasyon güncellemesi ilgili kod değişikliğinin parçasıdır.
 
 ## Ek kural A — Kanıtlanmamış bulgu yok
 
@@ -125,15 +135,23 @@ Görevle ilgili **yalnızca bir** skill oku:
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
 4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
    - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı  
-   - **3b (ADR-0008 Kabul):** dilim **3.3–3.6** uygulandı (kur, üç model, PriceQuote, kör havuz/K-011); **3.7** PriceLock arayüzü — sıradaki dilim talimatı ile
+   - **3b (ADR-0008 Kabul):** dilim **3.3–3.7** uygulandı (kur, üç model, PriceQuote, kör havuz/K-011, PriceLock); sipariş bağlama → Faz 4 + ADR-0010 kabulü
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
 7. **Faz 6** — Kalite kontrol, lojistik, teslimat, iade
 8. **Faz 7** — API standartları, dış sistemler, SAP
 9. **Faz 8** — Performans, güvenlik, loglama, izleme, yedek, deployment
+10. **Faz 9+** — Portallar, kurumsal, analitik, i18n — ayrıntı: `docs/KUYUMBANK_MASTER.md` §9–§10
 
 Firma izolasyonu ve yetkilendirme yanlış kurulursa sonraki tüm modüller bozulur. Bir faz bitmeden ilgisiz modüle geçme.  
-Canlı envanter: `docs/architecture/mevcut-mimari.md`.
+Canlı durum: `docs/KUYUMBANK_MASTER.md` §2 ve §12.
+
+### Faz 4+ iş seçimi
+
+- İş kartları: master §10 (ID’ler sabittir: PRE-*, F4-*, …, U-*).
+- Ürün/hukuk/muhasebe: master §11 — **Bekliyor** iken sabitleme yok.
+- 3.4–3.7’yi yeniden iş açma.
+- Sıra: stok ledger → rezervasyon → cart → lock/checkout → order; finans Order + U-* sonrası.
 
 ## Temel iş kuralları
 
@@ -186,10 +204,9 @@ Görev ancak şunlarla tamamlanır: gereksinim karşılandı, mimariye uydu, gü
 
 ## Dilim kapanış — handoff (standart)
 
-Her tamamlanan dilim/fazın sonunda kökte `FAZ_<N>_<M>_HANDOFF.md` oluşturulur (ör. `FAZ_3_6_HANDOFF.md`).  
-İçerik: tamamlananlar, dosyalar, test komutları/sonuçları, migration, riskler, sonraki agent adımları.  
-Tercihen dilim kodu yeşil testlerle **Git checkpoint** commit’lenir (ürün sahibi onayı; `.env`/`.docx`/secret yok); sonraki dilim bu checkpoint üzerinden başlar.
+Ayrı `FAZ_*_HANDOFF.md` **üretilmez**. Dilim bitince `docs/KUYUMBANK_MASTER.md` güncellenir: §2 durum, §7 tarihçe satırı, §10 iş durumu, §12 sıradaki adım; test komutları/sonuçları, migration, riskler burada kaydedilir.  
+Tercihen dilim kodu yeşil testlerle **Git checkpoint** commit’lenir (ürün sahibi onayı; `.env`/`.docx`/secret yok).
 
 ## Belirsizlik
 
-Gereksinim açıksa uygula. Eksik detayda iş kurallarına en uygun varsayımı seç, `docs/decisions/` altına ADR yaz, geri dönüşü kolay tut. Veri kaybı, finansal doğruluk, güvenlik veya geri döndürülemez mimari kararda tahmin etme; dur ve kararı bildir.
+Gereksinim açıksa uygula. Eksik detayda iş kurallarına en uygun varsayımı seç; kararı `docs/KUYUMBANK_MASTER.md` §6’ya **Taslak** ADR ID ile ekle (geri dönüşü kolay tut). Veri kaybı, finansal doğruluk, güvenlik veya geri döndürülemez mimari kararda tahmin etme; dur ve kararı bildir.

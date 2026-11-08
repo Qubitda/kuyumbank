@@ -11,7 +11,7 @@ description: >-
 **Prepared for:** Django **6.1**  
 **Framework refs (not this skill):** [Security](https://docs.djangoproject.com/en/6.1/topics/security/) · [Auth](https://docs.djangoproject.com/en/6.1/topics/auth/) · [CSRF](https://docs.djangoproject.com/en/6.1/ref/csrf/)
 
-Normative product rules: rapor K-002, K-003, K-005, §8. Deep audit: `docs/architecture/faz0-tenant-guvenlik-denetimi.md` (Faz 0 anı; canlı envanter: `docs/architecture/mevcut-mimari.md`).  
+Normative product rules: `docs/KUYUMBANK_MASTER.md` (§2 güvenlik, §3 standartlar, §6 ADR-0003).  
 Approved decisions: ADR-0003 (+ addendum), ADR-0005 (katalog ownership), ADR-0006 (Faz 2.1).  
 Findings must use DOĞRULANDI / DOĞRULANAMADI / PLANLAMA BULGUSU with file/line or command evidence. Faz kodu: ilgili ADR **Kabul** + açık talimat olmadan başlamaz.
 

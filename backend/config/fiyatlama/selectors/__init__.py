@@ -6,6 +6,7 @@ from .buyer_quote import (
 )
 from .tenant import (
     scope_fiyat_sozlesmesi_queryset,
+    scope_price_lock_queryset,
     scope_price_log_queryset,
     scope_price_quote_line_queryset,
     scope_price_quote_queryset,
@@ -22,6 +23,7 @@ __all__ = [
     "get_quote_for_actor",
     "present_buyer_quote",
     "scope_fiyat_sozlesmesi_queryset",
+    "scope_price_lock_queryset",
     "scope_price_log_queryset",
     "scope_price_quote_line_queryset",
     "scope_price_quote_queryset",

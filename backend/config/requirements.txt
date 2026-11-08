@@ -1,7 +1,7 @@
 # Kuyumbank backend — doğrudan bağımlılıklar
 # Kural: yalnızca kodun import ettiği / INSTALLED_APPS’te olan paketler.
 # Ortamda yüklü olsa bile DRF, Celery, redis vb. burada yok (henüz kullanılmıyor).
-# Kaynak: docs/decisions/ADR-0002-runtime-ve-bagimliliklar.md
+# Kaynak: docs/KUYUMBANK_MASTER.md §6 ADR-0002
 
 Django==6.1.2
 django-environ==0.12.0

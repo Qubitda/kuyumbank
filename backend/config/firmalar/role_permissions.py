@@ -22,6 +22,8 @@ P = {
     "approve_teklif": "fiyatlama.approve_teklif",
     "approve_eslestirme": "fiyatlama.approve_eslestirme",
     "manage_sozlesme": "fiyatlama.manage_sozlesme",
+    "lock_quote": "fiyatlama.lock_quote",
+    "lock_quote_on_behalf": "fiyatlama.lock_quote_on_behalf",
     "manage_kur": "tanimlar.manage_kur",
 }
 
@@ -90,6 +92,7 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_teklif"],
         P["approve_eslestirme"],
         P["manage_sozlesme"],
+        P["lock_quote_on_behalf"],
         P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
@@ -108,6 +111,7 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_teklif"],
         P["approve_eslestirme"],
         P["manage_sozlesme"],
+        P["lock_quote_on_behalf"],
         P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
@@ -147,7 +151,9 @@ ROLE_PERMISSION_MATRIX = {
         "firmalar.view_kullanici",
         "firmalar.change_kullanici",
     ),
-    roles.ALICI_SATINALMACI: (),
+    roles.ALICI_SATINALMACI: (
+        P["lock_quote"],
+    ),
     roles.ALICI_ONAYLAYICI: (),
     roles.ALICI_FINANS: (),
     roles.ALICI_DENETCI: (),

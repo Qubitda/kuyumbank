@@ -10,7 +10,7 @@ description: >-
 # Business Domain (Kuyumbank)
 
 **Prepared for:** Django **6.1** + Kuyumbank rapor v1.0  
-**Canonical:** `docs/Kuyumbank_Is_Analizi_Teknik_Analiz_Raporu.md` (§5, §9, K-006–K-013, K-010)
+**Canonical:** `docs/KUYUMBANK_MASTER.md` (§4–§5 domain/sektör; K-* özeti §5–§6)
 
 Django docs explain *how* to implement; this skill states *what* Kuyumbank must enforce.  
 Field presence ≠ rule enforcement. Label uncertain claims DOĞRULANAMADI / PLANLAMA BULGUSU.
@@ -39,7 +39,8 @@ K-011 (3.6): katalog `urunler.UrunTasi` (ProductStone) korunur; teklif maliyeti 
 - PB dönüşüm (3.4): `tanimlar.services.currency_conversion` — TRY per FX; taraf kur tipi; stale fail-closed.
 - Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
 - Rates (3.3): resolve via `kur_servisi` (buyer/supplier `kur_tipi` ayrı; no provider fallback).
-- Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line; PriceLock → Faz 4.
+- Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line.
+- Lock (3.7 / ADR-0010 Taslak): `pricing_service.lock_quote()` — geçerli quote; yeniden hesap yok; TTL=quote; L-07 `lock_quote` / `lock_quote_on_behalf` (+ on-behalf gerekçe); sipariş FK → Faz 4.
 - Buyer surface (3.6 / B-02): `selectors.buyer_quote` — yalnız `toplam_vergisiz` (+ gram başı); satır/tedarikçi/maliyet yok; IDOR → DoesNotExist.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
 - Formula components: metal (`gram × milyem × saf_birim_fiyat`) + işçilik + taş + extras + platform service + channel margin (+ configurable tax). B-01 servis payı kalemi hukuk öncesi kodlanmaz; B-06 vergi Faz 3’te yok (proforma).
@@ -65,5 +66,5 @@ QC failure blocks shipment. Finance ledger: no delete; reverse with contra entri
 
 1. Read related existing models/services only.
 2. Match rapor §9 behavior.
-3. If detail missing: safe default + ADR under `docs/decisions/`.
+3. If detail missing: safe default + Taslak ADR entry in `docs/KUYUMBANK_MASTER.md` §6.
 4. Stop for irreversible finance/legal/security guesses.

@@ -7,6 +7,7 @@ from fiyatlama.models import (
     FiyatSozlesmesi,
     FiyatSozlesmesiKalemi,
     PriceCalculationLog,
+    PriceLock,
     PriceQuote,
     PriceQuoteLine,
     TedarikciTeklif,
@@ -15,6 +16,7 @@ from fiyatlama.models import (
 from fiyatlama.selectors.tenant import (
     scope_fiyat_sozlesmesi_kalemi_queryset,
     scope_fiyat_sozlesmesi_queryset,
+    scope_price_lock_queryset,
     scope_price_log_queryset,
     scope_price_quote_line_queryset,
     scope_price_quote_queryset,
@@ -598,6 +600,49 @@ class PriceQuoteAdmin(admin.ModelAdmin):
 
     def has_view_permission(self, request, obj=None):
         return super().has_view_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PriceLock)
+class PriceLockAdmin(admin.ModelAdmin):
+    """PriceLock — salt okunur; alıcı kendi kilidi, tedarikçi görmez."""
+
+    list_display = (
+        "id",
+        "quote",
+        "alici_firma",
+        "toplam_vergisiz",
+        "para_birimi",
+        "durum",
+        "kilit_zamani",
+        "gecerlilik_sonu",
+    )
+    list_filter = ("durum", "para_birimi")
+    search_fields = ("alici_firma__ad", "idempotency_key")
+    list_select_related = ("alici_firma", "quote")
+    readonly_fields = (
+        "quote",
+        "alici_firma",
+        "toplam_vergisiz",
+        "para_birimi",
+        "kilit_zamani",
+        "gecerlilik_sonu",
+        "durum",
+        "idempotency_key",
+        "olusturan",
+        "olusturma_tarihi",
+    )
+
+    def get_queryset(self, request):
+        return scope_price_lock_queryset(super().get_queryset(request), request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def has_delete_permission(self, request, obj=None):
         return False

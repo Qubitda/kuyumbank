@@ -18,7 +18,7 @@ This skill states **project** engineering rules. For framework behavior, read Dj
 - Settings: `backend/config/config/settings.py`
 - Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama` under `backend/config/`
 - Manage: `backend/config/manage.py`
-- **Binding structure:** [`docs/decisions/ADR-0004-modular-python-organizasyon.md`](../../../docs/decisions/ADR-0004-modular-python-organizasyon.md)
+- **Binding structure:** ADR-0004 — see `docs/KUYUMBANK_MASTER.md` §3 / §6
 
 ### ADR-0004 package layout (per app)
 
