@@ -67,13 +67,22 @@ def scope_teklif_varyant_queryset(qs, user):
     )
 
 
-def scope_teklif_uruntasi_queryset(qs, user):
+def scope_teklif_tas_maliyeti_queryset(qs, user):
+    """TeklifTasMaliyeti (K-011) — platform tümü; tedarikçi yalnız kendi teklifi."""
     if can_view_all_tenants(user):
         return qs
+    firma = getattr(user, "firma", None)
     firma_id = getattr(user, "firma_id", None)
-    if not firma_id:
+    if not firma_id or firma is None:
+        return qs.none()
+    # Alıcı teklif taş maliyetini görmez (kör havuz)
+    if getattr(firma, "alici_mi", False) and not getattr(firma, "tedarikci_mi", False):
         return qs.none()
     return qs.filter(teklif__tedarikci_id=firma_id)
+
+
+# Geriye dönük alias (admin / eski testler)
+scope_teklif_uruntasi_queryset = scope_teklif_tas_maliyeti_queryset
 
 
 def scope_fiyat_sozlesmesi_queryset(qs, user):

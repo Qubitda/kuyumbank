@@ -1,9 +1,17 @@
-from django.db import models
+"""Teklif taş maliyeti — OfferStoneCost (K-011 / ADR-0008 Dilim 3.6).
+
+Katalog vitrin taşı: `urunler.UrunTasi` (ProductStone).
+Bu model: tedarikçi teklifine bağlı maliyet satırı; fiyat motoru taş bedelini buradan alır.
+Katalog `bedel` (TL vitrin) quote hesabına sızmaz.
+"""
+
 from decimal import Decimal
 
+from django.db import models
 
-class UrunTasi(models.Model):
-    """Teklife bağlı taş satırı. Pırlanta / renkli / süs taşı ortak + özel alanlar."""
+
+class TeklifTasMaliyeti(models.Model):
+    """Teklife bağlı taş maliyet satırı (eski ad: fiyatlama.UrunTasi)."""
 
     class TasGrubu(models.TextChoices):
         PIRLANTA = "PIRLANTA", "Pırlanta"
@@ -14,6 +22,7 @@ class UrunTasi(models.Model):
         "fiyatlama.TedarikciTeklif",
         on_delete=models.CASCADE,
         related_name="taslar",
+        help_text="related_name=taslar: fiyat motoru ve admin uyumluluğu (K-011).",
     )
     tas_grubu = models.CharField(max_length=16, choices=TasGrubu.choices)
     adet = models.PositiveIntegerField(default=1)
@@ -37,9 +46,11 @@ class UrunTasi(models.Model):
     olusturma_tarihi = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Ürün Taşı"
-        verbose_name_plural = "Ürün Taşları"
+        verbose_name = "Teklif taş maliyeti"
+        verbose_name_plural = "Teklif taş maliyetleri"
         ordering = ["teklif", "id"]
+        # Tablo adı RenameModel ile fiyatlama_tekliftasmaliyeti olur;
+        # geçiş migration'ı üretir.
 
     def __str__(self) -> str:
         return f"{self.get_tas_grubu_display()} — {self.toplam_karat}ct"

@@ -1,9 +1,9 @@
-# Mevcut mimari (Faz 3.5 PriceQuote sonrası envanter)
+# Mevcut mimari (Faz 3.6 kör havuz / K-011 sonrası envanter)
 
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1–3.2); 0008 Faz 3b (**Kabul**; Dilim 3.3–3.5 uygulandı); 0009 admin sertleştirme (**Kabul**; H1–H5)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1–3.2); 0008 Faz 3b (**Kabul**; Dilim 3.3–3.6 uygulandı); 0009 admin sertleştirme (**Kabul**; H1–H5)
 
 ## Uygulama haritası
 
@@ -12,11 +12,11 @@
 | `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `platform_kurulum`; `selectors/tenant`; komutlar: `bootstrap_platform`, `seed_role_permissions`, `audit_user_assignments` |
 | `tanimlar` | Metal, milyem, kur sağlayıcı/politika, metal/döviz gözlem, fiyat grubu, satış kanalı (quote TTL) | `kur_servisi`; `currency_conversion` (K-012); admin + `seed_tanimlar` / `seed_fiyat_gruplari` |
 | `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant (`gram_bandi_*`), katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `kategori_servisi` (`kategori_tasi`), `seo_servisi` (teknik fallback), `gram_bandi`; `selectors/katalog_tenant` |
-| `fiyatlama` | Sözleşme, teklif, üç model hesap, `PriceQuote`+Line (proforma), `PriceCalculationLog` | `teklif_servisi`; `sozlesme_servisi`; `fiyat_hesaplama`; `fiyat_motoru`; `pricing_service.quote` (immutable + DB trigger) |
+| `fiyatlama` | Sözleşme, teklif, `TeklifTasMaliyeti` (K-011), üç model, `PriceQuote`+Line, `PriceCalculationLog` | `teklif_servisi`; `sozlesme_servisi`; `fiyat_*`; `pricing_service.quote`; `buyer_quote` (B-02) |
 
 `AUTH_USER_MODEL = firmalar.Kullanici`. Paket düzeni: ADR-0004 (`models/`, `services/`, `selectors/`, `admin/`, `tests/`).
 
-**Bilinen borç (Faz 3 dışı / sonraki faz):** iki `UrunTasi` modeli (`urunler` vs `fiyatlama`, K-011); `Varyant.stok` ile `TedarikciTeklif.stok_adet` ikiliği (Faz 4 stok üçlüsü).
+**Bilinen borç:** `Varyant.stok` / `TedarikciTeklif.stok_adet` ikiliği (Faz 4). K-011 rename **çözüldü** (`TeklifTasMaliyeti` vs katalog `urunler.UrunTasi`).
 
 ## HTTP yüzeyi
 
@@ -52,7 +52,7 @@
 - Yuvarlama: ara adım yok; `toplam_vergisiz` TRY `0.01` HALF_UP.
 - `pricing_service.quote`: teklif seçimi (`oncelik`↓ → iç maliyet↑ → `id`↑) + `cozumle` + kur + `PriceQuote`/`Line`.
 - İmmutability: model + PostgreSQL UPDATE/DELETE trigger.
-- `platform_servis` kalemi yok (B-01). Alıcı kırılım UI → 3.6 (B-02).
+- `platform_servis` kalemi yok (B-01). Alıcı sunum: `buyer_quote` (B-02 yalnız toplam; kırılım kapalı).
 
 ## Fiyatlama (mevcut — dilim 3.1–3.5)
 

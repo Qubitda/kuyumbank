@@ -40,6 +40,8 @@ Findings must use DOĞRULANDI / DOĞRULANAMADI / PLANLAMA BULGUSU with file/line
 
 Do not expose supplier fields on buyer-facing serializers/admin inlines. Logs must not dump PII/finance beyond role need.
 
+**Dilim 3.6 (uygulandı):** `fiyatlama.selectors.buyer_quote` — alıcı PriceQuote DTO; `scope_price_quote_*` + admin alan maskesi; `TeklifTasMaliyeti` alıcıya kapalı. Out-of-scope quote → `BuyerQuoteNotFound` (404).
+
 ## Django security baseline (project)
 
 - `SECRET_KEY`, DB password from env; `DEBUG=False` in production

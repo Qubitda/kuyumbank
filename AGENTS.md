@@ -125,7 +125,7 @@ Görevle ilgili **yalnızca bir** skill oku:
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
 4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
    - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı  
-   - **3b (ADR-0008 Kabul):** dilim **3.3** kur + **3.4** üç model hesap/CurrencyConversion + **3.5** PriceQuote/quote orkestrasyonu uygulandı; **3.6+** kör havuz/K-011 — sıradaki dilim talimatı ile
+   - **3b (ADR-0008 Kabul):** dilim **3.3–3.6** uygulandı (kur, üç model, PriceQuote, kör havuz/K-011); **3.7** PriceLock arayüzü — sıradaki dilim talimatı ile
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
 7. **Faz 6** — Kalite kontrol, lojistik, teslimat, iade
@@ -183,6 +183,12 @@ Görev ancak şunlarla tamamlanır: gereksinim karşılandı, mimariye uydu, gü
 **Testler** — komutlar ve sonuçlar  
 **Riskler** — kalan sorunlar  
 **Sonraki faz** — bir sonraki somut adım
+
+## Dilim kapanış — handoff (standart)
+
+Her tamamlanan dilim/fazın sonunda kökte `FAZ_<N>_<M>_HANDOFF.md` oluşturulur (ör. `FAZ_3_6_HANDOFF.md`).  
+İçerik: tamamlananlar, dosyalar, test komutları/sonuçları, migration, riskler, sonraki agent adımları.  
+Tercihen dilim kodu yeşil testlerle **Git checkpoint** commit’lenir (ürün sahibi onayı; `.env`/`.docx`/secret yok); sonraki dilim bu checkpoint üzerinden başlar.
 
 ## Belirsizlik
 

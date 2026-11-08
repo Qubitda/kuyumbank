@@ -10,7 +10,7 @@ from fiyatlama.models import (
     PriceQuote,
     PriceQuoteLine,
     TedarikciTeklif,
-    UrunTasi,
+    TeklifTasMaliyeti,
 )
 from fiyatlama.selectors.tenant import (
     scope_fiyat_sozlesmesi_kalemi_queryset,
@@ -19,7 +19,7 @@ from fiyatlama.selectors.tenant import (
     scope_price_quote_line_queryset,
     scope_price_quote_queryset,
     scope_teklif_queryset,
-    scope_teklif_uruntasi_queryset,
+    scope_teklif_tas_maliyeti_queryset,
     scope_teklif_varyant_queryset,
     user_may_see_fiyat_maliyet,
     user_may_see_teklif_maliyet,
@@ -164,13 +164,13 @@ class FiyatSozlesmesiAdmin(admin.ModelAdmin):
         return display
 
 
-class UrunTasiInline(admin.TabularInline):
-    model = UrunTasi
+class TeklifTasMaliyetiInline(admin.TabularInline):
+    model = TeklifTasMaliyeti
     extra = 0
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return scope_teklif_uruntasi_queryset(qs, request.user)
+        return scope_teklif_tas_maliyeti_queryset(qs, request.user)
 
 
 @admin.register(TedarikciTeklif)
@@ -188,7 +188,7 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
     )
     list_filter = ("fiyat_modeli", "temin_tipi", "durum")
     search_fields = ("tedarikci__ad", "varyant__sku", "tedarikci_kodu")
-    inlines = [UrunTasiInline]
+    inlines = [TeklifTasMaliyetiInline]
     _maliyet_fields = ("birim_fiyat", "iscilik_override")
     # Durum / eşleştirme / versiyon yalnız servis (ADR-0006 B1, ADR-0007 §2.1)
     _servis_alanlari = (
@@ -438,8 +438,10 @@ class FiyatSozlesmesiKalemiAdmin(admin.ModelAdmin):
         return display
 
 
-@admin.register(UrunTasi)
-class FiyatlamaUrunTasiAdmin(admin.ModelAdmin):
+@admin.register(TeklifTasMaliyeti)
+class TeklifTasMaliyetiAdmin(admin.ModelAdmin):
+    """K-011: teklif taş maliyeti (eski FiyatlamaUrunTasiAdmin)."""
+
     list_display = ("teklif", "tas_grubu", "adet", "toplam_karat", "bedel", "para_birimi")
     list_filter = ("tas_grubu", "para_birimi")
     search_fields = ("teklif__tedarikci__ad", "teklif__varyant__sku")
@@ -447,15 +449,30 @@ class FiyatlamaUrunTasiAdmin(admin.ModelAdmin):
     _maliyet_fields = ("bedel",)
 
     def get_queryset(self, request):
-        return scope_teklif_uruntasi_queryset(super().get_queryset(request), request.user)
+        return scope_teklif_tas_maliyeti_queryset(
+            super().get_queryset(request), request.user
+        )
 
     def get_list_display(self, request):
         display = list(super().get_list_display(request))
-        if not user_may_see_fiyat_maliyet(request.user):
+        # Alıcı hiç görmemeli; tedarikçi kendi bedelini görebilir
+        if not user_may_see_teklif_maliyet(request.user):
             for f in self._maliyet_fields:
                 if f in display:
                     display.remove(f)
         return display
+
+    def has_module_permission(self, request):
+        # Alıcı modülü görmesin
+        firma = getattr(request.user, "firma", None)
+        if firma is not None and getattr(firma, "alici_mi", False):
+            if not can_view_all_tenants(request.user):
+                return False
+        return super().has_module_permission(request)
+
+
+# Geriye dönük test import adı
+FiyatlamaUrunTasiAdmin = TeklifTasMaliyetiAdmin
 
 
 class PriceQuoteLineInline(admin.TabularInline):
@@ -474,12 +491,16 @@ class PriceQuoteLineInline(admin.TabularInline):
         return False
 
     def has_change_permission(self, request, obj=None):
+        # True + readonly_fields = görüntüle; mutation yok (immutable satır)
+        return user_may_see_fiyat_maliyet(request.user)
+
+    def has_delete_permission(self, request, obj=None):
         return False
 
 
 @admin.register(PriceQuote)
 class PriceQuoteAdmin(admin.ModelAdmin):
-    """Proforma snapshot — salt okunur (ADR-0008 immutability)."""
+    """Proforma snapshot — salt okunur; alıcıya kör havuz (B-02 / Dilim 3.6)."""
 
     list_display = (
         "id",
@@ -491,13 +512,24 @@ class PriceQuoteAdmin(admin.ModelAdmin):
         "hesap_zamani",
         "belge_turu",
     )
-    list_filter = ("para_birimi", "fiyat_modeli", "satis_kanali")
+    list_filter = ("para_birimi", "satis_kanali")
     search_fields = ("alici_firma__ad", "varyant__sku")
-    list_select_related = ("alici_firma", "varyant", "satis_kanali", "teklif")
-    readonly_fields = (
+    list_select_related = ("alici_firma", "varyant", "satis_kanali")
+    # Alıcıya güvenli alanlar (B-02)
+    _buyer_safe_fields = (
         "alici_firma",
         "satis_kanali",
         "varyant",
+        "para_birimi",
+        "toplam_vergisiz",
+        "gram",
+        "gecerlilik_sonu",
+        "hesap_zamani",
+        "belge_turu",
+        "olusturma_tarihi",
+    )
+    # Platform maliyet kırılımı / tedarikçi izleri
+    _internal_fields = (
         "teklif",
         "teklif_versiyon",
         "fiyat_modeli",
@@ -507,11 +539,6 @@ class PriceQuoteAdmin(admin.ModelAdmin):
         "tedarikci_sozlesme",
         "tedarikci_sozlesme_versiyon",
         "tedarikci_kalem",
-        "para_birimi",
-        "toplam_vergisiz",
-        "gram",
-        "gecerlilik_sonu",
-        "hesap_zamani",
         "quote_ttl_saniye",
         "alici_kur_tipi",
         "tedarikci_kur_tipi",
@@ -519,20 +546,58 @@ class PriceQuoteAdmin(admin.ModelAdmin):
         "metal_kuru_tedarikci",
         "doviz_gozlem_idler",
         "hesap_girdisi",
-        "belge_turu",
         "olusturan",
-        "olusturma_tarihi",
     )
+    readonly_fields = _buyer_safe_fields + _internal_fields
     inlines = [PriceQuoteLineInline]
 
     def get_queryset(self, request):
         return scope_price_quote_queryset(super().get_queryset(request), request.user)
 
+    def _buyer_surface(self, user) -> bool:
+        """Alıcı (platform değil) — iç alanlar gizlenir."""
+        if can_view_all_tenants(user):
+            return False
+        firma = getattr(user, "firma", None)
+        return bool(firma is not None and getattr(firma, "alici_mi", False))
+
+    def get_fields(self, request, obj=None):
+        if self._buyer_surface(request.user):
+            return self._buyer_safe_fields
+        if user_may_see_fiyat_maliyet(request.user):
+            return self._buyer_safe_fields + self._internal_fields
+        # Platform staff without maliyet: safe + limited meta (no teklif/maliyet)
+        return self._buyer_safe_fields + (
+            "fiyat_modeli",
+            "quote_ttl_saniye",
+            "belge_turu",
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        return self.get_fields(request, obj)
+
+    def get_inline_instances(self, request, obj=None):
+        if self._buyer_surface(request.user):
+            return []
+        if not user_may_see_fiyat_maliyet(request.user):
+            return []
+        return super().get_inline_instances(request, obj)
+
+    def get_list_filter(self, request):
+        if self._buyer_surface(request.user):
+            return ("para_birimi", "satis_kanali")
+        return ("para_birimi", "fiyat_modeli", "satis_kanali")
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
+        # Salt okunur detay; change=False engeller view'i bazı Django sürümlerinde —
+        # view_permission ile okuma; mutation yok.
         return False
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
         return False

@@ -132,10 +132,11 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | **3.3** | ADR-0008 (3b) | Kur politikası — **uygulandı** |
 | **3.4** | ADR-0008 (3b) | Üç model hesap + CurrencyConversion — **uygulandı** |
 | **3.5** | ADR-0008 (3b) | PriceQuote + trigger — **uygulandı** |
-| **3.6–3.7** | ADR-0008 (3b) | kör havuz/K-011; PriceLock arayüzü |
+| **3.6** | ADR-0008 (3b) | kör havuz + K-011 — **uygulandı** |
+| **3.7** | ADR-0008 (3b) | PriceLock arayüzü → Faz 4 |
 
 ---
 
 ## 6. Sonraki adım
 
-Dilim **3.1–3.5 tamam.** Sıradaki: Dilim **3.6** (kör havuz alıcı yüzeyi + K-011). Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
+Dilim **3.1–3.6 tamam.** Sıradaki: Dilim **3.7** (PriceLock arayüzü) veya Faz 4 (stok/sipariş) — açık talimat + ADR sınırı.

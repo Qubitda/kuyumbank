@@ -160,8 +160,8 @@ Adım 1–3 → ADR-0007.
 
 4. **3.3** Kur politikası  
 5. **3.4** Üç model hesap + CurrencyConversion  
-6. **3.5** quote + trigger immutability  
-7. **3.6** kör havuz + K-011  
+6. **3.5** quote + trigger immutability — uygulandı  
+7. **3.6** kör havuz + K-011 — uygulandı  
 8. **3.7** PriceLock arayüzü → Faz 4  
 
 Dilim **3.0–3.2** → ADR-0007.

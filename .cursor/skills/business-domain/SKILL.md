@@ -31,7 +31,7 @@ Field presence ≠ rule enforcement. Label uncertain claims DOĞRULANAMADI / PLA
 
 **Catalog ownership (Faz 2):** `Urun.tedarikci` kaldırıldı → `olusturan_firma`; katalog platforma aittir. Teklif yaşam döngüsü (Faz 3.1): `fiyatlama.services.teklif_servisi` — durum yalnız servisten. Sözleşme K-007/K-008 (3.2): `sozlesme_servisi` + `cozumle`. Kur politikası (3.3): `tanimlar.services.kur_servisi` — tek aktif provider, stale fail-closed. Quote (3.5): `pricing_service.quote` → immutable `PriceQuote`.
 
-Two stone models exist (`urunler.UrunTasi` vs `fiyatlama.UrunTasi`) — rename pricing side toward offer stone cost (K-011) when touching that area.
+K-011 (3.6): katalog `urunler.UrunTasi` (ProductStone) korunur; teklif maliyeti `fiyatlama.TeklifTasMaliyeti` (eski `fiyatlama.UrunTasi`). Quote taş bedeli yalnız teklif modelinden.
 
 ## Pricing (K-009, K-013)
 
@@ -40,6 +40,7 @@ Two stone models exist (`urunler.UrunTasi` vs `fiyatlama.UrunTasi`) — rename p
 - Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
 - Rates (3.3): resolve via `kur_servisi` (buyer/supplier `kur_tipi` ayrı; no provider fallback).
 - Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line; PriceLock → Faz 4.
+- Buyer surface (3.6 / B-02): `selectors.buyer_quote` — yalnız `toplam_vergisiz` (+ gram başı); satır/tedarikçi/maliyet yok; IDOR → DoesNotExist.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
 - Formula components: metal (`gram × milyem × saf_birim_fiyat`) + işçilik + taş + extras + platform service + channel margin (+ configurable tax). B-01 servis payı kalemi hukuk öncesi kodlanmaz; B-06 vergi Faz 3’te yok (proforma).
 - Ambiguous contract resolution → error, do not guess (K-007/K-008; dilim 3.2).
