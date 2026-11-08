@@ -51,6 +51,62 @@ Faz 0 süresince:
 
 Faz sonunda oluşturulan/değiştirilen dosyalar listelenir; uygulama kodunun değişmediği Git ile doğrulanır.
 
+## Ek kural C — Fayda/Maliyet ve Geliştirme Verimliliği
+
+Ek kural A–B ve güvenlik/mimari/veri bütünlüğü kurallarını **zayıflatmaz**; onlarla birlikte uygulanır. Hedef: sürekli denetim değil, çalışan yazılım (~%70 geliştirme, %20 gerekli test, %10 dokümantasyon/borç).
+
+### Öncelik sırası
+
+1. İşlevsel gereksinimi doğru tamamla  
+2. Veri güvenliği ve ticari doğruluğu koru  
+3. Kritik hataları önle  
+4. Gerekli testleri çalıştır  
+5. Gereksiz mükemmelleştirme ve tekrarı önle  
+6. Token ve süreyi verimli kullan  
+
+Her kontrolün maliyeti ile faydası karşılaştırılır. Hız uğruna kalite düşmez; kalite adına proje bitirilemez hale gelmez.
+
+### Analiz sınırı
+
+- Yalnızca görevle ilgili dosyaları incele; tüm projeyi yeniden tarama.  
+- Önceki uygulama raporları / doğrulanmış ADR kararlarını yeniden analiz etme.  
+- Bağlamda olan dosyayı tekrar okuma; aynı bilgiyi birden fazla kaynaktan toplama.  
+- Belirsizlik yoksa yeni ADR üretme; net gereksinimde kullanıcıya gereksiz soru sorma.
+
+### Kodlama
+
+- Analiz yeterliyse doğrudan kodla; önce küçük tamamlanabilir değişiklik.  
+- Mevcut mimariyi koru; gereksiz refactor / “daha güzel” rewrite yok.  
+- Kapsam dışı teknik borcu ayrı not et; dilimde ilgisiz problem çözme; istenmeyen özellik ekleme.
+
+### Test — risk bazlı (üç seviye)
+
+1. **Değişiklik:** yalnız ilgili yeni/değişen testler; ilgisiz suite yok.  
+2. **Etki:** etkilenen servis/model/yetki/izolasyon; PostgreSQL kısıtlarını SQLite ile “geçti” sayma.  
+3. **Dilim kapanış:** genel kontroller + tam paket **bir kez**; sebepsiz tekrar yok.  
+
+Hata: ilişkisini belirle → ilgiliyse düzelt → başarısız testi → etkilenen grup. Her mikro düzeltmeden sonra tam paketi yeniden koşma. K-007/K-008 tarzı PG/ticari kısıtlar atlanmaz; küçük değişiklikte tüm suite şart değildir.
+
+### BUG sınıfları
+
+- **P0:** güvenlik, firma sızıntısı, veri kaybı, yanlış finans → derhal.  
+- **P1:** mevcut dilim işlevini bozar → dilimde düzelt.  
+- **P2:** kapsam dışı / borç / kozmetik → kaydet, akışı durdurma.  
+
+P2 için otomatik yeni denetim turu başlatma.
+
+### Tekrar / token
+
+Aynı analizi, uzun mimari özeti, kanıtlanmış kararı veya başarılı komutu gerekçesiz tekrarlama. Düzeltilebileni çöz-doğrula-devam et; engelde yalnız gerçek engel + gereken karar.
+
+### Durdurma
+
+Aynı sorun için iki makul düzeltme denemesinden sonra geniş analiz yok; kısa neden + kanıt + karar isteği.
+
+### Dilim tamamlanma
+
+İş gereksinimi + kritik güvenlik/bütünlük + ilgili testler + migration incelemesi + genel sonuç raporu + açık riskler. Sıfır borç hedefi yok; yönetilebilir belgelenmiş borçla ilerle.
+
 ## Skill yükleme
 
 Görevle ilgili **yalnızca bir** skill oku:
@@ -68,7 +124,7 @@ Görevle ilgili **yalnızca bir** skill oku:
 2. **Faz 1** — Firma, kullanıcı, roller, izinler, platform, firma izolasyonu
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
 4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
-   - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü uygulandı; dilim **3.2** K-007/K-008 açık  
+   - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı (WIP commit ayrı olabilir)  
    - **3b (ADR-0008 Taslak):** kur / quote — Kabul olmadan kod yok
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
