@@ -6,8 +6,20 @@ from firmalar.services.yetki_servisi import can_view_all_tenants
 
 
 def user_may_see_fiyat_maliyet(user) -> bool:
-    """Maliyet / price log: alıcı ve tedarikçi yüzeylerinde gizli; platform+view_all."""
+    """Platform maliyet / price log / sözleşme marjı (ADR-0009 H3).
+
+    Alıcı ve tedarikçi bu yüzeyde maliyet görmez; teklif kendi maliyeti için
+    `user_may_see_teklif_maliyet` kullanın.
+    """
     return can_view_all_tenants(user)
+
+
+def user_may_see_teklif_maliyet(user) -> bool:
+    """Teklif birim_fiyat / iscilik_override: platform veya tedarikçi (kendi qs)."""
+    if can_view_all_tenants(user):
+        return True
+    firma = getattr(user, "firma", None)
+    return bool(firma is not None and getattr(firma, "tedarikci_mi", False))
 
 
 def scope_teklif_queryset(qs, user):

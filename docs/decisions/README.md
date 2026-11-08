@@ -13,11 +13,9 @@ Onaylanmış kararlar burada tutulur. Agent varsayım yaptığında geri dönü�
 | [ADR-0006](ADR-0006-faz2-1-kararlar.md) | Faz 2.1 düzeltme kararları (B1–O6) | Kabul |
 | [ADR-0007](ADR-0007-faz3-fiyatlama.md) | Faz 3a: teklif yaşam döngüsü (3.1 uygulandı), K-007/K-008 (3.2 açık) | Kabul |
 | [ADR-0008](ADR-0008-faz3b-kur-fiyatlama-quote.md) | Faz 3b: kur, fiyat hesabı, PriceQuote, görünürlük | **Taslak** |
+| [ADR-0009](ADR-0009-admin-yuzey-sertlestirme.md) | Post-3.1 admin yüzey sertleştirme (H1–H5) | Kabul |
 
-Uygulama tasarımı: [`docs/architecture/faz1-kimlik-gecis-tasarimi.md`](../architecture/faz1-kimlik-gecis-tasarimi.md)  
-Doğrulama: [`docs/architecture/faz1-dogrulama-raporu.md`](../architecture/faz1-dogrulama-raporu.md)  
-Faz 2 etki: [`docs/architecture/faz2-etki-analizi.md`](../architecture/faz2-etki-analizi.md)  
-Faz 2.1: [`docs/architecture/faz2-1-dogrulama-raporu.md`](../architecture/faz2-1-dogrulama-raporu.md)  
-Faz 3 etki: [`docs/architecture/faz3-etki-analizi.md`](../architecture/faz3-etki-analizi.md)  
-Faz 3.1 uygulama: [`docs/architecture/faz3-1-uygulama-raporu.md`](../architecture/faz3-1-uygulama-raporu.md)  
-Mevcut mimari: [`docs/architecture/mevcut-mimari.md`](../architecture/mevcut-mimari.md)
+Mevcut mimari (canlı): [`mevcut-mimari.md`](../architecture/mevcut-mimari.md)  
+Faz 1: [`faz1-kimlik-gecis-tasarimi`](../architecture/faz1-kimlik-gecis-tasarimi.md) · [`faz1-uygulama-raporu`](../architecture/faz1-uygulama-raporu.md) · [`faz1-dogrulama-raporu`](../architecture/faz1-dogrulama-raporu.md) · [`faz1-1-kapanis-raporu`](../architecture/faz1-1-kapanis-raporu.md)  
+Faz 2 / 2.1: [`faz2-etki-analizi`](../architecture/faz2-etki-analizi.md) · [`faz2-baslangic-raporu`](../architecture/faz2-baslangic-raporu.md) · [`faz2-0-duzeltme-raporu`](../architecture/faz2-0-duzeltme-raporu.md) · [`faz2-1-dogrulama-raporu`](../architecture/faz2-1-dogrulama-raporu.md) · [`faz2-1-duzeltme-raporu`](../architecture/faz2-1-duzeltme-raporu.md)  
+Faz 3: [`faz3-etki-analizi`](../architecture/faz3-etki-analizi.md) · [`faz3-1-uygulama-raporu`](../architecture/faz3-1-uygulama-raporu.md) · [`faz3-1-sonrasi-guvenlik-denetimi`](../architecture/faz3-1-sonrasi-guvenlik-denetimi.md) · [`faz3-1-admin-sertlestirme-raporu`](../architecture/faz3-1-admin-sertlestirme-raporu.md)

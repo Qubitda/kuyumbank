@@ -16,11 +16,14 @@ python -m pip install -r requirements.txt
 copy .env.example .env
 # Edit .env: SECRET_KEY, DB_*
 python manage.py migrate
+python manage.py seed_role_permissions
+python manage.py bootstrap_platform
+python manage.py seed_tanimlar
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Admin: http://127.0.0.1:8000/admin/
+Ops: `audit_user_assignments` (firma/rol tutarlılığı). Admin: http://127.0.0.1:8000/admin/
 
 ## Checks and tests
 

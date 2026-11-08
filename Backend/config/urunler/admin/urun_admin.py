@@ -94,6 +94,28 @@ class UrunTenantAdminMixin:
             return scope_urun_queryset(qs, request.user)
         return scope_urun_related_queryset(qs, request.user, urun_field="urun")
 
+    def _parent_urun_onay_bekliyor(self, obj) -> bool:
+        if obj is None:
+            return False
+        urun = obj if isinstance(obj, Urun) else getattr(obj, "urun", None)
+        return getattr(urun, "onay_durumu", None) == "onay_bekliyor"
+
+    def has_change_permission(self, request, obj=None):
+        if not super().has_change_permission(request, obj):
+            return False
+        # ADR-0009 H4 / ADR-0006 O1: onay_bekliyor iken tedarikçi yazamaz
+        if obj is not None and not can_view_all_tenants(request.user):
+            if self._parent_urun_onay_bekliyor(obj):
+                return False
+        return True
+
+    def save_model(self, request, obj, form, change):
+        if not can_view_all_tenants(request.user) and self._parent_urun_onay_bekliyor(obj):
+            raise PermissionDenied(
+                "Onay bekleyen ürün / ilişkili kayıt tedarikçi tarafından değiştirilemez."
+            )
+        super().save_model(request, obj, form, change)
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "urun":
             kwargs["queryset"] = scope_urun_queryset(Urun.objects.all(), request.user)
@@ -314,6 +336,16 @@ class VaryantAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
     readonly_fields = ("sku",)
     list_per_page = 50
 
+    def get_changelist_instance(self, request):
+        # Django 6.1'de get_list_editable yok; tedarikçide list_editable kapat (H4)
+        original = self.list_editable
+        if not can_view_all_tenants(request.user):
+            self.list_editable = ()
+        try:
+            return super().get_changelist_instance(request)
+        finally:
+            self.list_editable = original
+
 
 @admin.register(UrunTasi)
 class UrunTasiAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
@@ -337,6 +369,15 @@ class UrunKanalAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
     list_select_related = ("urun", "kanal")
     autocomplete_fields = ("urun", "kanal")
     list_per_page = 50
+
+    def get_changelist_instance(self, request):
+        original = self.list_editable
+        if not can_view_all_tenants(request.user):
+            self.list_editable = ()
+        try:
+            return super().get_changelist_instance(request)
+        finally:
+            self.list_editable = original
 
     def has_delete_permission(self, request, obj=None):
         return False

@@ -188,12 +188,15 @@ class FiyatlamaAdminTenantTests(TestCase):
         ma = TedarikciTeklifAdmin(TedarikciTeklif, site)
         self.assertEqual(ma.get_queryset(self._req(self.padmin)).count(), 2)
 
-    # Senaryo 7 — maliyet gizleme
-    def test_s7_supplier_hides_cost_fields(self):
+    # Senaryo 7 — maliyet: platform sözleşme/log; teklifte tedarikçi kendi maliyetini görür (ADR-0009 H3)
+    def test_s7_supplier_sees_own_teklif_cost_not_platform_maliyet(self):
+        from fiyatlama.selectors.tenant import user_may_see_teklif_maliyet
+
         self.assertFalse(user_may_see_fiyat_maliyet(self.staff_a))
+        self.assertTrue(user_may_see_teklif_maliyet(self.staff_a))
         ma = TedarikciTeklifAdmin(TedarikciTeklif, site)
         display = ma.get_list_display(self._req(self.staff_a))
-        self.assertNotIn("birim_fiyat", display)
+        self.assertIn("birim_fiyat", display)
 
     def test_s7_alici_price_log_empty(self):
         self.assertFalse(user_may_see_fiyat_maliyet(self.alici_user))

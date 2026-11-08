@@ -382,12 +382,13 @@ def yeni_versiyon_olustur(
                 uretim_suresi_gun=eski.uretim_suresi_gun,
                 oncelik=eski.oncelik,
                 durum=TedarikciTeklif.Durum.ONAY_BEKLIYOR,
-                # Eşleştirme taşınmaz otomatik onaylanmaz; kapı için kopyala
-                eslestirme_durumu=eski.eslestirme_durumu,
-                eslestirme_guveni=eski.eslestirme_guveni,
-                eslestirme_kaniti=eski.eslestirme_kaniti or {},
-                esdegerlik_seviyesi=eski.esdegerlik_seviyesi,
-                hedef_urun_id=eski.hedef_urun_id,
+                # ADR-0009 H5(a): eşleştirme kopyalanmaz — otomatik onay yok
+                eslestirme_durumu="",
+                eslestirme_guveni="",
+                eslestirme_kaniti={},
+                esdegerlik_seviyesi="",
+                hedef_urun=None,
+                eslestiren_kullanici=None,
             )
             yeni.full_clean()
             yeni.save()

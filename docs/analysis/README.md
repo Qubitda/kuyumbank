@@ -14,14 +14,9 @@ Agent ve geliştirici önce bu dizini, ardından mimari ve ADR’leri okur. Rapo
 
 ## İlgili çıktılar
 
-- Mimari durum: [`../architecture/mevcut-mimari.md`](../architecture/mevcut-mimari.md)
-- Faz 0 denetim: [`../architecture/faz0-denetim-raporu.md`](../architecture/faz0-denetim-raporu.md)
-- Git/doküman denetimi: [`../architecture/faz0-git-ve-dokuman-denetimi.md`](../architecture/faz0-git-ve-dokuman-denetimi.md)
-- Tenant güvenlik: [`../architecture/faz0-tenant-guvenlik-denetimi.md`](../architecture/faz0-tenant-guvenlik-denetimi.md)
-- Faz 1 tasarım (kodsuz): [`../architecture/faz1-kimlik-gecis-tasarimi.md`](../architecture/faz1-kimlik-gecis-tasarimi.md)
-- Faz 1 teknik inceleme: [`../architecture/faz1-teknik-inceleme.md`](../architecture/faz1-teknik-inceleme.md)
-- Faz 1 kararları: [`../decisions/ADR-0003-faz1-kimlik-rbac.md`](../decisions/ADR-0003-faz1-kimlik-rbac.md)
-- Faz 3a (teklif/sözleşme): [`../decisions/ADR-0007-faz3-fiyatlama.md`](../decisions/ADR-0007-faz3-fiyatlama.md) (**Kabul**; dilim 3.1 uygulandı)
-- Faz 3.1 uygulama: [`../architecture/faz3-1-uygulama-raporu.md`](../architecture/faz3-1-uygulama-raporu.md)
-- Faz 3b (kur/quote): [`../decisions/ADR-0008-faz3b-kur-fiyatlama-quote.md`](../decisions/ADR-0008-faz3b-kur-fiyatlama-quote.md) (**Taslak**)
-- Kararlar: [`../decisions/`](../decisions/)
+- Mimari durum (canlı): [`../architecture/mevcut-mimari.md`](../architecture/mevcut-mimari.md)
+- Faz 0: [`faz0-denetim-raporu`](../architecture/faz0-denetim-raporu.md) · [`faz0-git-ve-dokuman-denetimi`](../architecture/faz0-git-ve-dokuman-denetimi.md) · [`faz0-tenant-guvenlik-denetimi`](../architecture/faz0-tenant-guvenlik-denetimi.md) *(anıtsal)*
+- Faz 1: [`faz1-kimlik-gecis-tasarimi`](../architecture/faz1-kimlik-gecis-tasarimi.md) · [`faz1-teknik-inceleme`](../architecture/faz1-teknik-inceleme.md) · [`faz1-uygulama-raporu`](../architecture/faz1-uygulama-raporu.md) · [`faz1-dogrulama-raporu`](../architecture/faz1-dogrulama-raporu.md) · [`faz1-1-kapanis-raporu`](../architecture/faz1-1-kapanis-raporu.md) · [ADR-0003](../decisions/ADR-0003-faz1-kimlik-rbac.md)
+- Faz 2 / 2.1: [`faz2-etki-analizi`](../architecture/faz2-etki-analizi.md) · [`faz2-baslangic-raporu`](../architecture/faz2-baslangic-raporu.md) · [`faz2-0-duzeltme-raporu`](../architecture/faz2-0-duzeltme-raporu.md) · [`faz2-1-dogrulama-raporu`](../architecture/faz2-1-dogrulama-raporu.md) · [`faz2-1-duzeltme-raporu`](../architecture/faz2-1-duzeltme-raporu.md) · [ADR-0005](../decisions/ADR-0005-katalog-platform-ownership.md) · [ADR-0006](../decisions/ADR-0006-faz2-1-kararlar.md)
+- Faz 3a/3b: [ADR-0007](../decisions/ADR-0007-faz3-fiyatlama.md) (**Kabul**; 3.1 uygulandı) · [`faz3-1-uygulama-raporu`](../architecture/faz3-1-uygulama-raporu.md) · [`faz3-1-sonrasi-guvenlik-denetimi`](../architecture/faz3-1-sonrasi-guvenlik-denetimi.md) · [ADR-0008](../decisions/ADR-0008-faz3b-kur-fiyatlama-quote.md) (**Taslak**) · [ADR-0009](../decisions/ADR-0009-admin-yuzey-sertlestirme.md) (**Kabul**, admin H1–H5)
+- Kararlar dizini: [`../decisions/`](../decisions/)

@@ -21,7 +21,7 @@ Framework sürüm matrisi: [Django 6.1 FAQ — install](https://docs.djangoproje
 1. Bu `AGENTS.md`
 2. `docs/analysis/` ve kanonik rapor: `docs/Kuyumbank_Is_Analizi_Teknik_Analiz_Raporu.md`
 3. `docs/architecture/`
-4. `docs/decisions/` (onaylı ADR’ler; Faz 1 için ADR-0003 bağlayıcı — ayrı talimat olmadan kodlama yok; dosya organizasyonu ADR-0004)
+4. `docs/decisions/` (onaylı ADR’ler; faz kodu ilgili ADR **Kabul** + açık talimat olmadan başlamaz — örn. Faz 1: ADR-0003, Faz 2: ADR-0005/0006, Faz 3a: ADR-0007; dosya organizasyonu ADR-0004)
 5. Django 6.1 resmi dokümantasyonu: https://docs.djangoproject.com/en/6.1/
 6. Django kaynak kodu: https://github.com/django/django
 7. Üçüncü taraf kütüphanelerin resmi dokümantasyonu

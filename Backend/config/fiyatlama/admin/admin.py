@@ -18,6 +18,7 @@ from fiyatlama.selectors.tenant import (
     scope_teklif_uruntasi_queryset,
     scope_teklif_varyant_queryset,
     user_may_see_fiyat_maliyet,
+    user_may_see_teklif_maliyet,
 )
 from fiyatlama.services import teklif_servisi
 from urunler.models import Varyant
@@ -109,6 +110,21 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         "hedef_urun",
         "esdegerlik_seviyesi",
     )
+    # H2: YAYINDA / ONAY_BEKLIYOR ticari alanlar kilitli; oncelik tedarikçiye hiç açık değil
+    _kilitli_ticari_alanlar = (
+        "fiyat_modeli",
+        "gram",
+        "birim_fiyat",
+        "iscilik_override",
+        "gecerlilik_baslangic",
+        "gecerlilik_bitis",
+        "stok_adet",
+        "oncelik",
+        "para_birimi",
+        "temin_tipi",
+        "varyant",
+        "tedarikci_kodu",
+    )
     actions = (
         "action_onaya_gonder",
         "action_yayina_al",
@@ -174,6 +190,16 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
                 ro.append(f)
         if not can_view_all_tenants(request.user) and "tedarikci" not in ro:
             ro.append("tedarikci")
+        # ADR-0009 H2: oncelik yalnız platform (view_all) yazar
+        if not can_view_all_tenants(request.user) and "oncelik" not in ro:
+            ro.append("oncelik")
+        if obj is not None and obj.durum in (
+            TedarikciTeklif.Durum.YAYINDA,
+            TedarikciTeklif.Durum.ONAY_BEKLIYOR,
+        ):
+            for f in self._kilitli_ticari_alanlar:
+                if f not in ro:
+                    ro.append(f)
         return ro
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -200,28 +226,41 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
             if firma is None or not getattr(firma, "tedarikci_mi", False):
                 raise PermissionDenied("Teklif yalnız tedarikçi firması kullanıcısıyla kaydedilir.")
             obj.tedarikci = firma
+        # H2: kilitli durum / oncelik POST ile aşılmaz
+        if change and obj.pk:
+            original = TedarikciTeklif.objects.get(pk=obj.pk)
+            if original.durum in (
+                TedarikciTeklif.Durum.YAYINDA,
+                TedarikciTeklif.Durum.ONAY_BEKLIYOR,
+            ):
+                for f in self._kilitli_ticari_alanlar:
+                    setattr(obj, f, getattr(original, f))
+            if not can_view_all_tenants(request.user):
+                obj.oncelik = original.oncelik
+        elif not can_view_all_tenants(request.user):
+            obj.oncelik = 0
         super().save_model(request, obj, form, change)
 
     def get_list_display(self, request):
         display = list(super().get_list_display(request))
-        if not user_may_see_fiyat_maliyet(request.user):
+        if not user_may_see_teklif_maliyet(request.user):
             for f in self._maliyet_fields:
                 if f in display:
                     display.remove(f)
-            firma = getattr(request.user, "firma", None)
-            # Alıcı (tedarikçi değil): tedarikçi kimliğini gösterme
-            if (
-                firma
-                and getattr(firma, "alici_mi", False)
-                and not getattr(firma, "tedarikci_mi", False)
-                and "tedarikci" in display
-            ):
-                display.remove("tedarikci")
+        firma = getattr(request.user, "firma", None)
+        # Alıcı (tedarikçi değil): tedarikçi kimliğini gösterme
+        if (
+            firma
+            and getattr(firma, "alici_mi", False)
+            and not getattr(firma, "tedarikci_mi", False)
+            and "tedarikci" in display
+        ):
+            display.remove("tedarikci")
         return display
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
-        if not user_may_see_fiyat_maliyet(request.user):
+        if not user_may_see_teklif_maliyet(request.user):
             fields = [f for f in fields if f not in self._maliyet_fields]
         # Eşleştirme güveni tedarikçiye gösterilmez (ADR-0006 B3)
         if not can_view_all_tenants(request.user):

@@ -3,18 +3,20 @@
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `Backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Kabul**; dilim 3.1 uygulandı); 0008 Faz 3b kur/quote (**Taslak**)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1 uygulandı); 0008 Faz 3b (**Taslak**); 0009 admin sertleştirme (**Kabul**; H1–H5 uygulandı)
 
 ## Uygulama haritası
 
-| App | Sorumluluk | Servis / selector |
-|-----|------------|-------------------|
-| `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC seed | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `selectors/tenant` |
-| `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + seed; kur politikası Faz 3b (ADR-0008) |
-| `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant, katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `katalog_tenant`, gram bandı |
-| `fiyatlama` | Sözleşme, `TedarikciTeklif` (yaşam döngüsü + versiyon), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi` (durum/sahiplik/dört göz/swap); `teklif_eslestirme_uygun_mu` predicate; `fiyat_hesaplama` (saf; quote yok); sözleşme durum servisi henüz yok |
+| App | Sorumluluk | Servis / selector / komut |
+|-----|------------|---------------------------|
+| `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `platform_kurulum`; `selectors/tenant`; komutlar: `bootstrap_platform`, `seed_role_permissions`, `audit_user_assignments` |
+| `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + `seed_tanimlar` / `seed_fiyat_gruplari`; domain servis yok; kur politikası Faz 3b (ADR-0008) |
+| `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant (`gram_bandi_*`), katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `kategori_servisi` (`kategori_tasi`), `seo_servisi` (teknik fallback), `gram_bandi`; `selectors/katalog_tenant` |
+| `fiyatlama` | Sözleşme, `TedarikciTeklif` (yaşam döngüsü + versiyon), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi`; `teklif_eslestirme_uygun_mu`; `fiyat_hesaplama` (saf); sözleşme durum servisi yok (3.2+ / ayrı dilim) |
 
 `AUTH_USER_MODEL = firmalar.Kullanici`. Paket düzeni: ADR-0004 (`models/`, `services/`, `selectors/`, `admin/`, `tests/`).
+
+**Bilinen borç (Faz 3 dışı / sonraki faz):** iki `UrunTasi` modeli (`urunler` vs `fiyatlama`, K-011); `Varyant.stok` ile `TedarikciTeklif.stok_adet` ikiliği (Faz 4 stok üçlüsü).
 
 ## HTTP yüzeyi
 

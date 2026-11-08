@@ -11,9 +11,9 @@ description: >-
 **Prepared for:** Django **6.1**  
 **Framework refs (not this skill):** [Security](https://docs.djangoproject.com/en/6.1/topics/security/) · [Auth](https://docs.djangoproject.com/en/6.1/topics/auth/) · [CSRF](https://docs.djangoproject.com/en/6.1/ref/csrf/)
 
-Normative product rules: rapor K-002, K-003, K-005, §8. Deep audit: `docs/architecture/faz0-tenant-guvenlik-denetimi.md`.  
-Approved Faz 1 decisions: `docs/decisions/ADR-0003-faz1-kimlik-rbac.md` (8 platform roles; firma NOT NULL; no silent superuser tenant bypass; K-004 ownership; distributed Meta.permissions; multi-surface isolation tests).  
-Findings must use DOĞRULANDI / DOĞRULANAMADI / PLANLAMA BULGUSU with file/line or command evidence. Do not implement Faz 1 without explicit user go-ahead.
+Normative product rules: rapor K-002, K-003, K-005, §8. Deep audit: `docs/architecture/faz0-tenant-guvenlik-denetimi.md` (Faz 0 anı; canlı envanter: `docs/architecture/mevcut-mimari.md`).  
+Approved decisions: ADR-0003 (+ addendum), ADR-0005 (katalog ownership), ADR-0006 (Faz 2.1).  
+Findings must use DOĞRULANDI / DOĞRULANAMADI / PLANLAMA BULGUSU with file/line or command evidence. Faz kodu: ilgili ADR **Kabul** + açık talimat olmadan başlamaz.
 
 ## Tenant model
 
