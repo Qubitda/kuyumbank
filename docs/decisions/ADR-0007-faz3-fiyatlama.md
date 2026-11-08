@@ -1,10 +1,10 @@
 # ADR-0007 — Faz 3a: Tedarikçi teklifi yaşam döngüsü ve sözleşme kuralları
 
-**Durum:** Taslak  
+**Durum:** Kabul edildi  
 **Tarih:** 2026-11-08 (revizyon: Faz 3a/3b bölünmesi)  
 **Bağlı:** ADR-0005, ADR-0006 (Kabul); kanonik rapor K-006…K-008; §9.3 (teklif); §12.3 (teklif/sözleşme maddeleri)  
 **Etki analizi:** [`docs/architecture/faz3-etki-analizi.md`](../architecture/faz3-etki-analizi.md)  
-**Onay:** Ürün sahibi onayı bekleniyor (agent Kabul işaretlemez)
+**Onay:** Ürün sahibi, 2026-11-08
 
 **Kapsam notu:** Faz 3b kararları [`ADR-0008-faz3b-kur-fiyatlama-quote.md`](ADR-0008-faz3b-kur-fiyatlama-quote.md) içindedir; **3.3+ kodu ADR-0008 Kabul olmadan başlamaz.**
 
@@ -18,7 +18,7 @@ Faz 2 katalog ownership’i ayırdı. Teklif durum servisi yok; K-007/K-008 (NUL
 
 ---
 
-## 2. Kararlar (bağlayıcı taslak)
+## 2. Kararlar (bağlayıcı)
 
 ### 2.1 Tedarikçi teklifi yaşam döngüsü
 
@@ -140,4 +140,4 @@ Kur politikası, üç model quote hesabı, `PriceQuote` / trigger, alıcı gör�
 - [ ] Eşleşme kapısı (boş = kullanılmaz) + versiyon swap atomik  
 - [ ] K-007/K-008 NULL-safe + btree_gist notu  
 - [ ] CASCADE→PROTECT + teklif durum servisi kapsamı  
-- [ ] Durum: **Kabul edildi** (yalnız ürün sahibi)
+- [x] Durum: **Kabul edildi** (yalnız ürün sahibi)
