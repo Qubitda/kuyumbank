@@ -22,7 +22,21 @@ P = {
     "approve_teklif": "fiyatlama.approve_teklif",
     "approve_eslestirme": "fiyatlama.approve_eslestirme",
     "manage_sozlesme": "fiyatlama.manage_sozlesme",
+    "manage_kur": "tanimlar.manage_kur",
 }
+
+_KUR_ADMIN = (
+    "tanimlar.view_kursaglayici",
+    "tanimlar.change_kursaglayici",
+    "tanimlar.add_kursaglayici",
+    "tanimlar.view_kurpolitikasi",
+    "tanimlar.change_kurpolitikasi",
+    "tanimlar.add_kurpolitikasi",
+    "tanimlar.view_metalkuru",
+    "tanimlar.add_metalkuru",
+    "tanimlar.view_dovizkuru",
+    "tanimlar.add_dovizkuru",
+)
 
 # Admin changelist/inline için Django model izinleri (grup üzerinden)
 _URUN_ADMIN = (
@@ -76,11 +90,13 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_teklif"],
         P["approve_eslestirme"],
         P["manage_sozlesme"],
+        P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
+        *_KUR_ADMIN,
     ),
     roles.PLATFORM_ADMIN: (
         P["approve_firma"],
@@ -92,11 +108,13 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_teklif"],
         P["approve_eslestirme"],
         P["manage_sozlesme"],
+        P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
+        *_KUR_ADMIN,
     ),
     roles.PLATFORM_OPS: (
         P["view_all_tenants"],
@@ -106,8 +124,10 @@ ROLE_PERMISSION_MATRIX = {
     roles.PLATFORM_FINANCE: (
         P["view_all_tenants"],
         P["manage_sozlesme"],
+        P["manage_kur"],
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
+        *_KUR_ADMIN,
     ),
     roles.PLATFORM_CATALOG: (
         P["view_all_tenants"],

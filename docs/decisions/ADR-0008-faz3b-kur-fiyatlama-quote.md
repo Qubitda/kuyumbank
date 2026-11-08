@@ -1,13 +1,14 @@
 # ADR-0008 — Faz 3b: Kur politikası, fiyat hesabı, PriceQuote snapshot, görünürlük
 
-**Durum:** Taslak  
+**Durum:** Kabul edildi  
 **Tarih:** 2026-11-08  
+**Kabul:** 2026-11-08 (ürün sahibi — B-02…B-05 + çoklu YAYINDA; kayıt: [`docs/adr-0008-urun-kararlari.md`](../adr-0008-urun-kararlari.md))  
 **Bağlı:** ADR-0007 (Faz 3a, Kabul), ADR-0005, ADR-0006 (Kabul); kanonik rapor K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; B-01…B-06  
 **Etki analizi:** [`docs/architecture/faz3-etki-analizi.md`](../architecture/faz3-etki-analizi.md)  
-**Önkoşul:** Dilim 3.3+ kodu bu ADR **Kabul** olmadan başlamaz. Teklif yaşam döngüsü / K-007 / K-008 → ADR-0007.  
-**Onay:** Ürün sahibi onayı bekleniyor (agent Kabul işaretlemez)
+**Önkoşul:** Dilim 3.3+ kodu bu ADR **Kabul** gerektirir. Teklif yaşam döngüsü / K-007 / K-008 → ADR-0007.  
+**Onay:** Ürün sahibi kabul etti (agent kendi taslağını onaylamaz)
 
-**Net not:** B-01 gizli platform hizmet payı hukuk görüşü gelmeden §2.8 ve servis payı kalemi **kodlanmaz**; proforma bu riski çözmez.
+**Net not:** B-01 gizli platform hizmet payı hukuk görüşü gelmeden servis payı kalemi **kodlanmaz**; B-02 alıcı görünürlük kararı bunu açmaz. B-06 vergi ertelenmesi (proforma) B-01’i kapatmaz.
 
 Django constraint API (normatif): [Constraints — Django 6.1](https://docs.djangoproject.com/en/6.1/ref/models/constraints/).
 
@@ -60,15 +61,23 @@ Ortak: teklif YAYINDA + geçerli + eşleşme onaylı (ADR-0007 kapısı); kur st
 
 **PriceLock:** Faz 4 arayüzü; bu ADR tanımlar, sipariş tablosu yok.
 
-### 2.5–2.7 K-011 / K-012 / K-019
+### 2.5–2.7 K-011 / K-012 / K-019 (Dilim 3.3 kur politikası)
 
-Taş rename; merkezi dönüşüm; stale kur sessiz fiyat yok; manuel kur audit. B-04/B-05 ÖNERİ §5.
+| Madde | Karar |
+|-------|--------|
+| Sağlayıcı (B-04) | `KurSaglayici`; aynı anda **tek aktif**; otomatik fallback **yok**. Kesintide resolve hata verir. |
+| Gözlem | Mevcut `MetalKuru` / `DovizKuru` genişletilir: `saglayici`, `kur_tipi`, piyasa `zaman` ≠ `alinma_zamani`, manuel `neden` + onaylayan. |
+| Stale | `(alinma − zaman)` veya `(now − zaman)` > sağlayıcı `max_gecikme_saniye` → geçersiz; sessiz “son bilinen kur” **yok**. |
+| Kur tipi (B-05) | `KurPolitikasi`: `alici_kur_tipi` ve `tedarikci_kur_tipi` ayrı; resolve taraf parametresiyle seçer. |
+| Manuel giriş | Neden zorunlu; giren ≠ onaylayan (dört göz); `AuditOlay`; yalnız aktif sağlayıcıya bağlanır. |
+| Quote TTL (B-03) | `SatisKanali.quote_ttl_saniye` kanal bazlı konfig; değer yoksa ileride quote üretilmez (3.5). TTL ≤ kullanılan gözlemin max gecikmesi (3.5 assert). |
+| Dilim sınırı | **3.3 kodu quote motoru / CurrencyConversion / PriceQuote üretmez.** K-011 taş rename → 3.6; K-012 dönüşüm → 3.4. |
 
 ### 2.8 Alıcı görünürlük
 
-§5 B-02 ÖNERİ: varsayılan yalnız toplam; kırılım hukuk onaysız açılmaz; servis payı ayrı görünür satır olmaz (toplama gömülü / gizli_mi).
+**B-02 Kabul (A):** Alıcı varsayılan olarak yalnız `toplam_vergisiz` (+ isteğe bağlı gram başı). Kırılım hukuk onayı olmadan açılmaz. Servis payı ayrı görünür satır olmaz.
 
-**B-01 hukuk görüşü gelmeden §2.8 ve servis payı kalemi kodlanmaz.**
+**B-01 hukuk görüşü gelmeden servis payı kalemi kodlanmaz** (görünürlük kararı servis payı üretimini açmaz). Alıcı yüzey uygulaması → dilim 3.6.
 
 ### 2.9 Vergi
 
@@ -108,18 +117,18 @@ Adım 1–3 → ADR-0007.
 
 ---
 
-## 5. ÜRÜN SAHİBİ KARARI GEREKİR — ÖNERİ (onay gerekir)
+## 5. ÜRÜN SAHİBİ KARARLARI (Kabul 2026-11-08)
 
-| ID | Konu | ÖNERİ (onay gerekir) |
-|----|------|----------------------|
-| B-02 | Alıcıya görünen kalem | Varsayılan **yalnız toplam** (+ isteğe bağlı gram başı). Kırılım konfigle; **hukuk onayı olmadan kırılım açılmaz**. Servis payı **ayrı satır görünmez**. |
-| B-03 | Quote TTL | **Kanal bazlı** (B2B≠B2C). TTL ≤ ilgili kur gözleminin max gecikmesi. Sayı finans belirler. Değer yoksa quote yok. |
-| B-04 | Kur sağlayıcı | Aynı anda **tek aktif provider**; otomatik fallback yok. Manuel: neden + dört göz + audit. Max gecikme konfig. |
-| B-05 | Kur tipi | Alıcı ve tedarikçi tarafı için **ayrı tipler** (ör. satış/alış); ikisi de snapshot’a. Seçim finansın. |
-| — | Çoklu YAYINDA teklif | Alıcı seçmez (kör havuz). Sıra: `oncelik` ↓, sonra en düşük maliyet, sonra deterministik eşitlik bozucu (ör. `teklif.id`). Seçilen teklif quote’a yazılır. |
-| — | Servis payı kaynağı | ALICI sözleşme kalemi + eksikse global konfig; ikisi yoksa quote yok. |
+| ID | Konu | Karar |
+|----|------|--------|
+| B-02 | Alıcıya görünen kalem | **A —** Varsayılan **yalnız toplam** (+ isteğe bağlı gram başı). Kırılım hukuk onaysız açılmaz. Servis payı ayrı satır görünmez. |
+| B-03 | Quote TTL | **A —** **Kanal bazlı**. TTL ≤ ilgili kur gözleminin max gecikmesi. Sayı finans konfigi. Değer yoksa quote yok. |
+| B-04 | Kur sağlayıcı | **A —** Aynı anda **tek aktif provider**; otomatik fallback yok. Manuel: neden + dört göz + audit. Max gecikme konfig. |
+| B-05 | Kur tipi | **A —** Alıcı ve tedarikçi için **ayrı tipler**; ikisi de (quote diliminde) snapshot’a. |
+| — | Çoklu YAYINDA teklif | Alıcı seçmez. Sıra: `oncelik` ↓ → en düşük iç maliyet → `teklif.id` ↑. (Uygulama: quote dilimi 3.5+) |
+| — | Servis payı kaynağı | **Kodlanmaz** (B-01 açık). Taslak not: ALICI kalem + global konfig; hukuk sonrası. |
 | — | C sınıfı eşleşme istisnası | **Yok.** |
-| B-06 | Vergi/KDV | **ERTELENDİ** (ürün sahibi kararı, 2026-11-08): Faz 3 proforma; KDV/vergi yok; mali müşavir şimdilik gerekmez. Vergi motoru ihtiyacında yeniden açılır. |
+| B-06 | Vergi/KDV | **ERTELENDİ** (2026-11-08): Faz 3 proforma; KDV/vergi yok; mali müşavir şimdilik gerekmez. |
 
 ---
 
@@ -167,8 +176,10 @@ Dilim **3.0–3.2** → ADR-0007.
 
 ## 10. Onay checklist
 
-- [ ] Üç fiyat modeli + `toplam_vergisiz` + quote trigger zorunlu  
-- [ ] ALICI vs TEDARIKCI sözleşme rolü  
-- [ ] §5 ÖNERİler / §6 hukuk gizli hizmet (B-01)  
-- [x] B-06 vergi/KDV: **ertelendi** (ürün sahibi kararı — proforma; mali müşavir şimdilik yok)  
-- [ ] Durum: **Kabul edildi** (yalnız ürün sahibi)
+- [x] B-02…B-05 + çoklu YAYINDA: ürün sahibi kabul (2026-11-08)  
+- [x] B-06 vergi/KDV: **ertelendi** (proforma)  
+- [x] B-01 / gizli hizmet payı: **kapsam dışı** (hukuk bekleniyor; kod yok)  
+- [x] ALICI vs TEDARIKCI sözleşme rolü (§2.4.1)  
+- [x] Durum: **Kabul edildi** (ürün sahibi)  
+- [ ] Üç fiyat modeli + `toplam_vergisiz` + quote trigger — dilim 3.4–3.5 uygulama  
+- [ ] §6 kalan dış doğrulama (kur lisans, TRY dışı yuvarlama) — uygulama sırasında açık

@@ -1,7 +1,14 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from tanimlar.models import AyarMilyem, KiymetliMetal, SatisKanali
+from tanimlar.models import (
+    AyarMilyem,
+    KiymetliMetal,
+    KurPolitikasi,
+    KurSaglayici,
+    KurTipi,
+    SatisKanali,
+)
 
 METALLER = [
     # (kod, ad, gram_bazli)
@@ -60,5 +67,27 @@ class Command(BaseCommand):
                 kod=kod, defaults={"ad": ad, "aktif": True}
             )
             yeni += olustu
+
+        # Dilim 3.3 — varsayılan tek aktif sağlayıcı + kur tipi politikası
+        _, olustu = KurSaglayici.objects.get_or_create(
+            kod="MANUEL",
+            defaults={
+                "ad": "Manuel platform girişi",
+                "aktif": True,
+                "max_gecikme_saniye": 300,
+            },
+        )
+        yeni += olustu
+        if not KurSaglayici.objects.filter(aktif=True).exists():
+            KurSaglayici.objects.filter(kod="MANUEL").update(aktif=True)
+
+        _, olustu = KurPolitikasi.objects.get_or_create(
+            anahtar="default",
+            defaults={
+                "alici_kur_tipi": KurTipi.SATIS,
+                "tedarikci_kur_tipi": KurTipi.ALIS,
+            },
+        )
+        yeni += olustu
 
         self.stdout.write(self.style.SUCCESS(f"Tamam. {yeni} yeni kayıt eklendi."))

@@ -1,16 +1,16 @@
-# Mevcut mimari (Faz 3.1 sonrası envanter)
+# Mevcut mimari (Faz 3.3 kur politikası sonrası envanter)
 
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `Backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1 uygulandı); 0008 Faz 3b (**Taslak**); 0009 admin sertleştirme (**Kabul**; H1–H5 uygulandı)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1–3.2); 0008 Faz 3b (**Kabul**; Dilim 3.3 uygulandı); 0009 admin sertleştirme (**Kabul**; H1–H5)
 
 ## Uygulama haritası
 
 | App | Sorumluluk | Servis / selector / komut |
 |-----|------------|---------------------------|
 | `firmalar` | `Firma`, `Kullanici`, adres, banka, `AuditOlay`, RBAC | `rol_servisi`, `yetki_servisi`, `audit_servisi` (`domain_atomic` / durable), `platform_kurulum`; `selectors/tenant`; komutlar: `bootstrap_platform`, `seed_role_permissions`, `audit_user_assignments` |
-| `tanimlar` | Metal, milyem, metal/döviz kuru, fiyat grubu, satış kanalı | admin + `seed_tanimlar` / `seed_fiyat_gruplari`; domain servis yok; kur politikası Faz 3b (ADR-0008) |
+| `tanimlar` | Metal, milyem, kur sağlayıcı/politika, metal/döviz gözlem, fiyat grubu, satış kanalı (quote TTL) | `kur_servisi` (tek aktif provider, stale resolve, manuel dört göz); admin + `seed_tanimlar` / `seed_fiyat_gruplari` |
 | `urunler` | Kategori, `Urun` (`olusturan_firma`, kimlik A/B/C), varyant (`gram_bandi_*`), katalog taşı, onay/eşleştirme | `onay_servisi`, `eslestirme_servisi`, `kategori_servisi` (`kategori_tasi`), `seo_servisi` (teknik fallback), `gram_bandi`; `selectors/katalog_tenant` |
 | `fiyatlama` | Sözleşme (K-007/K-008), `TedarikciTeklif` (yaşam döngüsü), teklif taşı, `hesapla()`, `cozumle()`, `PriceCalculationLog` | `teklif_servisi`; `sozlesme_servisi` (`manage_sozlesme`, AKTIF immutability, exclusion); `teklif_eslestirme_uygun_mu`; `fiyat_hesaplama` (saf) |
 
@@ -36,7 +36,16 @@
 - Kimlik unique: A/B + dolu anahtar + `onay_durumu != reddedildi` (0007).
 - Eşleştirme: tedarikçi önerir, platform onaylar; `eslestirme_durumu` boş = fiyat motoru kapısı (ADR-0007); quote ADR-0008.
 
-## Fiyatlama (mevcut — dilim 3.1)
+## Kur politikası (Dilim 3.3)
+
+- `KurSaglayici`: aynı anda tek `aktif` (partial unique); otomatik fallback yok.
+- `KurPolitikasi`: `alici_kur_tipi` ≠ `tedarikci_kur_tipi` (B-05).
+- `MetalKuru` / `DovizKuru`: `saglayici`, `kur_tipi`, piyasa `zaman` ≠ `alinma_zamani`; manuel neden + onaylayan.
+- Resolve: yalnız aktif sağlayıcı; stale → hata. Quote motoru yok (3.4–3.5).
+- `SatisKanali.quote_ttl_saniye`: B-03 konfig (değer yoksa 3.5’te quote yok).
+- B-01 servis payı / B-06 vergi: kodlanmadı.
+
+## Fiyatlama (mevcut — dilim 3.1–3.2)
 
 ```mermaid
 flowchart TD
