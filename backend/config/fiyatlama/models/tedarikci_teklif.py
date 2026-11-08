@@ -74,7 +74,13 @@ class TedarikciTeklif(models.Model):
     temin_tipi = models.CharField(
         max_length=16, choices=TeminTipi.choices, default=TeminTipi.HAZIR
     )
-    stok_adet = models.PositiveIntegerField(default=0)
+    stok_adet = models.PositiveIntegerField(
+        default=0,
+        help_text=(
+            "LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). "
+            "fiyat_modeli GRAM olsa bile bu alan gram değildir; dönüşüm yok (U-002)."
+        ),
+    )
     uretim_suresi_gun = models.PositiveIntegerField(null=True, blank=True)
     oncelik = models.PositiveIntegerField(default=0)
     durum = models.CharField(

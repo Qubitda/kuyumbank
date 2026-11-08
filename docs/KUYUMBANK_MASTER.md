@@ -2,11 +2,20 @@
 
 **Dosya:** `docs/KUYUMBANK_MASTER.md`  
 **Rol:** Kuyumbank’ın **tek kanonik** ürün, mimari, karar, tarihçe, yol haritası ve iş havuzu kaynağı.  
-**Güncelleme:** 2026-11-08 — Dilim 3.7 (PriceLock L-01…L-10 kod) + docs sadeleştirme  
+**Güncelleme:** 2026-11-08 — Kod–doküman senkronu (F4.1–4.3 + tek kaynak mimari)  
 **Dal:** `adim-1-ilerleme`  
-**Doküman kökü:** yalnız bu dosya (`docs/` altında analysis / architecture / decisions klasörü **yok**).
+**Doküman kökü:** `docs/` altında **yalnız bu dosya**.
 
-> Cursor Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya**. Yeni faz raporu / ikinci yol haritası / dağınık backlog / ayrı ADR dosyası **üretilmez**; değişiklikler buraya işlenir.
+> Cursor Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12). Kurulum: kök `README.md` → `backend/README.md`. Yeni faz raporu / ikinci yol haritası / dağınık backlog / ayrı `ADR-*.md` **üretilmez**.
+
+### Dokümantasyon mimarisi
+
+| Bilgi | Tek kaynak |
+|-------|------------|
+| Agent kuralları | `AGENTS.md` |
+| Ürün/teknik gerçek + ADR + backlog | **Bu master** |
+| Kurulum / komutlar | `README.md`, `backend/README.md` |
+| Cursor skills | `.cursor/skills/*` (özet; çelişirse master/kod kazanır) |
 
 ---
 
@@ -78,59 +87,75 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
-`firmalar`, `tanimlar`, `urunler`, `fiyatlama` — her birinde `models/`, `services/`, `selectors/`, `admin/`, `tests/`.
+`INSTALLED_APPS` (DOĞRULANDI `config/settings.py`): `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`.  
+Her app: `models/`, `services/`, `selectors/` (gerektiği yerde), `admin/`, `tests/`.  
+**Yok:** `siparis`, `finans`, DRF app, Celery.  
+**HTTP:** yalnız `config/urls.py` → `admin/` (DOĞRULANDI).
 
-### 2.3 Veri modelleri (özet — kodda var)
+### 2.3 Modül uygulama durumu (kod gerçeği)
+
+| Alan | Kod durumu | Not |
+|------|------------|-----|
+| Firma / kullanıcı / RBAC / AuditOlay | **Tamamlanmış** | Immutability QuerySet engeli yok (AUD-001 backlog) |
+| Tanımlar / kur / kanal / PB | **Tamamlanmış** | |
+| Katalog / eşleştirme / onay | **Tamamlanmış** | |
+| Teklif SM / sözleşme K-007/008 | **Tamamlanmış** | |
+| Fiyat motoru / PriceQuote / Lock | **Tamamlanmış** | Lock’ta `has_adet` yok |
+| Warehouse / Movement / Balance | **Tamamlanmış** | F4 dilim 1–2 |
+| StockReservation TTL/oversell | **Tamamlanmış** | F4-020/021; F4-022 expire job yok |
+| Cart / Checkout / Order | **Uygulanmamış** | `siparis` app yok |
+| FX pozisyon / hedge / cari | **Yalnız tasarım** | ADR-0012 Taslak; F5 |
+| DRF / ödeme / QC / kargo | **Uygulanmamış** | |
+
+### 2.4 Veri modelleri (özet — dosyada var)
 
 | Alan | Modeller | Etiket |
 |------|----------|--------|
-| Kimlik | `Firma`, `Kullanici`, adres, banka, `AuditOlay` | UYGULANDI |
-| Tanımlar | Metal, ayar/milyem, `KurSaglayici`, `KurPolitikasi`, Metal/Döviz kuru, `SatisKanali` (quote TTL) | UYGULANDI |
-| Katalog | `Kategori`, `Urun` (`olusturan_firma`), `Varyant`, katalog `UrunTasi` | UYGULANDI |
-| Teklif | `TedarikciTeklif` (SM + versiyon), `TeklifTasMaliyeti` (K-011) | UYGULANDI · TEST EDİLDİ |
-| Sözleşme | `FiyatSozlesmesi`, kalem, K-007/K-008 | UYGULANDI · TEST EDİLDİ |
-| Fiyat | saf hesap + `PriceQuote`/`Line` + immutability trigger | UYGULANDI · TEST EDİLDİ |
-| Kilit | `PriceLock` + L-04 TTL guard + L-07 perm | UYGULANDI · TEST EDİLDİ (34 PriceLock + 288 suite OK) |
-| Log | `PriceCalculationLog` (ticari truth değil) | UYGULANDI |
-| Order/Cart/Stock ledger | — | PLANLANDI |
-| RFQ/Payment/QC/Ship | — | PLANLANDI |
+| Kimlik | `Firma`, `Kullanici`, `FirmaAdresi`, `FirmaBankaHesabi`, `AuditOlay` | UYGULANDI |
+| Tanımlar | `KiymetliMetal`, ayar/milyem, `KurSaglayici`, `KurPolitikasi`, `MetalKuru`, `DovizKuru`, `SatisKanali`, `FiyatGrubu` | UYGULANDI |
+| Katalog | `Kategori`, `Urun`, `Varyant`, `UrunTasi`, `Olcu`, `UrunKanal` | UYGULANDI |
+| Teklif | `TedarikciTeklif`, `TeklifTasMaliyeti` | UYGULANDI · TEST EDİLDİ |
+| Sözleşme | `FiyatSozlesmesi`, kalem, çözümleme | UYGULANDI · TEST EDİLDİ |
+| Fiyat | `PriceQuote`/`Line`, `PriceLock`, `PriceCalculationLog` | UYGULANDI · TEST EDİLDİ |
+| Stok | `Warehouse`, `StockMovement`, `StockBalance`, `StockReservation` | UYGULANDI · TEST EDİLDİ |
+| Cart/Order/Payment | — | PLANLANDI |
 
-**Borç:** `Varyant.stok` / `TedarikciTeklif.stok_adet` ikiliği — ledger yok; Faz 4’te çözülecek.
+**Borç:** `Varyant.stok` / `TedarikciTeklif.stok_adet` dual alanları duruyor; ledger yazım yolu ayrı; kaldırma F4-070.
 
-### 2.4 Servisler / selector’lar
+### 2.5 Servisler / selector’lar (DOĞRULANDI dizin listesi)
 
 | Servis | Rol | Etiket |
 |--------|-----|--------|
-| `yetki_servisi` / `rol_servisi` / `audit_servisi` | RBAC, durable fail audit | UYGULANDI |
-| `teklif_servisi` / `sozlesme_servisi` | durum geçişleri | UYGULANDI |
-| `kur_servisi` / `currency_conversion` | kur + PB | UYGULANDI |
-| `fiyat_hesaplama` / `fiyat_motoru` | üç model Decimal | UYGULANDI |
-| `pricing_service.quote` / `lock_quote` | snapshot + kilit (L-07 perm + on-behalf gerekçe) | UYGULANDI |
-| `buyer_quote` selector | B-02 alıcı yüzeyi | UYGULANDI |
-| tenant selectors | firma scope | UYGULANDI |
+| `firmalar`: yetki / rol / audit / platform_kurulum | RBAC, durable fail audit | UYGULANDI |
+| `urunler`: onay / eslestirme / kategori / gram_bandi / seo | katalog SM | UYGULANDI |
+| `tanimlar`: kur_servisi / currency_conversion | kur + PB | UYGULANDI |
+| `fiyatlama`: teklif / sozlesme / fiyat_hesaplama / fiyat_motoru / pricing_service | teklif+quote+lock | UYGULANDI |
+| `fiyatlama.selectors.buyer_quote` | B-02 alıcı yüzeyi | UYGULANDI |
+| `stok`: warehouse / ledger / reservation / birim / dual_stock_envanter | F4 stok | UYGULANDI |
+| tenant selectors (`firmalar`/`urunler`/`stok`/…) | firma scope | UYGULANDI |
 
-### 2.5 Güvenlik
+### 2.6 Güvenlik (kodda karşılığı olan)
 
-- Tenant: selector + admin queryset; `view_all_tenants` yalnız platform+perm (ADR-0003 addendum).  
-- Superuser iş kuralı kısa yolu yok.  
-- Kör havuz: alıcı satır/maliyet/tedarikçi görmez; IDOR → DoesNotExist.  
-- Quote/Lock immutability: uygulama + PostgreSQL trigger.  
-- PriceLock create: `fiyatlama.lock_quote` (alıcı) veya `fiyatlama.lock_quote_on_behalf` (platform); `view_all_tenants` tek başına create yetkisi **vermez**.
+- Tenant: selector + admin queryset; `view_all_tenants` yalnız platform+perm.  
+- Superuser iş kuralı kısa yolu yok (servis perm).  
+- Kör havuz: buyer_quote maske; IDOR → DoesNotExist.  
+- Quote/Lock: app immutability + PG trigger (mig 0007 / 0010–0011).  
+- PriceLock create: `lock_quote` / `lock_quote_on_behalf`; `view_all_tenants` create vermez.  
+- Stok: movement immutable; reservation create/cancel/expire fiziksel movement yazmaz; consume → SATIS.  
+- **Yok (henüz):** DRF object-level API perm; AuditOlay QuerySet immutability (AUD-001).
 
-### 2.6 Test / migration
+### 2.7 Test / migration
 
 | Madde | Durum |
 |-------|--------|
-| Suite (`*.tests` paketleri) | **288 OK** (3.7 L-07 sonrası) — TEST EDİLDİ |
-| PriceLock testleri | **34 OK** — TEST EDİLDİ |
-| `fiyatlama.0007` PriceQuote trigger | UYGULANDI |
-| `fiyatlama.0008–0009` K-011 | UYGULANDI (commit `7802eb4`) |
-| `fiyatlama.0010` PriceLock model + immutability | UYGULANDI |
-| `fiyatlama.0011` L-04 TTL INSERT guard | UYGULANDI |
-| `fiyatlama.0012` L-07 permissions | UYGULANDI |
+| Suite `firmalar\|urunler\|fiyatlama\|tanimlar\|stok.tests` | **312 OK** (PG, F4.3 kapanış) — TEST EDİLDİ |
+| `stok` odak | warehouse + ledger + reservation testleri |
+| `fiyatlama.0007`–`0012` | Quote/Lock/K-011/L-04/L-07 |
+| `fiyatlama.0013` + `urunler.0008` | dual-stock help_text (veri kaybı yok) |
+| `stok.0001`–`0003` | Warehouse → Movement/Balance → Reservation |
 | DRF API testleri | Yok — PLANLANDI |
 
-### 2.7 Özellik matrisi (çekirdek)
+### 2.8 Özellik matrisi (çekirdek)
 
 | Özellik | Etiket |
 |---------|--------|
@@ -143,10 +168,11 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | PriceQuote immutability | UYGULANDI · TEST EDİLDİ |
 | Kör havuz B-02 + K-011 | UYGULANDI · TEST EDİLDİ |
 | PriceLock L-01…L-10 (kod) | UYGULANDI · TEST EDİLDİ |
-| ADR-0010 resmi ürün Kabul | **KARAR BEKLİYOR** (Taslak; kod kabul sayılmaz) |
+| ADR-0010 resmi ürün Kabul | **Kabul** (2026-11-08) |
 | B-01 platform servis payı | KARAR BEKLİYOR (kodlanmadı) |
 | B-06 KDV | KARAR BEKLİYOR (ertelendi; proforma) |
-| Order / stok ledger / ödeme / DRF | PLANLANDI |
+| Stok ledger + rezervasyon | UYGULANDI · TEST EDİLDİ (F4-010…021) |
+| Order / cart / ödeme / DRF | PLANLANDI |
 | Prosperer özellik parity | DOĞRULANAMADI (hedef kıyas) |
 
 ---
@@ -167,7 +193,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | Sözleşme | NULL-safe unique / exclusion | ADR-0007 |
 | Fiyat | Üç model; quote immutable; TTL kanal; kör B-02 | ADR-0008 **Kabul** |
 | Admin sertleştirme | H1–H5 | ADR-0009 **Kabul** |
-| PriceLock L-01…L-10 kod; L-11 Order FK yok | Servis+DB+test | ADR-0010 **Taslak** (resmi Kabul yok) |
+| PriceLock L-01…L-10; L-11 Order FK henüz yok | Servis+DB+test | ADR-0010 **Kabul**; L-11 PLANLANDI |
 | Para | `Decimal`; float yasak | standart |
 | Yazım | `domain_atomic`; fail audit durable dışı | audit_servisi |
 | Concurrency | `select_for_update` + DB kısıt | standart |
@@ -193,7 +219,7 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 | RFQ & Quotation | RFQ müzakere | — | PLANLANDI | Tümü | Pricing |
 | Cart & Checkout | Sepet, checkout | — | PLANLANDI | Tümü | Lock, Inventory |
 | Order Mgmt | SM, snapshot | — | PLANLANDI | Tümü | Cart |
-| Inventory & WH | Ledger, rezervasyon | dual alan borç | PLANLANDI | Ledger | Supplier |
+| Inventory & WH | WH + ledger + rezervasyon | `stok` (+ dual alan borç) | UYGULANDI (F4.1–4.3) | Cart/Order bağ, F4-070 | Supplier |
 | Payments & Finance | Ödeme, cari | — | PLANLANDI | U-* | Order |
 | Quality | QC, gram | — | PLANLANDI | Tümü | Order |
 | Shipping | Sevkiyat, carrier | — | PLANLANDI | Tümü | QC |
@@ -248,7 +274,9 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 | ADR-0007 | Faz 3a | Teklif SM, versiyon swap, K-007/K-008 | **Kabul** | 3.1–3.2 | Supplier/Pricing | UYGULANDI | 0005–0006 mig |
 | ADR-0008 | Faz 3b | Üç model, kur, quote, B-02…B-06, PriceLock tanımı | **Kabul** | 3.3–3.7 | Pricing | 3.3–3.7 kod | 0007–0012 |
 | ADR-0009 | Admin H1–H5 | Admin yüzey sertleştirme | **Kabul** | 3.1+ | Admin | UYGULANDI | admin tests |
-| ADR-0010 | PriceLock L-01…L-11 | Tek lock/quote; TTL=quote; L-07 perm; sipariş FK yok | **Taslak** | 3.7 | PriceLock | L-01…L-10 kod+test; L-11 yok | 0010–0012 |
+| ADR-0010 | PriceLock L-01…L-11 | Tek lock/quote; TTL=quote; L-07 perm; L-11→F4 | **Kabul** | 3.7 | PriceLock | L-01…L-10 UYGULANDI; L-11 PLANLANDI | 0010–0012 |
+| ADR-0011 | Faz 4 ticari çekirdek | Stok üçlüsü + cart/order + Lock→Order | **Kabul** | 4 | Inventory/Order | Dilim 1–3: WH+ledger+reservation | §6.4 · stok app |
+| ADR-0012 | Medusa-türev P0/P1 (audit/FX/hedge/cari) | Faz sırası + mevcut modele uyarlama; kod yok | **Taslak** | 4→5 | Audit/Finance | PLANLANDI | §6.5 |
 | B-01 | Servis payı | Kodlanmaz (hukuk) | **Açık** | 3+ | Pricing | Kod yok | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |
@@ -256,9 +284,9 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 | B-05 | Kur tipi | Alıcı/tedarikçi ayrı | **Kabul** | 3.3 | Pricing | UYGULANDI | KurPolitikasi |
 | B-06 | Vergi | Faz 3 proforma; KDV yok | **Ertelendi** | 3 | Pricing | Bilinçli yok | ADR-0008 §2.9 |
 
-### 6.1 ADR-0010 — madde durumu (ADR hâlâ **Taslak**)
+### 6.1 ADR-0010 — madde durumu (**Kabul** — 2026-11-08 ürün sahibi)
 
-Ürün sahibi resmi **Kabul** vermeden Faz 4 kodu başlamaz. Aşağısı kod gerçeğidir; ADR Kabul’ü değildir.
+L-01…L-10 kabul; L-11 Faz 4’te uygulanır.
 
 | Madde | Kod | Özet |
 |-------|-----|------|
@@ -276,16 +304,126 @@ Proje bağlamı için **tek kanonik kaynak bu dosyadır**. `docs/` altında yaln
 
 **Açık ürün notu (matris):** `PLATFORM_FINANCE` on-behalf opt-in şimdilik **yok**. `ALICI_YONETICI` / `ALICI_ONAYLAYICI` `lock_quote` almaz.
 
+#### ADR-0010 kapanış
+
+**Kabul (ürün sahibi 2026-11-08):** L-01…L-10; L-11 → Faz 4.  
+**Kanıt:** mig `0010–0012`, `test_price_lock.py`, commit `2979e25`.
+
 ### 6.2 Çelişki / kapanmış drift
 
 | Konu | Not |
 |------|-----|
-| ADR-0010 | Kod L-01…L-10 hazır; ADR **Taslak** → resmi Kabul bekler |
-| Eski handoff / faz raporları / `docs/decisions|architecture|analysis` | Kaldırıldı; kanonik yalnız bu master |
+| G0–G2 | 3.7 commit + ADR-0010/0011 Kabul — kapandı |
+| U-002 birim | Teklif `fiyat_modeli` → ADET/GRAM; **dönüşüm yok**; legacy alanlar ADET |
 | Prosperer parity | Hedef kıyas; runtime DOĞRULANAMADI |
 
----
+### 6.4 ADR-0011 — Faz 4 ticari çekirdek (**Kabul** — 2026-11-08)
 
+**Amaç:** Çalışan B2B işlem çekirdeği — stok ledger → rezervasyon → sepet → checkout/lock → sipariş + fiyat snapshot.  
+**Kapsam dışı:** Ödeme, cari/finans, QC, kargo, RFQ, B-01/B-06, konsinye/emanet (U-008).
+
+#### Varsayımlar (Kabul — F4-A1…A16)
+
+| ID | Karar |
+|----|--------|
+| F4-A1 | Paketler: `stok` + `siparis` (ADR-0004 düzeni). Cart siparis app’te. |
+| F4-A2 | **Warehouse:** platform veya tedarikçi sahibi; tenant selector; transfer UI yok. |
+| F4-A3 | **StockMovement:** tek yazım kaynağı; immutable (app+DB); doğrudan balance edit yasak. |
+| F4-A4 | **StockBalance:** projeksiyon; `available = on_hand − reserved − blocked` (Decimal). |
+| F4-A5 | **StockReservation:** checkout hold + TTL; sepet stok düşürmez; expire → available geri. |
+| F4-A6 | Oversell yok: `select_for_update` + PG test (F4-021). |
+| F4-A7 | **Cart/CartLine:** alıcıya özel; kör havuz (tedarikçi/maliyet yok). |
+| F4-A8 | **Checkout:** geçerli PriceLock + rezervasyon zorunlu; expired lock/quote → fail; idempotency key. |
+| F4-A9 | **Order/OrderLine:** durum yalnız servis SM; serbest status yok; her geçiş audit. |
+| F4-A10 | **L-11:** Order → PriceLock bağ (OneToOne veya PROTECT FK); satır fiyat snapshot quote/lock’tan kopya; sonradan değişmez; kur değişimi geçmişi etkilemez. |
+| F4-A11 | Dual-stock: `Varyant.stok` / `TedarikciTeklif.stok_adet` yazma kapatılır → ledger; silent dual-write yok; kaldırma F4-070. |
+| F4-A12 | Birim (U-002 **Kabul A**): `fiyat_modeli`→ADET (`SABIT_PARCA`) / GRAM (`METAL_BAZLI`,`GRAM_BIRIM`); **birimler arası dönüşüm/toplama yok**; balance anahtarı birim içerir. Legacy `stok`/`stok_adet` yalnız ADET semantiği — GRAM ledger’a kör kopya yasak. QC tolerans → Faz 6. |
+| F4-A13 | Konsinye/emanet (U-008): **Faz 4 dışı**; yalnız sahipli depo stoku. |
+| F4-A14 | HTTP (U-012 önerisi): **ince PRE-API** (DRF pin + health + cart/order iskelet + tenant test); tam Prosperer API yok. |
+| F4-A15 | İptal (F4-053): stok iade movement; ödeme iadesi yok. |
+| F4-A16 | Fail audit: domain_atomic dışı durable (mevcut desen). |
+
+#### Uygulama sırası
+
+1. **F4-002 + F4-010 — UYGULANDI:** Warehouse, dual-stock envanter, birim  
+2. **F4-011/012/013 — UYGULANDI:** Movement + Balance + düzeltme (`ledger_servisi`)  
+3. **F4-020/021 — UYGULANDI:** StockReservation TTL + oversell (`reservation_servisi`); F4-022 expire görevi hâlâ backlog  
+4. F4-030/031 Cart ← **sıradaki**  
+5. F4-040/041 Checkout + idempotency + fail audit  
+6. F4-050…053 Order + Lock bağ  
+7. PRE ince API (U-012 A)  
+8. F4-070 legacy stok kapatma  
+
+**Kabul kriterleri (özet):** oversell yok; expired lock checkout fail; OrderLine tutarı kurdan etkilenmez; tenant IDOR yok.
+
+### 6.5 ADR-0012 — Medusa_b2b türev P0/P1 paket (audit / FX / hedge / cari) — **Taslak**
+
+**Kaynak:** Medusa_b2b’den uyarlanmış 4 Cursor prompt’u (2026-11-08 ürün sahibi analizi talebi).  
+**Durum:** **Taslak** — ürün sahibi Kabul etmeden kodlanmaz. Bu dilimde yalnız analiz + backlog eşlemesi.  
+**Bağlayıcı kısıt:** AGENTS faz sırası; ADR-0011 F4 kapsam dışı finans; üretim `migrate` izinsiz yok; F4 sıradaki adım **Cart (F4-030)** — bu paket F4’ü kesmez.
+
+#### Özet karar önerisi (Taslak — Kabul değil)
+
+| Prompt | Öncelik | Hedef faz | Öneri |
+|--------|---------|-----------|--------|
+| 1 Immutable Audit | P0 çapraz | F4 arası **küçük sertleştirme** veya F5-013 öncesi | Uyarlanarak uygulanabilir; API rename yok |
+| 2 FX pozisyon | P0 finans | **Faz 5** (+ checkout gate sonrası) | F5-001 içinde; `has_adet` yok → alan tanımı şart |
+| 3 Hedge | P1 finans | **Faz 5** (FX ile birlikte) | F5-001 altı; `finans` veya `fiyatlama` paketi ADR’de seçilir |
+| 4 Cari + kredi | P1 finans | **Faz 5** | Mevcut **F5-010/011** + **U-005**; `fiyatlama/models/ledger.py` yerleştirme **reddedilir** (çift ledger) |
+
+#### Prompt 1 — Immutable Audit Log
+
+**Mevcut (DOĞRULANDI):** `firmalar/models/audit_olay.py` — `actor`, `actor_firma`, `action`, `entity_type`, `entity_id`, `success`, `detail`, `reason`, `created_at`; indeks `(entity_type, entity_id)` zaten var. Servis: `record_audit` / `record_audit_durable` + sidecar INSERT (`audit_servisi.py`). Immutability yalnız docstring disiplini; QuerySet `update`/`delete` engeli **yok**.
+
+**Uyum / sapma (PLANLAMA BULGUSU):**
+- `target_type` / `target_id` eklemek `entity_*` ile **çift semantik** üretir → tercih: mevcut alanları koru; Medusa `target` API’sini `entity_type`/`entity_id`’ye mapleyen ince `log()` alias (geriye uyum).
+- `changes` ≈ mevcut `detail`; ayrı JSONField isteğe bağlı (veya `detail["changes"]` sözleşmesi).
+- `ip_address` + `client_ip(request)` / `TRUSTED_PROXY_COUNT` faydalı; sidecar SQL kolon listesi **mutlaka** güncellenir (aksi halde durable fail audit kırılır — DOĞRULANDI: sabit INSERT kolonları).
+- `PermissionError` yerine projede yaygın `ValidationError` tercih edilebilir; DB trigger (PriceQuote/Lock deseni) P1 olarak düşünülür.
+- Çağrıları `log(...)` diye yeniden yazmak **yasak öneri** — yüzlerce `record_audit*` kırılır.
+
+**Backlog eşlemesi:** [AUD-001] (§10); F5-013 ile çakışmaz (finans alan seti ayrı).
+
+#### Prompt 2 — FX pozisyon (HAS)
+
+**Mevcut (DOĞRULANDI):** `PriceLock` alanları `toplam_vergisiz`, `para_birimi`, `durum∈{AKTIF,SURESI_DOLDU}` — **`has_adet` yok**; `cancelled` durumu yok. Quote’ta `gram` / metal kur FK’leri var; “kilitli müşteri HAS” tanımı ürün kararı ister.
+
+**Uyum / sapma:**
+- Formül `locked − unpaid_supplier − hedge` mantıklı; unpaid_supplier **Order sonrası** (F4 Order yokken 0 doğru).
+- Checkout’ta limit aşımı → admin onayı: ADR-0011 checkout dilimine **erken bağlanmamalı**; F5 + F4-040 sonrası gate.
+- Settings `HAS_POSITION_LIMIT` kabul edilebilir; Decimal env/settings disiplini ADR-0002.
+- Admin action HTML/`⚠️` emoji: opsiyonel; mesaj düz metin yeterli.
+
+**Backlog:** [FX-001]; bağımlı [F5-001], U-009 (HAS/metal referans).
+
+#### Prompt 3 — Hedge kayıt
+
+**Uyum:** Append-only + `grams≠0` check + `hedge_has_total()` FX’ten lazy import — FX ile aynı ADR diliminde.
+**Sapma (DOĞRULANDI):** `from fiyatlama.services import audit_servisi` **yanlış** — audit `firmalar.services.audit_servisi`. `except Exception: pass` audit yutması ADR-0006 O3 disiplinine zayıf; en azından log/metric.
+**Migrate prompt’u:** yalnız `makemigrations`; üretim migrate ürün sahibi onayı.
+
+**Backlog:** [HEDGE-001] → F5-001 altında.
+
+#### Prompt 4 — Cari + kredi limiti
+
+**Mevcut (DOĞRULANDI):** §10’da **F5-010** FinancialLedger + **F5-011** Cari + **U-005** zaten var. `Firma`: `ad` / `alici_mi` / `tedarikci_mi` — prompt’taki `isim` / `firma_tipi="supplier"` **uyumsuz**.
+
+**Kritik sapmalar:**
+- Modelleri `fiyatlama` içine koymak ADR-0011 (finans F4 dışı) ve F5-001 (ayrı finans ADR) ile çelişir → hedef paket **`finans` (yeni)** veya F5 ADR’de seçilen app; `fiyatlama.ledger` **çift kaynak** riski.
+- Platform kör havuzda cari taraf çoğu senaryoda **platform↔alıcı** (veya hak edişte platform↔tedarikçi); Medusa “supplier→buyer” birebir kopya **U-005 kararı olmadan** sabitlenmez.
+- `select_for_update` + append-only LedgerEntry mevcut F5-010 kabul kriterleriyle uyumlu (iyi).
+- Sipariş FK yok → doğru erteleme; yine de F4 Order bitmeden production charge yok.
+
+**Backlog:** mevcut F5-010/011 güçlendirilir; ayrı Medusa kopyası açılmaz. U-005’e Medusa notu işlendi.
+
+#### Çalıştırma sırası (prompt tablosu) — proje kuralı uyarlaması
+
+Prompt’ların “1→2→3→4 hemen migrate+test” sırası **Kuyumbank’ta bağlayıcı değil**.
+
+1. Önce F4 Cart→Checkout→Order (ADR-0011 sırası).  
+2. AUD-001 (opsiyonel F4 arası sertleştirme) ürün sahibi onayıyla.  
+3. F5-001 / ADR-0012 **Kabul** → FX+Hedge+Cari birlikte tasarım.  
+4. U-005 (ve gerekirse U-006/U-009) Bekliyor iken cari/hak ediş oranları **sabitlenmez**.
 
 ### 6.3 ADR tam metin arşivi (Git HEAD birleştirme öncesi)
 
@@ -1438,11 +1576,21 @@ Tam madde listesi §6.1 L-01…L-11. Durum: **Taslak** (ürün sahibi kabulü be
 - Model + `lock_quote` + expire + concurrency; migrations `0010` (model/guard), `0011` (L-04 TTL INSERT), `0012` (L-07 perms).  
 - L-07/L-10: dedicated permission; on-behalf gerekçe; audit.  
 - Test: PriceLock **34 OK**; suite **288 OK**.  
-- ADR-0010 **Taslak** (resmi Kabul yok).  
-- Devir: Faz 4 **kodlanmaz** — önce ADR-0010 Kabul + Faz4 ADR Kabul + U-012.
+- ADR-0010 **Kabul** (ürün sahibi 2026-11-08).  
+
+### Faz 4.1 — Warehouse + dual-stock
+- `Warehouse`, birim constants, dual-stock envanter yardımı; mig `stok.0001` (+ help_text `urunler.0008` / `fiyatlama.0013`).
+
+### Faz 4.2 — StockMovement / StockBalance / düzeltme
+- Immutable movement + balance projeksiyon; `ledger_servisi`; mig `stok.0002`.
+
+### Faz 4.3 — StockReservation (F4-020/021)
+- Hold+TTL; create/cancel/expire reserved-only; consume → SATIS; idempotency; `select_for_update` oversell.  
+- mig `stok.0003`; test `stok.tests.test_reservation_f4_020` **9 OK**.  
+- Devir: F4-022 expire görevi (opsiyonel) veya **F4-030 Cart**.
 
 ### Açık temalar
-B-01/B-06; dual stock; DRF yok; Order yok; TRY dışı yuvarlama; ADR-0010 resmi Kabul; U-001…U-012.
+B-01/B-06; dual stock kaldırma (F4-070); DRF yok; Order/Cart yok; TRY dışı yuvarlama; U-003…011.
 
 ---
 
@@ -1458,9 +1606,9 @@ Prosperer sütunu: hedef kıyas (**DOĞRULANAMADI** runtime).
 | 4 | Teklif/RFQ | KISMİ | RFQ+müzakere | RFQ SM | Buyer/sup UI | Kör | P1 | Teklif | Audit SM |
 | 5 | Sepet/checkout | Yok | Cart+checkout | Cart svc | Buyer sepet | IDOR | P0 | Lock, rezerv | Lock olmadan sipariş yok |
 | 6 | Sipariş | Yok | Order SM+snapshot | Order | Ops/buyer | Kör+audit | P0 | Cart | Fiyat değişmez |
-| 7 | Çok depo/stok | Yok (dual alan) | Ledger+WH | stok app | Ops | Tedarikçi scope | P0 | F4 ADR | Count edit yok |
-| 8 | Rezervasyon/ATP | Yok | TTL+ATP | Reservation | Ops | Oversell yok | P0 | Ledger | PG concurrent |
-| 9 | Ödeme/cari | Yok | Payment+cari | finans | Buyer/finans | Audit | P0 | Order, U-* | State tutarlı |
+| 7 | Çok depo/stok | KISMİ (WH+ledger; dual alan borç) | Ledger+WH | F4-070 | Ops | Tedarikçi scope | P0 | F4 ADR | Count edit yok |
+| 8 | Rezervasyon/ATP | KISMİ (F4-020/021) | TTL+ATP + expire job | F4-022 | Ops | Oversell yok | P0 | Ledger | PG concurrent |
+| 9 | Ödeme/cari | Yok | Payment+cari+kredi | finans (F5-010/011; ADR-0012) | Buyer/finans | Audit | P0 | Order, U-005 | State tutarlı |
 | 10 | Sevkiyat | Yok | Shipment+carrier | lojistik | Takip | Adres tenant | P1 | QC | QC fail blok |
 | 11 | İade/SH | Yok | RMA | after-sales | Buyer | U-004 | P1 | Ship | SM+ledger |
 | 12 | Portallar | Yok (admin) | Buyer/sup portal | API | Next/PWA | Aynı RBAC | P1 | API | Admin’siz akış |
@@ -1481,7 +1629,7 @@ Prosperer sütunu: hedef kıyas (**DOĞRULANAMADI** runtime).
 **Kural:** Faz kodu = ilgili ADR **Kabul** + açık talimat. Bu bölüm planlamadır.
 
 ### Gate (Faz 4 öncesi)
-G0 3.7 commit · G1 ADR-0010 kabul · G2 Faz4 ADR kabul · G3 U-002/U-008 kapsam net · G4 PRE-API veya admin-only kararı (U-012).
+G0 3.7 commit **kapandı** (`2979e25`) · G1 ADR-0010 Kabul · G2 ADR-0011 Kabul · G3 U-002 (+ U-008 kapsam dışı teyit) · G4 U-012 ince PRE-API.
 
 ### PRE — API iskeleti
 Amaç: DRF pin, `/api/v1/health`, perm/tenant test iskeleti, OpenAPI, Idempotency.  
@@ -1495,7 +1643,7 @@ Kapsam dışı: Ödeme, QC, kargo, RFQ, B-01/B-06.
 Önkoşul: G0–G2.  
 Alt: F4-001…070.  
 Kabul: Oversell yok; expired lock checkout fail; sipariş fiyatı kurdan etkilenmez.  
-Durum: PLANLANDI (kod yok).
+Durum: **KISMİ** — dilim 1–3 (WH + ledger + reservation) UYGULANDI; cart/checkout/order backlog.
 
 ### Faz 5 — Finans
 Amaç: Ledger, cari, payment intent, adapter.  
@@ -1700,95 +1848,54 @@ Toplam benzersiz iş/karar kartı: **111**
 ### [F4-001] Faz 4 ADR taslağı (stok üçlüsü + sipariş SM + PriceLock bağ)
 
 - **Faz:** Faz 4
-- **Durum:** Backlog
-- **Öncelik:** P0
-- **Tip / Domain:** Product
-- **Bağımlılıklar:** U-001 (ADR-0010), mevcut 3.7 kod
-- **Amaç:** Onaylanabilir veri modeli ve durum geçişleri
-- **Kapsam:** Warehouse, Balance, Movement, Reservation, Cart, Order, Lock→Order; dual-stock taşıma politikası
-- **Kapsam dışı:** Ödeme, QC, kargo kodu
-- **Domain/model:** Yeni app’ler önerisi (`stok`, `siparis` veya eşdeğer)
-- **Servis/API:** Servis sınırları ADR’de
-- **Arayüz:** Yok (belge)
-- **Audit:** Kritik geçişler listelenir
-- **Migration:** Dual field stratejisi
-- **Test:** ADR kabul checklist
-- **Kabul kriterleri:** Ürün sahibi “Kabul”; agent kendi onaylamaz
-- **Dokümantasyon:** Karar kaydı `KUYUMBANK_MASTER.md` §6’ya ADR ID ile eklenir
+- **Durum:** **Kabul** (ADR-0011)
+- **Dokümantasyon:** §6.4
 
 ### [F4-002] Dual stock alan envanteri ve deprecation planı
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-001
-- **Amaç:** `Varyant.stok` / `TedarikciTeklif.stok_adet` ikiliğini ledger’a taşıma planı
-- **Kapsam:** Okuma noktaları listesi; yazma yasaklama sırası
-- **Kapsam dışı:** Ledger uygulaması (F4-011)
-- **Kabul kriterleri:** Plan ADR ekinde; silent dual-write yok
+- **Durum:** **UYGULANDI** · **Öncelik:** P0 · **Tip:** Backend
+- **Kanıt:** `stok/services/dual_stock_envanter.py`; Varyant/Teklif help_text; mig `urunler.0008`, `fiyatlama.0013`
+- **Not:** Legacy alanlar ADET; GRAM’a kör migrate yok
+- **Kapsam dışı:** Ledger (F4-011)
 
 ### [F4-010] Warehouse modeli + tenant scope
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-001
-- **Amaç:** Depo kaydı (platform/tedarikçi sahipliği net)
-- **Kapsam:** Model, admin salt, selector
-- **Kapsam dışı:** Transfer UI
-- **Domain/model:** `Warehouse`
-- **Tenant/RBAC/gizlilik:** Tedarikçi yalnız kendi depoları
-- **Audit:** create/update
-- **Test:** izolasyon
-- **Kabul kriterleri:** Yetkisiz depo görünmez
+- **Durum:** **UYGULANDI** · **Öncelik:** P0 · **Tip:** Backend
+- **Kanıt:** `stok.Warehouse`, `warehouse_servisi`, selector, admin salt; mig `stok.0001`; test 9 OK
+- **Perm:** `manage_warehouse` / `manage_own_warehouse`
 
 ### [F4-011] StockMovement immutable ledger
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-010
-- **Amaç:** Stok değişiminin tek kaynağı hareket satırı
-- **Kapsam:** Movement tipi; PROTECT; app+DB immutability politikası
-- **Kapsam dışı:** Reservation
-- **Test:** update/delete reddi; birim karışmama
-- **Kabul kriterleri:** Doğrudan balance edit yok
-- **Decimal:** gram/adet/karat birim alanları (U-002)
-- **Concurrency:** atomic yazım
+- **Durum:** **UYGULANDI** · mig `stok.0002`
+- **Kanıt:** `StockMovement`, `ledger_servisi.kaydet_hareket`; app immutability
 
 ### [F4-012] StockBalance projeksiyonu
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-011
-- **Amaç:** Kullanılabilir / rezerve / bloke ayrımı
-- **Kapsam:** Balance satırı; movement sonrası güncelleme servisi
-- **Test:** tutarlılık invariant
-- **Kabul kriterleri:** available = on_hand − reserved − blocked (formül ADR’de)
+- **Durum:** **UYGULANDI**
+- **Kanıt:** unique (warehouse, teklif, birim); `available = on_hand − reserved − blocked`
 
 ### [F4-013] Stok düzeltme servisi (adjustment)
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend/Security
-- **Bağımlılıklar:** F4-012
-- **Amaç:** Düzeltmeler movement ile; audit zorunlu
-- **Kabul kriterleri:** Neden + aktör olmadan adjustment yok
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `ledger_servisi.duzeltme` — neden ≥5; perm + audit
 
 ### [F4-020] StockReservation modeli + TTL
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-012
-- **Amaç:** Checkout hold; sepet stok düşürmez
-- **Kapsam:** TTL; durum AKTIF/SURESI_DOLDU/TUKETILDI
-- **Test:** expire `now` enjekte
-- **Kabul kriterleri:** Expired rezervasyon available’a döner
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `StockReservation`, `reservation_servisi`; mig `stok.0003`; create/cancel/expire reserved-only; consume SATIS; ADET/GRAM karışmaz
+- **Test:** `stok.tests.test_reservation_f4_020` (TTL/`now` enjekte)
 
 ### [F4-021] Rezervasyon concurrency (select_for_update)
 
 - **Faz:** Faz 4
-- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
-- **Bağımlılıklar:** F4-020
-- **Amaç:** Oversell engeli
-- **Test:** TransactionTestCase paralel rezervasyon PG
-- **Kabul kriterleri:** İkinci aşırı rezervasyon ValidationError
+- **Durum:** **UYGULANDI**
+- **Kanıt:** `get_or_create_balance_locked` + available kontrolü; PG `TransactionTestCase` paralel 4×6/10 → 1 ok / 3 fail
 
 ### [F4-022] Rezervasyon expire görevi (iskelet)
 
@@ -1901,10 +2008,10 @@ Toplam benzersiz iş/karar kartı: **111**
 
 - **Faz:** Faz 5
 - **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Product
-- **Bağımlılıklar:** F4-050, U-003, U-005
-- **Amaç:** Onaylı finans modeli
-- **Kapsam dışı:** Provider seçimi detayı
-- **Kabul kriterleri:** ADR Kabul
+- **Bağımlılıklar:** F4-050, U-003, U-005; girdi: **ADR-0012 Taslak** (FX/hedge/cari Medusa uyarlaması)
+- **Amaç:** Onaylı finans modeli; FX pozisyon + hedge + cari paket sınırları
+- **Kapsam dışı:** Provider seçimi detayı; F4 Cart/Order’ı kesmek
+- **Kabul kriterleri:** ADR Kabul (0012 veya F5 finans ADR birleşik)
 
 ### [F5-010] FinancialLedger / hareket modeli (append-only)
 
@@ -1915,6 +2022,7 @@ Toplam benzersiz iş/karar kartı: **111**
 - **Audit:** her hareket
 - **Kabul kriterleri:** DELETE yasak (app+DB politika)
 - **Decimal:** para birimi zorunlu
+- **Not (ADR-0012):** Medusa `LedgerEntry` buraya maplenir; `fiyatlama/models/ledger.py` **ikinci ledger olarak açılmaz**
 
 ### [F5-011] Cari hesap (firma bakiyesi projeksiyonu)
 
@@ -1922,6 +2030,7 @@ Toplam benzersiz iş/karar kartı: **111**
 - **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
 - **Bağımlılıklar:** F5-010, U-005
 - **Kabul kriterleri:** Alıcı başkasının carisini görmez
+- **Not (ADR-0012):** `CreditAccount` + kredi limiti buraya; taraflar (platform↔alıcı vs tedarikçi↔alıcı) U-005 kararı
 
 ### [F5-012] Order ↔ PaymentIntent bağlama
 
@@ -1936,8 +2045,37 @@ Toplam benzersiz iş/karar kartı: **111**
 
 - **Faz:** Faz 5
 - **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Security
-- **Bağımlılıklar:** F5-010
+- **Bağımlılıklar:** F5-010, AUD-001 (tercihen önce)
 - **Kabul kriterleri:** actor, amount, currency, order ref, success
+
+### [AUD-001] AuditOlay immutability + IP / changes sertleştirme
+
+- **Faz:** Çapraz (F1 artifact; F4 arası veya F5 öncesi)
+- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Security
+- **Bağımlılıklar:** ADR-0012 Kabul (veya dar kapsamlı ürün sahibi onayı)
+- **Amaç:** QuerySet/instance UPDATE/DELETE engeli; isteğe bağlı `ip_address`; `record_audit*` geriye uyum; sidecar kolon sync
+- **Kapsam dışı:** `entity_*` → `target_*` rename; mevcut çağrıları `log()` diye yeniden yazmak
+- **Kaynak:** Medusa immutable audit prompt (§6.5 Prompt 1)
+- **Kabul kriterleri:** update/bulk_update/delete/save-2 PermissionError|ValidationError; create OK; durable INSERT yeni kolonlarla çalışır
+
+### [FX-001] Açık HAS pozisyon servisi (stateless)
+
+- **Faz:** Faz 5
+- **Durum:** Backlog · **Öncelik:** P0 · **Tip:** Backend
+- **Bağımlılıklar:** F5-001 / ADR-0012 Kabul; PriceLock gram/HAS tanımı (U-009)
+- **Amaç:** `open_has = locked_customer − unpaid_supplier − hedge`; limit + `approval_required`
+- **Kapsam dışı:** F4 checkout’a erken bağlama; sahte `has_adet` alanı uydurma
+- **Kanıt notu:** PriceLock’ta `has_adet` **yok** (DOĞRULANDI `price_lock.py`)
+- **Kabul kriterleri:** Decimal Q4; over_limit testi; hedge lazy 0
+
+### [HEDGE-001] HedgeEntry append-only
+
+- **Faz:** Faz 5
+- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** FX-001 / F5-001
+- **Amaç:** Uzun/kısa gram kaydı; `hedge_has_total()` FX’ten düşülür
+- **Kapsam dışı:** Üretim migrate onaysız; yanlış `fiyatlama.audit_servisi` import
+- **Kabul kriterleri:** grams≠0; immutability testleri; FX open_has hedge’i yansıtır
 
 ### [F5-020] Ödeme sağlayıcı adapter arayüzü
 
@@ -2304,22 +2442,16 @@ Toplam benzersiz iş/karar kartı: **111**
 ### [U-001] ADR-0010 PriceLock varsayımları (L-01…L-11)
 
 - **Faz:** Karar
-- **Durum:** Bekliyor (L-01…L-10 kod hazır; resmi ADR Kabul yok; L-11 Faz 4)
-- **Konu:** PriceLock sözleşmesinin ürün sahibi tarafından Kabul edilmesi
-- **Neden gerekli:** Faz 4 Order bağlama gate’i (G1)
+- **Durum:** **Kabul** (2026-11-08) — L-01…L-10; L-11 Faz 4
 - **Etkilenen:** PriceLock, Order (Faz 4)
-- **Önerilen:** §6.1 madde tablosu (kodla uyumlu)
-- **Onaylayacak:** Ürün sahibi
 
 ### [U-002] Stok ölçü birimleri ve tolerans
 
 - **Faz:** Karar
-- **Durum:** Bekliyor
-- **Konu:** Adet / gram / karat; tolerans bandı
-- **Etkilenen:** Inventory, QC (Faz 4–6)
-- **Seçenekler:** (A) teklif modeline göre birim (B) çoklu birim aynı balance
-- **Önerilen:** A — model bazlı birincil birim
-- **Onaylayacak:** Ürün sahibi + operasyon
+- **Durum:** **Kabul A** (2026-11-08)
+- **Uygulama:** `stok.services.birim` — SABIT_PARCA→ADET; METAL/GRAM→GRAM; dönüşüm yok
+- **Açık netlik:** Aynı depoda farklı birimler **ayrı balance** (sonraki dilim); legacy ADET alanları GRAM’a çevrilmez
+- **QC tolerans:** Faz 6
 
 ### [U-003] KDV / vergi davranışı
 
@@ -2345,11 +2477,22 @@ Toplam benzersiz iş/karar kartı: **111**
 
 - **Faz:** Karar
 - **Durum:** Bekliyor
-- **Konu:** Cari bakiyenin ticari anlamı; kapanış
-- **Etkilenen:** Faz 5
-- **Seçenekler:** Basit cari / tam muhasebe entegrasyonu
-- **Önerilen:** Basit cari v1 + ERP sonra
+- **Konu:** Cari bakiyenin ticari anlamı; kapanış; kredi limiti tarafları
+- **Etkilenen:** Faz 5 (F5-010/011); ADR-0012 Prompt 4
+- **Seçenekler:** Basit cari / tam muhasebe entegrasyonu; **taraflar:** platform↔alıcı vs tedarikçi↔alıcı (Medusa supplier→buyer kopyası kör havuzda şüpheli)
+- **Önerilen:** Basit cari v1 + ERP sonra; paket `finans` (yeni) — `fiyatlama` içine ikinci ledger **yok**
 - **Onaylayacak:** Mali müşavir
+- **Firma alan uyarısı:** `Firma.ad` / `alici_mi`/`tedarikci_mi` — Medusa `isim`/`firma_tipi` yok (DOĞRULANDI)
+
+### [U-013] FX / HAS pozisyon ve hedge politikası
+
+- **Faz:** Karar
+- **Durum:** Bekliyor
+- **Konu:** “Kilitli müşteri HAS” tanımı (PriceLock’ta `has_adet` yok); limit aşımında onay kapısı; hedge muhasebesi
+- **Etkilenen:** FX-001, HEDGE-001, checkout gate (F4-040 sonrası), U-009
+- **Seçenekler:** Quote.gram toplamı / metal net HAS / TRY÷kur türevi (türev yasak önerilmez)
+- **Önerilen:** F5-001 ile birlikte; F4 Cart’ı bloklamaz
+- **Onaylayacak:** Ürün sahibi + finans
 
 ### [U-006] Tedarikçi ödeme vadesi ve hak ediş
 
@@ -2374,12 +2517,8 @@ Toplam benzersiz iş/karar kartı: **111**
 ### [U-008] Konsinye / emanet mülkiyet ve sorumluluk
 
 - **Faz:** Karar
-- **Durum:** Bekliyor
-- **Konu:** Stok mülkiyeti, risk
-- **Etkilenen:** Inventory, Shipping
-- **Seçenekler:** Yalnız platform deposu / tedarikçi konsinye
-- **Önerilen:** Faz 4’te konsinye yok; sonra
-- **Onaylayacak:** Hukuk + operasyon
+- **Durum:** **Kabul** — Faz 4 kapsam dışı (2026-11-08)
+- **Uygulama:** Warehouse yalnız platform/tedarikçi sahibi
 
 ### [U-009] Metal/kur ticari referans ve TRY dışı yuvarlama
 
@@ -2414,12 +2553,7 @@ Toplam benzersiz iş/karar kartı: **111**
 ### [U-012] Faz 4 HTTP yüzeyi: yalnız servis+admin mi, PRE-API zorunlu mu?
 
 - **Faz:** Karar
-- **Durum:** Bekliyor
-- **Konu:** Cart/Order için erken DRF
-- **Etkilenen:** PRE, Faz 4
-- **Seçenekler:** (A) PRE zorunlu (B) önce service+admin test
-- **Önerilen:** A — ince PRE
-- **Onaylayacak:** Ürün sahibi / teknik sponsor
+- **Durum:** **Kabul A** — ince PRE-API (2026-11-08); uygulama PRE diliminde
 
 ---
 
@@ -2429,20 +2563,13 @@ Toplam benzersiz iş/karar kartı: **111**
 
 | ID | Konu | Neden | Domain/Faz | Onay | Durum |
 |----|------|-------|------------|------|-------|
-| U-001 | ADR-0010 resmi Kabul | G1; L-01…L-10 kodlu, L-11 Faz 4 | PriceLock / F4 | Ürün sahibi | Bekliyor |
-| U-002 | Stok birimleri/tolerans | Ledger şema | Inventory / F4–6 | Ürün+ops | Bekliyor |
-| U-003 | KDV/vergi | Toplamlar | Pricing/Finance | Mali müşavir | Bekliyor |
-| U-004 | İade/iptal finans | Return | F5–6 | Finans+hukuk | Bekliyor |
-| U-005 | Cari/muhasebe | Finance | F5 | Mali müşavir | Bekliyor |
-| U-006 | Hak ediş/vade | Settlement | F5 | Ürün+finans | Bekliyor |
-| U-007 | B-01 servis payı | Pricing line | Pricing | Hukuk | Bekliyor |
-| U-008 | Konsinye/emanet | WH ownership | Inventory | Hukuk+ops | Bekliyor |
-| U-009 | Kur referans / TRY dışı quantize | ADR-0008 §6 | Pricing | Finans | Bekliyor |
-| U-010 | Hukuki belgeler | Checkout metin | Document | Hukuk | Bekliyor |
-| U-011 | B-02 kırılım genişleme | buyer_quote | Pricing | Hukuk | Bekliyor |
-| U-012 | PRE-API vs admin-only F4 | G4 | PRE/F4 | Teknik sponsor | Bekliyor |
-
-Ayrıca açık: B-01, B-06 (ADR-0008 kayıtlı).
+| U-001 | ADR-0010 | L-01…L-10; L-11→F4 | **Kabul** |
+| U-002 | Birim A | dönüşümsüz ADET/GRAM | **Kabul** |
+| U-008 | Konsinye | F4 dışı | **Kabul** |
+| U-012 | İnce PRE-API | dilim 7 | **Kabul** |
+| U-003…007, 009…011 | Finans/hukuk | F4 bloklamaz | Bekliyor |
+| U-013 | FX/HAS + hedge | F5; PriceLock HAS tanımı | Bekliyor |
+| ADR-0012 | Medusa P0/P1 paket | audit/FX/hedge/cari uyarlama | **Taslak** |
 
 ---
 
@@ -2450,20 +2577,13 @@ Ayrıca açık: B-01, B-06 (ADR-0008 kayıtlı).
 
 | Madde | Değer |
 |-------|--------|
-| Faz | **3.7 kod tamam** (L-01…L-10); Faz 4 **başlamadı** |
-| Son işlev | PriceLock + L-04 TTL DB guard + L-07/L-10 RBAC/audit |
-| Test | PriceLock 34 OK · suite 288 OK |
-| Migration | `fiyatlama.0010` … `0012` |
-| ADR-0010 | **Taslak** — resmi ürün Kabul bekliyor |
-| Bekleyen U-* | U-001…U-012 |
-| Doküman | Yalnız `docs/KUYUMBANK_MASTER.md` (+ `AGENTS.md`, skills, `backend/README.md`) |
-| Sıradaki iş | (1) ADR-0010 ürün Kabul (U-001) (2) Faz 4 ADR taslağı F4-001 (3) U-012 — **açık talimat + Kabul olmadan Faz 4 kodu yok** |
-| Gate | G1 ADR-0010 Kabul · G2 Faz4 ADR Kabul · G3 U-002/U-008 · G4 U-012 |
-
-### Docs sadeleştirme (2026-11-08)
-
-Kaldırıldı: `docs/analysis/`, `docs/architecture/`, `docs/decisions/`, kök handoff/faz raporları. Bilgi bu master’dadır.
+| Faz | **4 dilim 1–3 UYGULANDI** (Warehouse + ledger + StockReservation) |
+| ADR | 0010 **Kabul** · 0011 **Kabul** · **0012 Taslak** (Medusa audit/FX/hedge/cari — kod yok) |
+| Test | reservation **9 OK** · suite **312 OK** (PG) |
+| Migration | `stok.0001–0003`, `urunler.0008`, `fiyatlama.0013` (**veri kaybı yok**; yeni tablolar + help_text) — üretim migrate **çalıştırılmadı** |
+| Sıradaki | **F4-030/031 Cart** (F4-022 opsiyonel P1). Medusa 4’lü prompt paketi F4’ü kesmez → F5 / AUD-001 |
+| U-002 netlik | Birim = teklif modeli; **dönüşüm yok**; balance anahtarı birim içerir; legacy ADET kör kopya yasak |
 
 ---
 
-*Son güncelleme: 2026-11-08 — Dilim 3.7 + docs tek kaynak.*
+*Son güncelleme: 2026-11-08 — Kod–doküman senkronu (AGENTS/README/master §2; F4.1–4.3 kod gerçeği).*

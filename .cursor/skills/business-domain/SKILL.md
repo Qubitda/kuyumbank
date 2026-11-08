@@ -40,27 +40,27 @@ K-011 (3.6): katalog `urunler.UrunTasi` (ProductStone) korunur; teklif maliyeti 
 - Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
 - Rates (3.3): resolve via `kur_servisi` (buyer/supplier `kur_tipi` ayrı; no provider fallback).
 - Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line.
-- Lock (3.7 / ADR-0010 Taslak): `pricing_service.lock_quote()` — geçerli quote; yeniden hesap yok; TTL=quote; L-07 `lock_quote` / `lock_quote_on_behalf` (+ on-behalf gerekçe); sipariş FK → Faz 4.
+- Lock (3.7 / ADR-0010 **Kabul**): `pricing_service.lock_quote()` — geçerli quote; yeniden hesap yok; TTL=quote; L-07 `lock_quote` / `lock_quote_on_behalf` (+ on-behalf gerekçe); Order FK → Faz 4 (L-11 henüz yok). PriceLock’ta `has_adet` yok.
 - Buyer surface (3.6 / B-02): `selectors.buyer_quote` — yalnız `toplam_vergisiz` (+ gram başı); satır/tedarikçi/maliyet yok; IDOR → DoesNotExist.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
 - Formula components: metal (`gram × milyem × saf_birim_fiyat`) + işçilik + taş + extras + platform service + channel margin (+ configurable tax). B-01 servis payı kalemi hukuk öncesi kodlanmaz; B-06 vergi Faz 3’te yok (proforma).
 - Ambiguous contract resolution → error, do not guess (K-007/K-008; dilim 3.2).
 
-## Stock (K-010)
+## Stock (K-010) — `stok` app (F4 dilim 1–3 UYGULANDI)
 
-Separate:
+Separate (DOĞRULANDI):
 
-1. **Balance** — quantity on hand (offer/variant + supplier)
-2. **Reservation** — checkout hold with TTL; cart does not decrement
-3. **Movement** — immutable ledger of changes (sale, adjust, return)
+1. **StockBalance** — `available = on_hand − reserved − blocked`; anahtar warehouse+teklif+birim
+2. **StockReservation** — TTL hold; create/cancel/expire yalnız `reserved` (movement yok); consume → SATIS
+3. **StockMovement** — immutable ledger (GIRIS/CIKIS/DUZELTME/…); `ledger_servisi`
 
-Do not treat `Varyant.stok` and `TedarikciTeklif.stok_adet` as dual sources of truth. Direct count edits forbidden; corrections via movements.
+Birim (U-002): teklif `fiyat_modeli` → ADET/GRAM; **dönüşüm yok**.  
+Legacy `Varyant.stok` / `TedarikciTeklif.stok_adet` dual borç (F4-070). Cart/Order **yok**.
 
 ## Commerce / ops state
 
-Order transitions only via services with role + precondition + audit. No free-text status. Side flows (cancel/return/refund) are separate — no arbitrary rollback.
-
-QC failure blocks shipment. Finance ledger: no delete; reverse with contra entries.
+Order/Cart **henüz yok** (`siparis` app yok). Gelecek: transitions yalnız servis + audit.  
+QC / finance ledger → Faz 5–6 (ADR-0012 cari/FX Taslak; F5-010/011).
 
 ## When implementing
 

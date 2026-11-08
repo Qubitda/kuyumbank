@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'firmalar.apps.FirmalarConfig',
     'fiyatlama.apps.FiyatlamaConfig',
     'urunler.apps.UrunlerConfig',
+    'stok.apps.StokConfig',
 
 ]
 

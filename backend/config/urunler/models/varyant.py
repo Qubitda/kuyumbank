@@ -54,7 +54,14 @@ class Varyant(models.Model):
         help_text="Kutu, sertifika, gravür gibi kalemlerin toplamı.",
     )
 
-    stok = models.PositiveIntegerField("Stok", default=1)
+    stok = models.PositiveIntegerField(
+        "Stok",
+        default=1,
+        help_text=(
+            "LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). "
+            "GRAM teklif stokuyla toplanmaz/dönüştürülmez (U-002)."
+        ),
+    )
     benzersiz_parca = models.BooleanField(
         "Benzersiz parça", default=False,
         help_text="Tek adet, tekrar üretilmeyen parça (ör. sertifikalı tek taş).",

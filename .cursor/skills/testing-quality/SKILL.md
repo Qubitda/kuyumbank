@@ -36,13 +36,12 @@ description: >-
 cd backend/config
 python manage.py check
 python manage.py makemigrations --check --dry-run
-python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests --verbosity=1
+python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests stok.tests --verbosity=1
 ```
 
 Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer explicit `*.tests` modules.
 
-Baseline (Dilim 3.6 sonrası, 2026-11-08): **254 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`; PostgreSQL; +12 kör havuz/K-011).
-
+Baseline (F4.3 sonrası, 2026-11-08): **312 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar` + `stok`; PostgreSQL). Güncel sayı: master §12.
 ## Migration review checklist
 
 - Read generated migration file

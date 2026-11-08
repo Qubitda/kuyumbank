@@ -24,6 +24,8 @@ P = {
     "manage_sozlesme": "fiyatlama.manage_sozlesme",
     "lock_quote": "fiyatlama.lock_quote",
     "lock_quote_on_behalf": "fiyatlama.lock_quote_on_behalf",
+    "manage_warehouse": "stok.manage_warehouse",
+    "manage_own_warehouse": "stok.manage_own_warehouse",
     "manage_kur": "tanimlar.manage_kur",
 }
 
@@ -93,6 +95,7 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_eslestirme"],
         P["manage_sozlesme"],
         P["lock_quote_on_behalf"],
+        P["manage_warehouse"],
         P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
@@ -112,6 +115,7 @@ ROLE_PERMISSION_MATRIX = {
         P["approve_eslestirme"],
         P["manage_sozlesme"],
         P["lock_quote_on_behalf"],
+        P["manage_warehouse"],
         P["manage_kur"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
@@ -123,6 +127,7 @@ ROLE_PERMISSION_MATRIX = {
     roles.PLATFORM_OPS: (
         P["view_all_tenants"],
         P["approve_teklif"],
+        P["manage_warehouse"],
         *_FIYATLAMA_TEKLIF_ADMIN,
     ),
     roles.PLATFORM_FINANCE: (
@@ -161,6 +166,7 @@ ROLE_PERMISSION_MATRIX = {
         P["manage_users"],
         P["submit_urun"],
         P["manage_own_teklif"],
+        P["manage_own_warehouse"],
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
         "firmalar.view_firma",
@@ -171,6 +177,7 @@ ROLE_PERMISSION_MATRIX = {
         P["manage_users"],
         P["submit_urun"],
         P["manage_own_teklif"],
+        P["manage_own_warehouse"],
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
     ),
@@ -185,7 +192,9 @@ ROLE_PERMISSION_MATRIX = {
         "fiyatlama.change_tedarikciteklif",
         "fiyatlama.add_tedarikciteklif",
     ),
-    roles.TEDARIKCI_DEPO: (),
+    roles.TEDARIKCI_DEPO: (
+        P["manage_own_warehouse"],
+    ),
     roles.TEDARIKCI_FINANS: (),
 }
 
