@@ -5,7 +5,7 @@ Proje bağlamını burada tekrar etme; kanonik durum için master’a git.
 
 ## Proje (kısa)
 
-Jewelry B2B platform. Django modular monolith. Alıcı–tedarikçi **kör havuz**; fiyat **snapshot/kilit**; stok **ledger + rezervasyon** (cart/order henüz yok).
+Jewelry B2B platform. Django modular monolith. Alıcı–tedarikçi **kör havuz**; fiyat **snapshot/kilit**; stok **ledger + rezervasyon**; `siparis` **Cart → Checkout → Order** (+ iptal/IADE).
 
 ## İlk okuma sırası
 
@@ -67,10 +67,10 @@ Kod: master §6’da ilgili ADR **Kabul** + açık talimat olmadan o fazın uygu
 2. Faz 1 — firma, kullanıcı, RBAC, izolasyon
 3. Faz 2 — katalog
 4. Faz 3 — teklif / fiyatlama / quote / PriceLock (3a–3b uygulandı; ADR-0010 **Kabul**)
-5. Faz 4 — stok ledger → rezervasyon → **cart** → checkout/lock → order (ADR-0011 **Kabul**; dilim 1–3 uygulandı)
+5. Faz 4 — stok ledger → rezervasyon → cart → checkout/lock → order+iptal (ADR-0011 **Kabul**; dilim 1–7 uygulandı: WH…Order+IADE)
 6. Faz 5+ — finans, QC, API, ops, portal — master §9–§10
 
-Canlı durum: master **§2** ve **§12**. Faz 4 sıra: WH → ledger → reservation → cart → checkout → order. Finans Order + U-* sonrası. ADR-0012 (Medusa audit/FX/hedge/cari) **Taslak** — F4’ü kesmez.
+Canlı durum: master **§2** ve **§12**. Faz 4 kalan: PRE/reorder/outbox/legacy stok. Finans Order + U-* sonrası. ADR-0012 (Medusa audit/FX/hedge/cari) **Taslak** — F4’ü kesmez.
 
 ## Temel iş kuralları
 
@@ -78,8 +78,8 @@ Canlı durum: master **§2** ve **§12**. Faz 4 sıra: WH → ledger → reserva
 - Firma verisi tenant-scoped; client `firma_id` / `tedarikci_id` güvenilmez.
 - Kör havuz: alıcı↔tedarikçi kimlik/maliyet sızıntısı yok.
 - Katalog platform; teklif tedarikçi; alıcı fiyatı quote.
-- Fiyat: Decimal; siparişte snapshot zorunlu (Order henüz yok).
-- Stok: Movement (immutable) ≠ Balance (projeksiyon) ≠ Reservation (TTL hold).
+- Fiyat: Decimal; siparişte snapshot zorunlu (`OrderLine` + L-11 `price_lock`).
+- Stok: Movement (immutable) ≠ Balance (projeksiyon) ≠ Reservation (TTL hold); sipariş tüketimi SATIS, iptal IADE.
 - Kritik işlem audit; fail audit `domain_atomic` dışında durable.
 - Alanın modelde olması kuralın uygulandığı anlamına gelmez.
 

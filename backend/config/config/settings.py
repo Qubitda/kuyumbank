@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'fiyatlama.apps.FiyatlamaConfig',
     'urunler.apps.UrunlerConfig',
     'stok.apps.StokConfig',
+    'siparis.apps.SiparisConfig',
 
 ]
 

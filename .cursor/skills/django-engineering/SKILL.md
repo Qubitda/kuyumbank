@@ -16,7 +16,7 @@ This skill states **project** engineering rules. For framework behavior, read Dj
 ## Project layout
 
 - Settings: `backend/config/config/settings.py`
-- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok` under `backend/config/` (`siparis` yok)
+- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis` under `backend/config/`
 - Manage: `backend/config/manage.py`
 - HTTP: yalnız admin (`config/urls.py`); DRF yok
 - **Binding structure:** ADR-0004 — see `docs/KUYUMBANK_MASTER.md` §3 / §6
