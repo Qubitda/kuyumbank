@@ -45,5 +45,5 @@ Prefer explicit test module paths (see `.cursor/skills/testing-quality/SKILL.md`
 | `urunler` | Catalog (platform ownership, approval) |
 | `fiyatlama` | Offers (lifecycle/versioning), contracts (K-007/K-008), metal price math |
 
-Phase status (code): Faz 1–2.1 done; Faz 3a **3.1–3.2** done; Faz 3b Dilim **3.3** kur politikası done (ADR-0008 Kabul). Next: **3.4** hesap + CurrencyConversion (quote motoru değil).  
-Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/` (`mevcut-mimari.md`, `faz3-3-uygulama-raporu.md`).
+Phase status (code): Faz 1–2.1 done; Faz 3a **3.1–3.2** done; Faz 3b Dilim **3.3–3.5** done (kur + üç model/CurrencyConversion + PriceQuote). Next: **3.6** kör havuz / K-011.  
+Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/` (`mevcut-mimari.md`, `faz3-4-uygulama-raporu.md`).

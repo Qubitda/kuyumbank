@@ -7,6 +7,8 @@ from fiyatlama.models import (
     FiyatSozlesmesi,
     FiyatSozlesmesiKalemi,
     PriceCalculationLog,
+    PriceQuote,
+    PriceQuoteLine,
     TedarikciTeklif,
     UrunTasi,
 )
@@ -14,6 +16,8 @@ from fiyatlama.selectors.tenant import (
     scope_fiyat_sozlesmesi_kalemi_queryset,
     scope_fiyat_sozlesmesi_queryset,
     scope_price_log_queryset,
+    scope_price_quote_line_queryset,
+    scope_price_quote_queryset,
     scope_teklif_queryset,
     scope_teklif_uruntasi_queryset,
     scope_teklif_varyant_queryset,
@@ -452,3 +456,83 @@ class FiyatlamaUrunTasiAdmin(admin.ModelAdmin):
                 if f in display:
                     display.remove(f)
         return display
+
+
+class PriceQuoteLineInline(admin.TabularInline):
+    model = PriceQuoteLine
+    extra = 0
+    can_delete = False
+    fields = ("sira", "kalem_tipi", "tutar")
+    readonly_fields = fields
+
+    def get_queryset(self, request):
+        return scope_price_quote_line_queryset(
+            super().get_queryset(request), request.user
+        )
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PriceQuote)
+class PriceQuoteAdmin(admin.ModelAdmin):
+    """Proforma snapshot — salt okunur (ADR-0008 immutability)."""
+
+    list_display = (
+        "id",
+        "alici_firma",
+        "varyant",
+        "toplam_vergisiz",
+        "para_birimi",
+        "gecerlilik_sonu",
+        "hesap_zamani",
+        "belge_turu",
+    )
+    list_filter = ("para_birimi", "fiyat_modeli", "satis_kanali")
+    search_fields = ("alici_firma__ad", "varyant__sku")
+    list_select_related = ("alici_firma", "varyant", "satis_kanali", "teklif")
+    readonly_fields = (
+        "alici_firma",
+        "satis_kanali",
+        "varyant",
+        "teklif",
+        "teklif_versiyon",
+        "fiyat_modeli",
+        "alici_sozlesme",
+        "alici_sozlesme_versiyon",
+        "alici_kalem",
+        "tedarikci_sozlesme",
+        "tedarikci_sozlesme_versiyon",
+        "tedarikci_kalem",
+        "para_birimi",
+        "toplam_vergisiz",
+        "gram",
+        "gecerlilik_sonu",
+        "hesap_zamani",
+        "quote_ttl_saniye",
+        "alici_kur_tipi",
+        "tedarikci_kur_tipi",
+        "metal_kuru_alici",
+        "metal_kuru_tedarikci",
+        "doviz_gozlem_idler",
+        "hesap_girdisi",
+        "belge_turu",
+        "olusturan",
+        "olusturma_tarihi",
+    )
+    inlines = [PriceQuoteLineInline]
+
+    def get_queryset(self, request):
+        return scope_price_quote_queryset(super().get_queryset(request), request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

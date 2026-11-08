@@ -3,6 +3,7 @@ from .urun_tasi import UrunTasi
 from .fiyat_sozlesmesi import FiyatSozlesmesi
 from .fiyat_sozlesmesi_kalemi import FiyatSozlesmesiKalemi
 from .price_calculation_log import PriceCalculationLog
+from .price_quote import PriceQuote, PriceQuoteLine
 
 __all__ = [
     "TedarikciTeklif",
@@ -10,4 +11,6 @@ __all__ = [
     "FiyatSozlesmesi",
     "FiyatSozlesmesiKalemi",
     "PriceCalculationLog",
+    "PriceQuote",
+    "PriceQuoteLine",
 ]

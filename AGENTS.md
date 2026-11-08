@@ -125,7 +125,7 @@ Görevle ilgili **yalnızca bir** skill oku:
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
 4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
    - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı  
-   - **3b (ADR-0008 Kabul):** dilim **3.3** kur politikası uygulandı; **3.4+** üç model hesap / quote — sıradaki dilim talimatı ile
+   - **3b (ADR-0008 Kabul):** dilim **3.3** kur + **3.4** üç model hesap/CurrencyConversion + **3.5** PriceQuote/quote orkestrasyonu uygulandı; **3.6+** kör havuz/K-011 — sıradaki dilim talimatı ile
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
 7. **Faz 6** — Kalite kontrol, lojistik, teslimat, iade

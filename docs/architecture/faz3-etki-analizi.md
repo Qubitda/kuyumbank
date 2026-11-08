@@ -130,10 +130,12 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | **3.1** | ADR-0007 (3a) | Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + predicate — **uygulandı** |
 | **3.2** | ADR-0007 (3a) | K-007/K-008 (sözleşme NULL-safe / exclusion) — **uygulandı** |
 | **3.3** | ADR-0008 (3b) | Kur politikası — **uygulandı** |
-| **3.4–3.7** | ADR-0008 (3b) | Üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
+| **3.4** | ADR-0008 (3b) | Üç model hesap + CurrencyConversion — **uygulandı** |
+| **3.5** | ADR-0008 (3b) | PriceQuote + trigger — **uygulandı** |
+| **3.6–3.7** | ADR-0008 (3b) | kör havuz/K-011; PriceLock arayüzü |
 
 ---
 
 ## 6. Sonraki adım
 
-Dilim **3.1–3.3 tamam.** Sıradaki: Dilim **3.4** (üç model hesap + CurrencyConversion). Quote motoru **3.5**. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
+Dilim **3.1–3.5 tamam.** Sıradaki: Dilim **3.6** (kör havuz alıcı yüzeyi + K-011). Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.

@@ -99,3 +99,24 @@ def scope_price_log_queryset(qs, user):
     if not user_may_see_fiyat_maliyet(user):
         return qs.none()
     return qs
+
+
+def scope_price_quote_queryset(qs, user):
+    """PriceQuote — platform tümü; alıcı yalnız kendi firması; tedarikçi görmez."""
+    if can_view_all_tenants(user):
+        return qs
+    firma = getattr(user, "firma", None)
+    firma_id = getattr(user, "firma_id", None)
+    if not firma_id or firma is None:
+        return qs.none()
+    if getattr(firma, "alici_mi", False):
+        return qs.filter(alici_firma_id=firma_id)
+    return qs.none()
+
+
+def scope_price_quote_line_queryset(qs, user):
+    """Satır kırılımı: platform maliyet yetkisi; alıcı B-02 yüzeyi 3.6 (şimdilik kapalı)."""
+    if can_view_all_tenants(user) and user_may_see_fiyat_maliyet(user):
+        return qs
+    # Alıcı varsayılan kırılım görmez (B-02); yalnız başlık selector'da
+    return qs.none()

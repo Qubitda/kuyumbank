@@ -71,7 +71,7 @@ Ortak: teklif YAYINDA + geçerli + eşleşme onaylı (ADR-0007 kapısı); kur st
 | Kur tipi (B-05) | `KurPolitikasi`: `alici_kur_tipi` ve `tedarikci_kur_tipi` ayrı; resolve taraf parametresiyle seçer. |
 | Manuel giriş | Neden zorunlu; giren ≠ onaylayan (dört göz); `AuditOlay`; yalnız aktif sağlayıcıya bağlanır. |
 | Quote TTL (B-03) | `SatisKanali.quote_ttl_saniye` kanal bazlı konfig; değer yoksa ileride quote üretilmez (3.5). TTL ≤ kullanılan gözlemin max gecikmesi (3.5 assert). |
-| Dilim sınırı | **3.3 kodu quote motoru / CurrencyConversion / PriceQuote üretmez.** K-011 taş rename → 3.6; K-012 dönüşüm → 3.4. |
+| Dilim sınırı | **3.3** yalnız kur politikası. **3.4** üç model + CurrencyConversion. **3.5** PriceQuote. K-011 taş rename → 3.6. |
 
 ### 2.8 Alıcı görünürlük
 
@@ -181,5 +181,5 @@ Dilim **3.0–3.2** → ADR-0007.
 - [x] B-01 / gizli hizmet payı: **kapsam dışı** (hukuk bekleniyor; kod yok)  
 - [x] ALICI vs TEDARIKCI sözleşme rolü (§2.4.1)  
 - [x] Durum: **Kabul edildi** (ürün sahibi)  
-- [ ] Üç fiyat modeli + `toplam_vergisiz` + quote trigger — dilim 3.4–3.5 uygulama  
+- [x] Üç fiyat modeli + `toplam_vergisiz` + quote trigger — dilim 3.4–3.5 uygulama  
 - [ ] §6 kalan dış doğrulama (kur lisans, TRY dışı yuvarlama) — uygulama sırasında açık

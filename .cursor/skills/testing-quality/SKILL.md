@@ -41,7 +41,7 @@ python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.test
 
 Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer explicit `*.tests` modules.
 
-Baseline (Dilim 3.3 sonrası, 2026-11-08): **205 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`; PostgreSQL).
+Baseline (Dilim 3.5 sonrası, 2026-11-08): **242 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`; PostgreSQL; +14 PriceQuote).
 
 ## Migration review checklist
 

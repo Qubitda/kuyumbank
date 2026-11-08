@@ -29,16 +29,17 @@ Field presence ≠ rule enforcement. Label uncertain claims DOĞRULANAMADI / PLA
 | Supplier offer (`TedarikciTeklif`) | Supplier | Many offers per variant |
 | Buyer price | Platform quote | Never raw supplier cost |
 
-**Catalog ownership (Faz 2):** `Urun.tedarikci` kaldırıldı → `olusturan_firma`; katalog platforma aittir. Teklif yaşam döngüsü (Faz 3.1): `fiyatlama.services.teklif_servisi` — durum yalnız servisten. Sözleşme K-007/K-008 (3.2): `sozlesme_servisi` + `cozumle`. Kur politikası (3.3): `tanimlar.services.kur_servisi` — tek aktif provider, stale fail-closed; quote motoru henüz yok.
+**Catalog ownership (Faz 2):** `Urun.tedarikci` kaldırıldı → `olusturan_firma`; katalog platforma aittir. Teklif yaşam döngüsü (Faz 3.1): `fiyatlama.services.teklif_servisi` — durum yalnız servisten. Sözleşme K-007/K-008 (3.2): `sozlesme_servisi` + `cozumle`. Kur politikası (3.3): `tanimlar.services.kur_servisi` — tek aktif provider, stale fail-closed. Quote (3.5): `pricing_service.quote` → immutable `PriceQuote`.
 
 Two stone models exist (`urunler.UrunTasi` vs `fiyatlama.UrunTasi`) — rename pricing side toward offer stone cost (K-011) when touching that area.
 
 ## Pricing (K-009, K-013)
 
-- Pure math: `fiyatlama.services.fiyat_hesaplama.hesapla` (keep pure; dilim 3.1–3.3 değiştirmedi).
+- Pure math (3.4): `fiyat_hesaplama` — `hesapla_metal_bazli` / `hesapla_gram_birim` / `hesapla_sabit_parca` (+ legacy `hesapla`); Django-free; `toplam_vergisiz` HALF_UP 0.01.
+- PB dönüşüm (3.4): `tanimlar.services.currency_conversion` — TRY per FX; taraf kur tipi; stale fail-closed.
 - Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
 - Rates (3.3): resolve via `kur_servisi` (buyer/supplier `kur_tipi` ayrı; no provider fallback).
-- Orchestration belongs in a future `PricingService.quote()` (ADR-0008 dilim 3.5+): rates, contract, offer version → immutable **PriceQuote** → lock on order.
+- Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line; PriceLock → Faz 4.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
 - Formula components: metal (`gram × milyem × saf_birim_fiyat`) + işçilik + taş + extras + platform service + channel margin (+ configurable tax). B-01 servis payı kalemi hukuk öncesi kodlanmaz; B-06 vergi Faz 3’te yok (proforma).
 - Ambiguous contract resolution → error, do not guess (K-007/K-008; dilim 3.2).
