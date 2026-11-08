@@ -1,4 +1,4 @@
-# Kuyumbank Backend
+# Kuyumbank backend
 
 Django **6.1** modular monolith. Project package lives in `config/`.
 
@@ -11,7 +11,7 @@ Django **6.1** modular monolith. Project package lives in `config/`.
 ## Setup
 
 ```powershell
-cd Backend\config
+cd backend\config
 python -m pip install -r requirements.txt
 copy .env.example .env
 # Edit .env: SECRET_KEY, DB_*
@@ -28,7 +28,7 @@ Ops: `audit_user_assignments` (firma/rol tutarlılığı). Admin: http://127.0.0
 ## Checks and tests
 
 ```powershell
-cd Backend\config
+cd backend\config
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests --verbosity=1
@@ -41,9 +41,9 @@ Prefer explicit test module paths (see `.cursor/skills/testing-quality/SKILL.md`
 | App | Role |
 |-----|------|
 | `firmalar` | Firms, users, RBAC, audit |
-| `tanimlar` | Metals, rates, channels |
+| `tanimlar` | Metals, rate provider/policy (`kur_servisi`), channels (quote TTL) |
 | `urunler` | Catalog (platform ownership, approval) |
-| `fiyatlama` | Offers (lifecycle/versioning), contracts, metal price math |
+| `fiyatlama` | Offers (lifecycle/versioning), contracts (K-007/K-008), metal price math |
 
-Phase status (code): Faz 1–2.1 done; Faz 3a dilim **3.1** (teklif yaşam döngüsü) done; quote/kur = ADR-0008 (Taslak).  
-Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/` (incl. `faz3-1-uygulama-raporu.md`).
+Phase status (code): Faz 1–2.1 done; Faz 3a **3.1–3.2** done; Faz 3b Dilim **3.3** kur politikası done (ADR-0008 Kabul). Next: **3.4** hesap + CurrencyConversion (quote motoru değil).  
+Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/` (`mevcut-mimari.md`, `faz3-3-uygulama-raporu.md`).

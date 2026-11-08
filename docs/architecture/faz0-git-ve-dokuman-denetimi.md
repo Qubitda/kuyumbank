@@ -15,7 +15,7 @@
 | `.cursor/skills/multi-tenant-security/SKILL.md` |
 | `.cursor/skills/business-domain/SKILL.md` |
 | `.cursor/skills/testing-quality/SKILL.md` |
-| `Backend/README.md` |
+| `backend/README.md` |
 | `docs/analysis/README.md` |
 | `docs/architecture/mevcut-mimari.md` |
 | `docs/architecture/faz0-denetim-raporu.md` |
@@ -30,19 +30,19 @@
 
 | Dosya | Neden |
 |-------|--------|
-| `Backend/config/requirements.txt` | Bağımlılık bildirimi düzeltildi (doğrudan deps; ortamla hizalı) |
-| `Backend/config/.env.example` | Örnek secret/DB kimlik bilgisi kaldırıldı; placeholder |
+| `backend/config/requirements.txt` | Bağımlılık bildirimi düzeltildi (doğrudan deps; ortamla hizalı) |
+| `backend/config/.env.example` | Örnek secret/DB kimlik bilgisi kaldırıldı; placeholder |
 
 ## 2. Uygulama kodu — Ek kural B doğrulaması
 
-**DOĞRULANDI:** Faz 0 allowlist’inde `Backend/config/**/*.py` (models/views/services/migrations) yok.
+**DOĞRULANDI:** Faz 0 allowlist’inde `backend/config/**/*.py` (models/views/services/migrations) yok.
 
 Working tree’de görülen geniş `firmalar`/`tanimlar`/`urunler`/`fiyatlama` yeniden düzenlemesi (düz dosyadan paket yapıya geçiş, silinen `models.py` vb.) **Faz 0 ürünü değildir**; önceden mevcut WIP olarak korunmuştur (Ek kural B: mevcut Git değişiklikleri ezilmez).
 
 Doğrulama komutu (allowlist dışı app py değişikliğinin Faz 0’a ait olmadığını göstermek için):
 
 ```text
-git status --short -- AGENTS.md .cursor docs/analysis docs/architecture docs/decisions Backend/README.md Backend/config/requirements.txt Backend/config/.env.example
+git status --short -- AGENTS.md .cursor docs/analysis docs/architecture docs/decisions backend/README.md backend/config/requirements.txt backend/config/.env.example
 ```
 
 Beklenen: yalnızca yukarıdaki allowlist dosyaları (ve bu denetim turunda eklenen mimari md’ler).
@@ -54,9 +54,9 @@ Beklenen: yalnızca yukarıdaki allowlist dosyaları (ve bu denetim turunda ekle
 
 | Konu | Sınıf | Kanıt |
 |------|-------|--------|
-| `settings.py` `import environ` | DOĞRULANDI | `Backend/config/config/settings.py` L10 |
+| `settings.py` `import environ` | DOĞRULANDI | `backend/config/config/settings.py` L10 |
 | `import_export` INSTALLED_APPS | DOĞRULANDI | `settings.py` L56 |
-| HEAD `requirements.txt` içinde `django-environ` yok | DOĞRULANDI | `git show HEAD:Backend/config/requirements.txt` |
+| HEAD `requirements.txt` içinde `django-environ` yok | DOĞRULANDI | `git show HEAD:backend/config/requirements.txt` |
 | Ortamda `django-environ==0.12.0` | DOĞRULANDI | `pip freeze` (Faz 0’da kuruldu) |
 | Ortamda `psycopg==3.3.6`, `psycopg2` yok | DOĞRULANDI | `pip freeze` / `pip show` |
 | HEAD requirements `psycopg2==2.9.13` | DOĞRULANDI | git show HEAD |
@@ -70,7 +70,7 @@ Güncel `requirements.txt` yalnızca: Django, django-environ, django-import-expo
 
 | Konu | Sınıf | Kanıt |
 |------|-------|--------|
-| HEAD `.env.example` içinde dolu `SECRET_KEY` ve `DB_USER`/`DB_PASSWORD` | DOĞRULANDI | `git show HEAD:Backend/config/.env.example` |
+| HEAD `.env.example` içinde dolu `SECRET_KEY` ve `DB_USER`/`DB_PASSWORD` | DOĞRULANDI | `git show HEAD:backend/config/.env.example` |
 | Faz 0 sonrası placeholder’a çekildi | DOĞRULANDI | working tree diff |
 
 Gerçek `.env` içeriği okunmadı / raporlanmadı.

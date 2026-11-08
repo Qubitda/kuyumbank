@@ -1,4 +1,4 @@
-# Kuyumbank Backend — doğrudan bağımlılıklar
+# Kuyumbank backend — doğrudan bağımlılıklar
 # Kural: yalnızca kodun import ettiği / INSTALLED_APPS’te olan paketler.
 # Ortamda yüklü olsa bile DRF, Celery, redis vb. burada yok (henüz kullanılmıyor).
 # Kaynak: docs/decisions/ADR-0002-runtime-ve-bagimliliklar.md

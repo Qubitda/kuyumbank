@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
-**Kod kökü:** `Backend/config/`  
+**Kod kökü:** `backend/config/`  
 **Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a (**Kabul**; 3.1–3.2); 0008 Faz 3b (**Kabul**; Dilim 3.3 uygulandı); 0009 admin sertleştirme (**Kabul**; H1–H5)
 
 ## Uygulama haritası
@@ -82,4 +82,4 @@ Modular monolith; domain service; alıcı fiyatı `PriceQuote` + lock (Faz 3/4);
 
 ## Bağımlılıklar
 
-`Backend/config/requirements.txt` · `.env` / `.env.example` (secret repoya girmez)
+`backend/config/requirements.txt` · `.env` / `.env.example` (secret repoya girmez)

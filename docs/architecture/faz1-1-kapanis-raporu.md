@@ -12,14 +12,14 @@ Kanıt etiketleri: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
 
 | Dosya | Sorumluluk |
 |-------|------------|
-| `Backend/config/firmalar/services/audit_servisi.py` | `record_audit` + `record_audit_durable` (ürün atomic dışı başarısız deneme) |
-| `Backend/config/urunler/services/onay_servisi.py` | Yetki/sahiplik atomic dışı; fail audit atomic dışı; başarı audit ürün yazımıyla aynı atomic; `refresh_from_db` ile stale durum engeli |
-| `Backend/config/urunler/selectors/katalog_tenant.py` | Tek selector: `scope_urun_queryset`, `scope_urun_related_queryset`, `user_may_see_tedarikci_identity` (`can_view_all_tenants`; `is_superuser` kısa yolu yok) |
-| `Backend/config/urunler/selectors/__init__.py` | Selector export |
-| `Backend/config/urunler/admin/urun_admin.py` | Urun/Varyant/UrunKanal/UrunTasi `get_queryset`, inline, FK, autocomplete, list_display/filter/fieldset tedarikçi gizleme; action queryset scope |
-| `Backend/config/urunler/tests/test_audit_rollback.py` | P0 TransactionTestCase: fail/success audit + ürün durumu |
-| `Backend/config/urunler/tests/test_k004_extended.py` | Fail audit persist iddiası güncellendi |
-| `Backend/config/urunler/tests/test_admin.py` | ADR-0003-05 urunler admin hücreleri (1–4, 6, 7) |
+| `backend/config/firmalar/services/audit_servisi.py` | `record_audit` + `record_audit_durable` (ürün atomic dışı başarısız deneme) |
+| `backend/config/urunler/services/onay_servisi.py` | Yetki/sahiplik atomic dışı; fail audit atomic dışı; başarı audit ürün yazımıyla aynı atomic; `refresh_from_db` ile stale durum engeli |
+| `backend/config/urunler/selectors/katalog_tenant.py` | Tek selector: `scope_urun_queryset`, `scope_urun_related_queryset`, `user_may_see_tedarikci_identity` (`can_view_all_tenants`; `is_superuser` kısa yolu yok) |
+| `backend/config/urunler/selectors/__init__.py` | Selector export |
+| `backend/config/urunler/admin/urun_admin.py` | Urun/Varyant/UrunKanal/UrunTasi `get_queryset`, inline, FK, autocomplete, list_display/filter/fieldset tedarikçi gizleme; action queryset scope |
+| `backend/config/urunler/tests/test_audit_rollback.py` | P0 TransactionTestCase: fail/success audit + ürün durumu |
+| `backend/config/urunler/tests/test_k004_extended.py` | Fail audit persist iddiası güncellendi |
+| `backend/config/urunler/tests/test_admin.py` | ADR-0003-05 urunler admin hücreleri (1–4, 6, 7) |
 | `docs/architecture/faz1-1-kapanis-raporu.md` | Bu rapor |
 
 ---

@@ -3,7 +3,7 @@ name: testing-quality
 description: >-
   Kuyumbank Django 6.1 testing standards: model, service, API, authorization,
   tenant isolation, edge cases, and concurrency tests on PostgreSQL. Use when
-  writing, running, or reviewing tests under Backend/config.
+  writing, running, or reviewing tests under backend/config.
 ---
 
 # Testing & Quality (Kuyumbank)
@@ -33,7 +33,7 @@ description: >-
 ## How to run (this repo)
 
 ```text
-cd Backend/config
+cd backend/config
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests --verbosity=1
@@ -41,7 +41,7 @@ python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.test
 
 Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer explicit `*.tests` modules.
 
-Baseline (Faz 3.1 sonrası, 2026-11-08): **164 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`).
+Baseline (Dilim 3.3 sonrası, 2026-11-08): **205 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`; PostgreSQL).
 
 ## Migration review checklist
 

@@ -166,7 +166,7 @@ README güncellenmeli (doküman düzeltmesi; uygulama kodu değil).
 
 ## Çalıştırılan komutlar
 
-Çalışma dizini: `Backend/config`
+Çalışma dizini: `backend/config`
 
 ### `python manage.py check`
 

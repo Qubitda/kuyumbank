@@ -159,7 +159,7 @@ migrate firmalar 0004
 
 | Madde | Sonuç | Sınıf |
 |-------|--------|-------|
-| `git ls-files` `.env` | Yalnız `Backend/config/.env.example` | DOĞRULANDI |
+| `git ls-files` `.env` | Yalnız `backend/config/.env.example` | DOĞRULANDI |
 | `.gitignore` | `.env`, `.env.*`, `!.env.example` | DOĞRULANDI |
 | Gerçek `.env` içerik | Okunmadı / raporlanmadı | — |
 | Zayıf secret uyarısı | Yerel geliştirmede zayıf `SECRET_KEY`/DB parolası varsa **döndürülmeli** (değer yazılmadı) | PLANLAMA BULGUSU |

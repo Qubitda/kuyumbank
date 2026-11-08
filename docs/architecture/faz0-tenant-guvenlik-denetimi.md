@@ -13,7 +13,7 @@ Her bulgu Ek kural A ile etiketlidir. Satır referanssız kesin iddia yok.
 | | |
 |--|--|
 | **Sınıf** | DOĞRULANDI |
-| **Kanıt** | `Backend/config/config/urls.py` L20–22: yalnızca `path('admin/', admin.site.urls)` |
+| **Kanıt** | `backend/config/config/urls.py` L20–22: yalnızca `path('admin/', admin.site.urls)` |
 | **Sonuç** | Tenant izolasyonunu API permission ile kanıtlayacak endpoint yok. Admin session auth tek yüzey. |
 | **Risk** | İleride API eklenince scope unutulursa IDOR kaçınılmaz. |
 

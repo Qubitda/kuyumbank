@@ -7,7 +7,7 @@ Bu dosya proje genelinde bağlayıcıdır. Teknik doğruluk ve veri güvenliği,
 - Python: 3.12–3.14 (geliştirme ortamı: 3.14.6)
 - Django: **6.1.x** (pin: 6.1.2)
 - Veritabanı: PostgreSQL
-- Proje kökü (manage.py): `Backend/config/`
+- Proje kökü (manage.py): `backend/config/`
 
 Framework sürüm matrisi: [Django 6.1 FAQ — install](https://docs.djangoproject.com/en/6.1/faq/install/) · [6.1 release notes](https://docs.djangoproject.com/en/6.1/releases/6.1/) · [Download](https://www.djangoproject.com/download/)
 
@@ -42,7 +42,7 @@ Dosya/satır referansı olmayan teknik bulgu kesin gerçek gibi yazılmaz. Çal�
 
 Faz 0 süresince:
 
-- Backend uygulama Python dosyalarına dokunulmaz.
+- backend uygulama Python dosyalarına dokunulmaz.
 - Model, migration, view, serializer, service değiştirilmez.
 - Veritabanı şeması değiştirilmez; üretim DB’ye bağlanılmaz.
 - Mevcut Git değişiklikleri korunur (ezilmez).
@@ -124,8 +124,8 @@ Görevle ilgili **yalnızca bir** skill oku:
 2. **Faz 1** — Firma, kullanıcı, roller, izinler, platform, firma izolasyonu
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
 4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
-   - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı (WIP commit ayrı olabilir)  
-   - **3b (ADR-0008 Taslak):** kur / quote — Kabul olmadan kod yok
+   - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü + **3.2** K-007/K-008 uygulandı  
+   - **3b (ADR-0008 Kabul):** dilim **3.3** kur politikası uygulandı; **3.4+** üç model hesap / quote — sıradaki dilim talimatı ile
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
 7. **Faz 6** — Kalite kontrol, lojistik, teslimat, iade

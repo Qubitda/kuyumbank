@@ -1,8 +1,8 @@
 # Faz 3 — Etki analizi (teklif / fiyatlama / snapshot)
 
-**Tarih:** 2026-11-08 (analiz) · **Uygulama notu:** dilim **3.1 uygulandı** — [`faz3-1-uygulama-raporu.md`](faz3-1-uygulama-raporu.md); §3.1 bulguları tarihsel (analiz anı).  
+**Tarih:** 2026-11-08 (analiz) · **Uygulama notu:** dilim **3.1–3.3 uygulandı** — [`faz3-1`](faz3-1-uygulama-raporu.md) / [`faz3-2`](faz3-2-uygulama-raporu.md) / [`faz3-3`](faz3-3-uygulama-raporu.md); §3 bulguları tarihsel (analiz anı).  
 **Kapsam (analiz):** Salt okunur kod incelemesi; o tarihte kod/migration değişmedi.  
-**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a (**Kabul**) / ADR-0008 Faz 3b (**Taslak**).
+**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a (**Kabul**) / ADR-0008 Faz 3b (**Kabul**; 3.3).
 
 Etiketler: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
 
@@ -128,11 +128,12 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 |-------|-----|------|
 | **3.0** | ADR-0007 (3a) | Staging yok (uzak DB yok, yalnız yerel PostgreSQL); yerel `btree_gist` 1.8 doğrulandı (CREATE EXTENSION OK); üretim yetkisi **DOĞRULANAMADI** — hosting henüz yok |
 | **3.1** | ADR-0007 (3a) | Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + predicate — **uygulandı** |
-| **3.2** | ADR-0007 (3a) | K-007/K-008 (sözleşme NULL-safe / exclusion) — açık |
-| **3.3–3.7** | ADR-0008 (3b) | Kur politikası; üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
+| **3.2** | ADR-0007 (3a) | K-007/K-008 (sözleşme NULL-safe / exclusion) — **uygulandı** |
+| **3.3** | ADR-0008 (3b) | Kur politikası — **uygulandı** |
+| **3.4–3.7** | ADR-0008 (3b) | Üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
 
 ---
 
 ## 6. Sonraki adım
 
-Dilim **3.1 tamam.** Sıradaki: dilim **3.2** (K-007/K-008) veya ADR-0008 (**Taslak**) Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
+Dilim **3.1–3.3 tamam.** Sıradaki: Dilim **3.4** (üç model hesap + CurrencyConversion). Quote motoru **3.5**. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.

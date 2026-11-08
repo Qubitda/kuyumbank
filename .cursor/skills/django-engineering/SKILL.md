@@ -3,7 +3,7 @@ name: django-engineering
 description: >-
   Kuyumbank Django 6.1 engineering standards for models, ORM, services,
   migrations, admin, and Decimal/transaction patterns. Use when implementing or
-  reviewing Backend/config Python, models, services, migrations, or admin.
+  reviewing backend/config Python, models, services, migrations, or admin.
 ---
 
 # Django Engineering (Kuyumbank)
@@ -15,9 +15,9 @@ This skill states **project** engineering rules. For framework behavior, read Dj
 
 ## Project layout
 
-- Settings: `Backend/config/config/settings.py`
-- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama` under `Backend/config/`
-- Manage: `Backend/config/manage.py`
+- Settings: `backend/config/config/settings.py`
+- Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama` under `backend/config/`
+- Manage: `backend/config/manage.py`
 - **Binding structure:** [`docs/decisions/ADR-0004-modular-python-organizasyon.md`](../../../docs/decisions/ADR-0004-modular-python-organizasyon.md)
 
 ### ADR-0004 package layout (per app)
@@ -48,7 +48,7 @@ Do not create empty `views/` / `serializers/` “for later”. Do not mass-refac
 7. Integrity: prefer DB `constraints`, `unique`, `CheckConstraint`, `PROTECT` FKs where the business rule is absolute. For date-range overlap rules (e.g. active price contracts, K-008) prefer a PostgreSQL exclusion constraint; otherwise a locked service check.
 8. Migrations: generate with Django; read the file before commit. Flag data-loss risk explicitly. Test the reverse migration on an empty DB. Never delete rows to satisfy a NOT NULL/unique constraint; the migration must fail safely instead. No production migrate without approval.
 9. Validation has three layers: serializer/form (user-facing errors), service (workflow and cross-model rules), DB constraint (structural invariants). `Kullanici.save()` calls `full_clean()` for **all** users, including superusers (ADR-0003-02); do not spread that pattern to hot-path models blindly (see report K-017).
-10. Do not add dependencies without need. Pin direct dependencies only in `Backend/config/requirements.txt` (ADR-0002).
+10. Do not add dependencies without need. Pin direct dependencies only in `backend/config/requirements.txt` (ADR-0002).
 11. No secrets in code. Use env via existing `django-environ` pattern. `.env` never enters the repo or archives.
 12. Admin and future API must call the **same** service functions for state changes.
 13. No circular imports; preserve model/admin/test discovery when moving files.

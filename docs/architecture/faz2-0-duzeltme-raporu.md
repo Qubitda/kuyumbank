@@ -51,8 +51,8 @@ Selector tabanlı fiyatlama admin; maliyet/log alıcı-tedarikçide gizli; pasif
 |---------|--------|-------|
 | Git index’te `.env` | Yok (`git ls-files` boş) | DOĞRULANDI |
 | Git history ekleme | Eşleşme yok | DOĞRULANDI |
-| Diskte varlık | `Backend/config/.env` var | DOĞRULANDI |
-| ignore | `Backend/.gitignore` | DOĞRULANDI |
+| Diskte varlık | `backend/config/.env` var | DOĞRULANDI |
+| ignore | `backend/.gitignore` | DOĞRULANDI |
 | Anahtar adları (değer yok) | SECRET_KEY, DEBUG, ALLOWED_HOSTS, DB_* | DOĞRULANDI |
 | Döndürme | Yerel SECRET_KEY / DB_PASSWORD **döndürülmeli** (değer yazılmadı) | PLANLAMA BULGUSU / operasyon |
 
