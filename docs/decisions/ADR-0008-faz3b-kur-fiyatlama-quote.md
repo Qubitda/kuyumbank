@@ -2,7 +2,7 @@
 
 **Durum:** Taslak  
 **Tarih:** 2026-11-08  
-**Bağlı:** ADR-0007 (Faz 3a, Taslak/Kabul sonrası kod sırası), ADR-0005, ADR-0006 (Kabul); kanonik rapor K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; B-01…B-06  
+**Bağlı:** ADR-0007 (Faz 3a, Kabul), ADR-0005, ADR-0006 (Kabul); kanonik rapor K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; B-01…B-06  
 **Etki analizi:** [`docs/architecture/faz3-etki-analizi.md`](../architecture/faz3-etki-analizi.md)  
 **Önkoşul:** Dilim 3.3+ kodu bu ADR **Kabul** olmadan başlamaz. Teklif yaşam döngüsü / K-007 / K-008 → ADR-0007.  
 **Onay:** Ürün sahibi onayı bekleniyor (agent Kabul işaretlemez)
@@ -37,7 +37,7 @@ Ortak: teklif YAYINDA + geçerli + eşleşme onaylı (ADR-0007 kapısı); kur st
 
 ### 2.4 PricingService.quote() ve snapshot
 
-**Giriş:** `alici_firma`, `satis_kanali`, `varyant`, isteğe bağlı `teklif_id`; yoksa platform teklif seçimi (§5 ÖNERİ / ADR-0007 çoklu YAYINDA kuralı).
+**Giriş:** `alici_firma`, `satis_kanali`, `varyant`, isteğe bağlı `teklif_id`; yoksa platform teklif seçimi (§5 ÖNERİ — çoklu YAYINDA).
 
 **Adımlar:** yayınlı ürün/varyant → teklif YAYINDA+geçerli+**eşleşme onaylı** → teklif seçimi → kurlar (stale yok) → **sözleşmeler (§2.4.1)** → PB dönüşüm → model-spesifik hesap (§2.1.1) → **PriceQuote + Line** (immutable).
 
@@ -116,11 +116,10 @@ Adım 1–3 → ADR-0007.
 | B-03 | Quote TTL | **Kanal bazlı** (B2B≠B2C). TTL ≤ ilgili kur gözleminin max gecikmesi. Sayı finans belirler. Değer yoksa quote yok. |
 | B-04 | Kur sağlayıcı | Aynı anda **tek aktif provider**; otomatik fallback yok. Manuel: neden + dört göz + audit. Max gecikme konfig. |
 | B-05 | Kur tipi | Alıcı ve tedarikçi tarafı için **ayrı tipler** (ör. satış/alış); ikisi de snapshot’a. Seçim finansın. |
+| — | Çoklu YAYINDA teklif | Alıcı seçmez (kör havuz). Sıra: `oncelik` ↓, sonra en düşük maliyet, sonra deterministik eşitlik bozucu (ör. `teklif.id`). Seçilen teklif quote’a yazılır. |
 | — | Servis payı kaynağı | ALICI sözleşme kalemi + eksikse global konfig; ikisi yoksa quote yok. |
 | — | C sınıfı eşleşme istisnası | **Yok.** |
 | B-06 | Vergi/KDV | **ERTELENDİ** (ürün sahibi kararı, 2026-11-08): Faz 3 proforma; KDV/vergi yok; mali müşavir şimdilik gerekmez. Vergi motoru ihtiyacında yeniden açılır. |
-
-Çoklu YAYINDA seçim sırası → ADR-0007 §5 (3a).
 
 ---
 

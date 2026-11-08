@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-11-08  
 **Kapsam:** Salt okunur kod incelemesi; kod/migration değişmedi.  
-**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a / ADR-0008 Faz 3b (**Taslak**).
+**Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a (**Kabul**) / ADR-0008 Faz 3b (**Taslak**).
 
 Etiketler: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
 
@@ -122,11 +122,12 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 
 | Dilim | ADR | Konu |
 |-------|-----|------|
-| **3.0–3.2** | ADR-0007 (3a) | Staging + `btree_gist`; teklif yaşam döngüsü + CASCADE; K-007/K-008 |
+| **3.0** | ADR-0007 (3a) | Staging yok (uzak DB yok, yalnız yerel PostgreSQL); yerel `btree_gist` 1.8 doğrulandı (CREATE EXTENSION OK); üretim yetkisi **DOĞRULANAMADI** — hosting henüz yok |
+| **3.1–3.2** | ADR-0007 (3a) | Teklif yaşam döngüsü + CASCADE; K-007/K-008 |
 | **3.3–3.7** | ADR-0008 (3b) | Kur politikası; üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
 
 ---
 
 ## 6. Sonraki adım
 
-ADR-0007 (3a) ürün sahibi **Kabul** → dilim 3.0–3.2. ADR-0008 (3b) ayrı Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
+ADR-0007 (3a) **Kabul** (2026-11-08) → dilim 3.1–3.2. ADR-0008 (3b) ayrı Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.

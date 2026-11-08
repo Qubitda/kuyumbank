@@ -30,11 +30,17 @@ Faz 2 katalog ownership’i ayırdı. Teklif durum servisi yok; K-007/K-008 (NUL
 | Faz 2 taslak teklifler | Migration ile gelen tekliflerde `eslestirme_durumu=''`: eşleşme kapısından geçmez. Operasyon: `teklif_eslestir_oner` → platform `eslestirmeyi_onayla`. Backfill otomatik `onaylandi` **yapılmaz**. |
 | Durum makinesi | `TASLAK → ONAY_BEKLIYOR → YAYINDA ↔ PASIF`; yalnız servis + perm + audit. |
 | `approve_teklif` | Platform + permission; dört göz (ADR-0006 O5). |
-| Versiyon geçişi | Yayınlı teklifte fiyat/gram/model değişimi → **yeni satır/versiyon** `ONAY_BEKLIYOR` (veya taslak); **eski YAYINDA kalır**. Yenisi onaylanınca **tek `domain_atomic`**: yeni → YAYINDA, eski → PASIF. Fiyatsız boşluk yok. İleriye dönük: quote/sipariş eski `teklif_id`/`versiyon` taşır — ADR-0008. |
+| Versiyon geçişi | Yayınlı teklifte fiyat/gram/model değişimi → **yeni satır/versiyon** `ONAY_BEKLIYOR` (veya taslak); onaylanana kadar **eski YAYINDA kalır**. Yenisi onaylanınca **tek `domain_atomic`**: önce eski → PASIF, sonra yeni → YAYINDA (`select_for_update`). Fiyatsız boşluk yok. İleriye dönük: quote/sipariş eski `teklif_id`/`versiyon` taşır — ADR-0008. |
 | Geçerlilik | `gecerlilik_baslangic` / `gecerlilik_bitis` YAYINDA için zorunlu; süresi dolmuş → fiyat motorunda kullanılmaz (quote yok — ADR-0008). |
-| Aktif çakışma | Aynı `tedarikci + varyant + tedarikci_kodu` (boş kodda `tedarikci+varyant`) için **bir** YAYINDA; partial unique + servis. Çoklu YAYINDA (farklı kod): alıcı seçmez — §5 ÖNERİ. |
+| Aktif çakışma | Aynı `tedarikci + varyant + tedarikci_kodu` (boş kodda `tedarikci+varyant`) için **bir** YAYINDA; partial unique + servis. Çoklu YAYINDA (farklı kod) seçim sırası → ADR-0008 §5. |
 | FK | `varyant` CASCADE → **PROTECT**; aktif teklif varken varyant silinemez. |
 | Admin | Durum readonly; action → servis. |
+
+#### Netleştirme (anlam değişmez)
+
+1. **Versiyon swap sırası:** Önce eski teklif → PASIF, sonra yeni teklif → YAYINDA; tek `domain_atomic` içinde; ilgili satırlar `select_for_update` ile kilitlenir. Gerekçe: “aktif çakışma” partial unique’i ertelenmemiş kısıttır; sıra ters olursa ara ifade kısıtı ihlal eder.
+2. **Eşleştirme kapısı (3a):** Yalnız saf bir uygunluk koşulu (selector / predicate); quote çağrısı yok. Quote tarafındaki gerçek reddi testi ADR-0008’e aittir; §7’deki ilgili test 3a’da **predicate** testidir.
+3. **Versiyon alanları:** `versiyon` ve önceki teklife bağ ADR’de adlandırılmamıştır; uygulama sırasında geri dönüşü kolay en küçük çözüm seçilir ve uygulama raporunda **VARSAYIM** olarak listelenir (alan adı uydurma yok).
 
 ### 2.2 K-007 sözleşme kalemi
 
@@ -51,7 +57,7 @@ Faz 2 katalog ownership’i ayırdı. Teklif durum servisi yok; K-007/K-008 (NUL
 |-------|--------|
 | Kural | Aynı `firma + kontrat_tipi + kanal_anahtarı` kapsamında AKTIF `daterange` çakışmaz. |
 | NULL kanal | Ham `satis_kanali_id` exclusion’da **yetersiz** (`NULL` çakışma sayılmaz). İfade: `COALESCE(satis_kanali_id, 0)` (veya sentinel) + `daterange(baslangic, bitis, '[]')` + `&&`. Kanalsız iki AKTIF böylece engellenir. |
-| Extension | `ExclusionConstraint` / `gist` için **`btree_gist`** gerekir. **DOĞRULANAMADI:** üretim hosting’te `CREATE EXTENSION btree_gist` yetkisi. Dilim 3.0’da doğrula; kurulamazsa: yayın servisinde `select_for_update` + aralık sorgusu (eşdeğer kural, test aynı). |
+| Extension | `ExclusionConstraint` / `gist` için **`btree_gist`** gerekir. Yerel: `btree_gist` 1.8 **DOĞRULANDI** (CREATE EXTENSION OK). **DOĞRULANAMADI:** üretim hosting yetkisi (hosting henüz yok). Kurulamazsa: yayın servisinde `select_for_update` + aralık sorgusu (eşdeğer kural, test aynı). |
 | Kanal vs kanalsız | Kanallı AKTIF o kanalda baskın; kanalsız diğer kanallara fallback. Matris testle sabitlenir. |
 | İmmutability | AKTIF sonrası kalem/tarih değişmez → yeni versiyon. |
 | Permission | `manage_sozlesme`. |
@@ -71,7 +77,7 @@ Faz 2 katalog ownership’i ayırdı. Teklif durum servisi yok; K-007/K-008 (NUL
 | 3 | K-008: `btree_gist` + exclusion (`COALESCE` kanal) **veya** servis kilidi; extension **DOĞRULANAMADI** ise servis yolu |
 | Reverse | Çakışmada dur; satır silme yok |
 
-Staging envanteri dilim 3.0 (**DOĞRULANAMADI** bu tur). Adım 4 (PriceQuote / trigger) → ADR-0008.
+Dilim 3.0: staging yok (uzak DB yok, yalnız yerel PostgreSQL); yerel `btree_gist` 1.8 doğrulandı (CREATE EXTENSION OK); üretim yetkisi **DOĞRULANAMADI** — hosting henüz yok. Adım 4 (PriceQuote / trigger) → ADR-0008.
 
 ---
 
@@ -86,9 +92,7 @@ Staging envanteri dilim 3.0 (**DOĞRULANAMADI** bu tur). Adım 4 (PriceQuote / t
 
 ## 5. ÜRÜN SAHİBİ KARARI GEREKİR — ÖNERİ (onay gerekir)
 
-| ID | Konu | ÖNERİ (onay gerekir) |
-|----|------|----------------------|
-| — | Çoklu YAYINDA teklif | Alıcı seçmez (kör havuz). Sıra: `oncelik` ↓, sonra en düşük maliyet, sonra deterministik eşitlik bozucu (ör. `teklif.id`). Seçilen teklif ADR-0008 quote’a yazılır. |
+Çoklu YAYINDA teklif seçim sırası → ADR-0008 §5 (3b; quote seçimi).
 
 B-02…B-06 ve servis payı → ADR-0008 §5.
 
@@ -108,8 +112,8 @@ B-01 (hukuk / gizli hizmet payı) ve diğer dış doğrulamalar → ADR-0008 §6
 
 | Ek | Test |
 |----|------|
-| — | `eslestirme_durumu=''` → fiyat motoru / quote reddi (kapı; quote uygulaması ADR-0008) |
-| — | Versiyon: onay transaction’ında eski PASIF / yeni YAYINDA atomik |
+| — | `eslestirme_durumu=''` → predicate reddi (kapı; quote uygulaması ADR-0008) |
+| — | Versiyon: onay transaction’ında önce eski PASIF, sonra yeni YAYINDA (`select_for_update`) |
 | — | K-007 NULL ayar tekilliği; K-008 iki kanalsız AKTIF reddi |
 | — | Teklif sahiplik / durum makinesi / CASCADE→PROTECT |
 
@@ -117,8 +121,8 @@ B-01 (hukuk / gizli hizmet payı) ve diğer dış doğrulamalar → ADR-0008 §6
 
 ## 8. Dilimler
 
-1. **3.0** Kabul + staging envanter + `btree_gist` kontrolü  
-2. **3.1** Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + eşleşme kapısı  
+1. **3.0** Kabul; staging yok (uzak DB yok); yerel `btree_gist` 1.8 doğrulandı; üretim yetkisi DOĞRULANAMADI  
+2. **3.1** Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + eşleşme predicate  
 3. **3.2** K-007/K-008  
 
 Dilim **3.3–3.7** → ADR-0008.

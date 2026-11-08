@@ -3,7 +3,7 @@
 **Tarih:** 2026-11-08  
 **Runtime:** Python 3.14.6 · Django 6.1.2 · PostgreSQL  
 **Kod kökü:** `Backend/config/`  
-**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Taslak**); 0008 Faz 3b kur/quote (**Taslak**)
+**Bağlı ADR:** 0003–0006 (Kabul); 0007 Faz 3a teklif/sözleşme (**Kabul**); 0008 Faz 3b kur/quote (**Taslak**)
 
 ## Uygulama haritası
 
