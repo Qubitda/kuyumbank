@@ -27,7 +27,8 @@ Admin: http://127.0.0.1:8000/admin/
 ```powershell
 cd Backend\config
 python manage.py check
-python manage.py test urunler.tests fiyatlama.tests.test_fiyat_hesaplama --verbosity=1
+python manage.py makemigrations --check --dry-run
+python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests --verbosity=1
 ```
 
 Prefer explicit test module paths (see `.cursor/skills/testing-quality/SKILL.md`).
@@ -36,9 +37,10 @@ Prefer explicit test module paths (see `.cursor/skills/testing-quality/SKILL.md`
 
 | App | Role |
 |-----|------|
-| `firmalar` | Firms and users |
+| `firmalar` | Firms, users, RBAC, audit |
 | `tanimlar` | Metals, rates, channels |
-| `urunler` | Catalog |
-| `fiyatlama` | Contracts, offers, price math |
+| `urunler` | Catalog (platform ownership, approval) |
+| `fiyatlama` | Offers (lifecycle/versioning), contracts, metal price math |
 
-Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/`.
+Phase status (code): Faz 1–2.1 done; Faz 3a dilim **3.1** (teklif yaşam döngüsü) done; quote/kur = ADR-0008 (Taslak).  
+Agent rules: repo root `AGENTS.md`. Architecture: `docs/architecture/` (incl. `faz3-1-uygulama-raporu.md`).

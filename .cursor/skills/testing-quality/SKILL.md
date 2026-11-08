@@ -35,12 +35,13 @@ description: >-
 ```text
 cd Backend/config
 python manage.py check
-python manage.py test urunler.tests fiyatlama.tests.test_fiyat_hesaplama --verbosity=1
+python manage.py makemigrations --check --dry-run
+python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests --verbosity=1
 ```
 
 Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer explicit `*.tests` modules.
 
-Baseline (Faz 0): **23 tests OK** (`urunler` + `fiyatlama` calculator). `firmalar` has no tests yet — add in Faz 1.
+Baseline (Faz 3.1 sonrası, 2026-11-08): **164 tests OK** (`firmalar` + `urunler` + `fiyatlama` + `tanimlar`).
 
 ## Migration review checklist
 

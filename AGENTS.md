@@ -67,14 +67,17 @@ Görevle ilgili **yalnızca bir** skill oku:
 1. **Faz 0** — Standartlar ve denetim (tamamlandıktan sonra beklenen: talimat)
 2. **Faz 1** — Firma, kullanıcı, roller, izinler, platform, firma izolasyonu
 3. **Faz 2** — Kategori, ürün, varyant, özellikler, görseller
-4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot
+4. **Faz 3** — Tedarikçi teklifi, fiyatlama, fiyat snapshot  
+   - **3a (ADR-0007 Kabul):** dilim **3.1** teklif yaşam döngüsü uygulandı; dilim **3.2** K-007/K-008 açık  
+   - **3b (ADR-0008 Taslak):** kur / quote — Kabul olmadan kod yok
 5. **Faz 4** — Stok hareketi / rezervasyon / bakiye + sipariş yaşam döngüsü
 6. **Faz 5** — Ödeme, tahsilat, cari, komisyon, finansal hareket
 7. **Faz 6** — Kalite kontrol, lojistik, teslimat, iade
 8. **Faz 7** — API standartları, dış sistemler, SAP
 9. **Faz 8** — Performans, güvenlik, loglama, izleme, yedek, deployment
 
-Firma izolasyonu ve yetkilendirme yanlış kurulursa sonraki tüm modüller bozulur. Bir faz bitmeden ilgisiz modüle geçme.
+Firma izolasyonu ve yetkilendirme yanlış kurulursa sonraki tüm modüller bozulur. Bir faz bitmeden ilgisiz modüle geçme.  
+Canlı envanter: `docs/architecture/mevcut-mimari.md`.
 
 ## Temel iş kuralları
 

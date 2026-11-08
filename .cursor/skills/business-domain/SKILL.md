@@ -29,17 +29,18 @@ Field presence ≠ rule enforcement. Label uncertain claims DOĞRULANAMADI / PLA
 | Supplier offer (`TedarikciTeklif`) | Supplier | Many offers per variant |
 | Buyer price | Platform quote | Never raw supplier cost |
 
-**Current debt:** `Urun.tedarikci` ties catalog to one supplier — do not deepen this; Faz 2–3 must split ownership toward platform catalog + offers.
+**Catalog ownership (Faz 2):** `Urun.tedarikci` kaldırıldı → `olusturan_firma`; katalog platforma aittir. Teklif yaşam döngüsü (Faz 3.1): `fiyatlama.services.teklif_servisi` — durum yalnız servisten; alıcı/quote ADR-0008.
 
 Two stone models exist (`urunler.UrunTasi` vs `fiyatlama.UrunTasi`) — rename pricing side toward offer stone cost (K-011) when touching that area.
 
 ## Pricing (K-009, K-013)
 
-- Pure math: `fiyatlama.services.fiyat_hesaplama.hesapla` (keep pure).
-- Orchestration belongs in a future `PricingService.quote()`: select rates, contract rule, offer version → immutable **PriceQuote** → lock on order.
+- Pure math: `fiyatlama.services.fiyat_hesaplama.hesapla` (keep pure; dilim 3.1 değiştirmedi).
+- Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
+- Orchestration belongs in a future `PricingService.quote()` (ADR-0008): rates, contract, offer version → immutable **PriceQuote** → lock on order.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
 - Formula components: metal (`gram × milyem × saf_birim_fiyat`) + işçilik + taş + extras + platform service + channel margin (+ configurable tax).
-- Ambiguous contract resolution → error, do not guess (K-007/K-008).
+- Ambiguous contract resolution → error, do not guess (K-007/K-008; dilim 3.2).
 
 ## Stock (K-010)
 

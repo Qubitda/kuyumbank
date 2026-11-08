@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-11-08  
 **ADR:** 0007 (Kabul) §2.1 + §3 migration adım 1 + §7 teklif testleri + §8 dilim 3.1  
-**Durum:** Kod tamam; COMMIT yok (talimat)
+**Durum:** Kod tamam; commit `977bb38` (`adim-1-ilerleme`)
 
 ## Değiştirilen / oluşturulan dosyalar (sorumluluk)
 

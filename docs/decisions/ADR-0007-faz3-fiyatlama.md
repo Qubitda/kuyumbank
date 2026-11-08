@@ -6,7 +6,8 @@
 **Etki analizi:** [`docs/architecture/faz3-etki-analizi.md`](../architecture/faz3-etki-analizi.md)  
 **Onay:** Ürün sahibi, 2026-11-08
 
-**Kapsam notu:** Faz 3b kararları [`ADR-0008-faz3b-kur-fiyatlama-quote.md`](ADR-0008-faz3b-kur-fiyatlama-quote.md) içindedir; **3.3+ kodu ADR-0008 Kabul olmadan başlamaz.**
+**Kapsam notu:** Faz 3b kararları [`ADR-0008-faz3b-kur-fiyatlama-quote.md`](ADR-0008-faz3b-kur-fiyatlama-quote.md) içindedir; **3.3+ kodu ADR-0008 Kabul olmadan başlamaz.**  
+**Uygulama:** Dilim **3.1** uygulandı — [`faz3-1-uygulama-raporu.md`](../architecture/faz3-1-uygulama-raporu.md). Dilim **3.2** (K-007/K-008) açık.
 
 Django constraint API (normatif): [Constraints — Django 6.1](https://docs.djangoproject.com/en/6.1/ref/models/constraints/) (`UniqueConstraint.nulls_distinct`).
 
@@ -14,7 +15,7 @@ Django constraint API (normatif): [Constraints — Django 6.1](https://docs.djan
 
 ## 1. Bağlam
 
-Faz 2 katalog ownership’i ayırdı. Teklif durum servisi yok; K-007/K-008 (NULL-safe unique/exclusion) eksik. ADR-0006: teklif `durum` admin salt okunur; `approve_teklif` / `manage_sozlesme` Faz 3’e ertelenmişti. Bu ADR yalnız **dilim 3.0–3.2** (teklif yaşam döngüsü + sözleşme kuralları) içindir.
+Faz 2 katalog ownership’i ayırdı. *(Analiz/Kabul anı:)* teklif durum servisi yoktu; K-007/K-008 (NULL-safe unique/exclusion) eksik. ADR-0006: teklif `durum` admin salt okunur; `approve_teklif` / `manage_sozlesme` Faz 3’e ertelenmişti. Bu ADR yalnız **dilim 3.0–3.2** (teklif yaşam döngüsü + sözleşme kuralları) içindir.
 
 ---
 
@@ -122,8 +123,8 @@ B-01 (hukuk / gizli hizmet payı) ve diğer dış doğrulamalar → ADR-0008 §6
 ## 8. Dilimler
 
 1. **3.0** Kabul; staging yok (uzak DB yok); yerel `btree_gist` 1.8 doğrulandı; üretim yetkisi DOĞRULANAMADI  
-2. **3.1** Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + eşleşme predicate  
-3. **3.2** K-007/K-008  
+2. **3.1** Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + eşleşme predicate — **uygulandı**  
+3. **3.2** K-007/K-008 — açık  
 
 Dilim **3.3–3.7** → ADR-0008.
 
@@ -141,7 +142,7 @@ Kur politikası, üç model quote hesabı, `PriceQuote` / trigger, alıcı gör�
 
 ## 10. Onay checklist
 
-- [ ] Eşleşme kapısı (boş = kullanılmaz) + versiyon swap atomik  
-- [ ] K-007/K-008 NULL-safe + btree_gist notu  
-- [ ] CASCADE→PROTECT + teklif durum servisi kapsamı  
+- [x] Eşleşme kapısı (boş = kullanılmaz) + versiyon swap atomik *(dilim 3.1)*  
+- [ ] K-007/K-008 NULL-safe + btree_gist notu *(dilim 3.2)*  
+- [x] CASCADE→PROTECT + teklif durum servisi kapsamı *(dilim 3.1)*  
 - [x] Durum: **Kabul edildi** (yalnız ürün sahibi)

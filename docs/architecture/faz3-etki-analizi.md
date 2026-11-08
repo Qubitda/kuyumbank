@@ -1,7 +1,7 @@
 # Faz 3 — Etki analizi (teklif / fiyatlama / snapshot)
 
-**Tarih:** 2026-11-08  
-**Kapsam:** Salt okunur kod incelemesi; kod/migration değişmedi.  
+**Tarih:** 2026-11-08 (analiz) · **Uygulama notu:** dilim **3.1 uygulandı** — [`faz3-1-uygulama-raporu.md`](faz3-1-uygulama-raporu.md); §3.1 bulguları tarihsel (analiz anı).  
+**Kapsam (analiz):** Salt okunur kod incelemesi; o tarihte kod/migration değişmedi.  
 **Bağlı:** Kanonik rapor K-006…K-009, K-011…K-013, K-019; §5.2, §5.4, §9.3, §9.4, §12.3; ADR-0005, ADR-0006; ADR-0007 Faz 3a (**Kabul**) / ADR-0008 Faz 3b (**Taslak**).
 
 Etiketler: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
@@ -10,7 +10,9 @@ Etiketler: **DOĞRULANDI** / **DOĞRULANAMADI** / **PLANLAMA BULGUSU**
 
 ## 1. Özet
 
-Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskeleti, `FiyatSozlesmesi` versiyon zinciri, `TedarikciTeklif` + eşleştirme alanları, tenant selector’lar. Kırılacak / tamamlanacak: teklif durum servisi yok, K-007 çelişkisi, K-008 tarih exclusion yok, `PriceQuote` yok, kur politikası yok, iki `UrunTasi`, para birimi tutarsızlığı, `Varyant.stok` / `stok_adet` ikiliği (Faz 4’e sınır).
+Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskeleti, `FiyatSozlesmesi` versiyon zinciri, `TedarikciTeklif` + eşleştirme alanları, tenant selector’lar.  
+**3.1 sonrası kapandı:** teklif durum servisi (`teklif_servisi`), versiyon/geçerlilik, YAYINDA partial unique, CASCADE→PROTECT, eşleşme predicate.  
+**Hâlâ açık:** K-007 çelişkisi, K-008 tarih exclusion, `PriceQuote` / kur (ADR-0008), iki `UrunTasi`, para birimi tutarsızlığı, `Varyant.stok` / `stok_adet` ikiliği (Faz 4’e sınır).
 
 ---
 
@@ -34,15 +36,17 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 
 ### 3.1 Tedarikçi teklifi yaşam döngüsü
 
-| Bulgu | Etiket | Kanıt |
+> **Uygulama (2026-11-08):** dilim 3.1 ile kapatıldı — `teklif_servisi`, `versiyon`/`onceki_teklif`/`gecerlilik_*`, YAYINDA partial unique, `varyant` PROTECT, `teklif_eslestirme_uygun_mu`. Kanıt: [`faz3-1-uygulama-raporu.md`](faz3-1-uygulama-raporu.md). Aşağıdaki satırlar **analiz anı** bulgularıdır.
+
+| Bulgu (analiz anı) | Etiket | Kanıt (o tarih) |
 |-------|--------|-------|
-| `durum` alanları var; geçiş servisi yok | DOĞRULANDI | `tedarikci_teklif.py:19–23`, `:69–71`; admin readonly `:98–99` |
-| `approve_teklif` yalnız Meta/seed | DOĞRULANDI | `tedarikci_teklif.py:123`; grep servis kullanımı yok |
-| `valid_from` / `valid_until` / teklif `versiyon` yok | DOĞRULANDI | Model alan listesi `:40–115` — yok |
-| `varyant` FK **CASCADE** | DOĞRULANDI | `tedarikci_teklif.py:40–43` → PROTECT/arşiv (ADR-0007 / dilim 3.1) |
-| `tedarikci_mi` doğrulaması yok | DOĞRULANDI | Model `clean()` fiyat modeli dışında; admin save yalnız firma atar |
-| Aktif teklif çakışma (firma+varyant+SKU) yok | DOĞRULANDI | Unique yalnız `tedarikci`+`tedarikci_kodu` dolu iken `:127–130` |
-| K-006 eski “ürün sahibi = tedarikçi” kanıtı | PLANLAMA BULGUSU | ADR-0005 sonrası katalog platform; teklif↔varyant sahipliği yeniden tanımlanır |
+| `durum` alanları var; geçiş servisi yok | DOĞRULANDI | o tarih: model + admin readonly |
+| `approve_teklif` yalnız Meta/seed | DOĞRULANDI | o tarih: serviste `require_perm` yoktu |
+| `valid_from` / `valid_until` / teklif `versiyon` yok | DOĞRULANDI | o tarih: alan yoktu → 3.1’de eklendi |
+| `varyant` FK **CASCADE** | DOĞRULANDI | o tarih CASCADE → 3.1 PROTECT |
+| `tedarikci_mi` doğrulaması yok | DOĞRULANDI | o tarih; 3.1 serviste sahiplik |
+| Aktif teklif çakışma (firma+varyant+SKU) yok | DOĞRULANDI | o tarih; 3.1 YAYINDA partial unique |
+| K-006 eski “ürün sahibi = tedarikçi” kanıtı | PLANLAMA BULGUSU | ADR-0005 sonrası katalog platform; teklif↔varyant sahipliği |
 
 ### 3.2 K-007 sözleşme kalemi çelişkisi
 
@@ -123,11 +127,12 @@ Faz 3’te yeniden kullanılacak çekirdek: saf `hesapla()`, `cozumle()` iskelet
 | Dilim | ADR | Konu |
 |-------|-----|------|
 | **3.0** | ADR-0007 (3a) | Staging yok (uzak DB yok, yalnız yerel PostgreSQL); yerel `btree_gist` 1.8 doğrulandı (CREATE EXTENSION OK); üretim yetkisi **DOĞRULANAMADI** — hosting henüz yok |
-| **3.1–3.2** | ADR-0007 (3a) | Teklif yaşam döngüsü + CASCADE; K-007/K-008 |
+| **3.1** | ADR-0007 (3a) | Teklif yaşam döngüsü + versiyon swap + CASCADE→PROTECT + predicate — **uygulandı** |
+| **3.2** | ADR-0007 (3a) | K-007/K-008 (sözleşme NULL-safe / exclusion) — açık |
 | **3.3–3.7** | ADR-0008 (3b) | Kur politikası; üç model hesap; PriceQuote + trigger; kör havuz/K-011; PriceLock arayüzü |
 
 ---
 
 ## 6. Sonraki adım
 
-ADR-0007 (3a) **Kabul** (2026-11-08) → dilim 3.1–3.2. ADR-0008 (3b) ayrı Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
+Dilim **3.1 tamam.** Sıradaki: dilim **3.2** (K-007/K-008) veya ADR-0008 (**Taslak**) Kabul → 3.3+. Faz 4 (stok/sipariş) 3b’den bağımsız başlamaz.
