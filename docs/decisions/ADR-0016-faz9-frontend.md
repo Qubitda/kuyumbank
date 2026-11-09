@@ -1,56 +1,32 @@
-# ADR-0016 — Faz 9 frontend teknolojisi (F9-001)
+# ADR-0016 — Faz 9 frontend teknolojisi (F9-001) — SUPERSEDE
 
-**Durum:** **Taslak** (ürün sahibi Kabul’ü bekleniyor — agent Kabul etmez)
-**Bağımlılık:** PRE/F7 API UYGULANDI; F4-062 `/buyer/` minimal UI UYGULANDI; ADR-0002/0004 **Kabul**
-**Kod:** Bu ADR **Kabul** + açık talimat olmadan F9-010… portal kodu başlamaz
+**Durum:** **Supersede** (ürün sahibi Qubit, 2026-11-09) — yerine [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md)
+**Önceki durum:** **Kabul** (2026-11-09, FE-1 C→A Django template v1)
+**Bağımlılık (tarihsel):** PRE/F7 API; F4-062 `/buyer/`; ADR-0002/0004 **Kabul**
 
-> F9-001 kartı. Amaç: alıcı/tedarikçi portal deneyiminin teknoloji seçimi; kör havuz ve tenant kuralları bozulmaz.
+> Bu ADR artık bağlayıcı ürün kararı değildir. F9-010/011 Django HTML dilimleri **kodda kalır** (silinmez); yeni ürün yüzeyi ve API sözleşmesi → **ADR-0017**.
 
-## Bağlam (kod gerçeği)
+## Neden supersede
 
-- Mevcut HTTP: Django admin + ince DRF `/api/v1/` + session `/buyer/` (sepet/sipariş/finans/onay/RFQ) + `/ops/finance/`.
-- Next.js / SPA paketleri `requirements` / repo kökünde **yok** (bilinçli).
-- Celery/Redis yok; auth Token + Session + Basic.
+Ürün sahibi (2026-11-09): asıl tüketici **Next.js App Router + TypeScript** (ayrı `frontend/`); backend `/api/v1/` bu mimariye uyumlu hale getirilecek. Yeni Django HTML ürün UI’sı açılmayacak. Mevcut `/buyer/`, `/ops/` şablonları kalır.
 
-## Seçenekler
+## Tarihsel kabul (FE-1…FE-5) — artık yürürlükte değil
 
-| ID | Seçenek | Artı | Eksi |
-|----|---------|------|------|
-| **A** | **Django template portal** — `/buyer/`, `/supplier/` büyütülür; aynı servis/selector | Hızlı; CSRF/session hazır; RBAC aynı; ek runtime yok | SPA UX / PWA sınırlı; zengin bileşen maliyeti |
-| **B** | **Next.js (App Router) SPA** — yalnız `/api/v1/` tüketir | Modern UX; ayrı deploy | Yeni stack; CORS/auth; çift yüzey riski; F9 öncesi maliyet |
-| **C** | **Hibrit** — v1 = A; v2 = B (API kontratı F7 sabiti) | Erken değer + ileride SPA | İki yüzey geçici borç |
+| ID | Eski karar | Not |
+|----|------------|-----|
+| FE-1 | C→A Django template v1 | Supersede → ADR-0017 (Next.js birincil) |
+| FE-2 | `/supplier/` Django | Supersede → tedarikçi UI Next.js; API B6 |
+| FE-3 | Session portal; API Token ayrı | Supersede → session+CSRF API birincil (tarayıcı token yok) |
+| FE-4 | PWA sonra | ADR-0017 kapsamında sonra |
+| FE-5 | Minimal CSS | Next.js: Tailwind v4 + shadcn (frontend dizini) |
 
-## Öneri (Taslak — bağlayıcı değil)
+## Kod mirası (silinmez)
 
-**C → önce A:** F9-010…015’i Django template ile kapat; API kontratını F7’de sertleştir; Next.js ayrı ADR/dilim (ürün talebi + kapasite).
-
-Gerekçe: `/buyer/` zaten F4/F5/F10 UI taşıyor; Prosperer parity henüz runtime DOĞRULANAMADI; erken Next.js, F8 kalanları (Sentry/perf) ve F10-022’den önce risk/maliyet yüksek.
-
-## Kabul kararları (ürün sahibi doldurur)
-
-| ID | Soru | Karar (boş = bekliyor) |
-|----|------|------------------------|
-| FE-1 | v1 portal yüzeyi? | A / B / C |
-| FE-2 | Supplier portal yolu? | `/supplier/` Django / Next route / ertelenir |
-| FE-3 | Auth | Session (Django) / Token-only SPA / ikisi |
-| FE-4 | PWA (F9-016) | v1 zorunlu / sonra |
-| FE-5 | Design system | Minimal mevcut CSS / ayrı paket |
-
-## Kapsam dışı
-
-- Celery; gerçek ödeme/kargo UI
-- Dynamic Pricing (U-015 kilitli)
-- Bu ADR Kabul edilmeden Next.js iskeleti veya F9-010 kodu
-
-## Uygulama sırası (Kabul sonrası)
-
-1. Bu ADR **Kabul** (FE-1…FE-5 dolu)
-2. F9-010 dashboard iskeleti (seçilen stack)
-3. F9-011…015 dilimleri (kör havuz testleri zorunlu)
-4. F9-016/017 P2
+- `/buyer/` — F9-010 dashboard, F9-011 katalog, F4-062 sepet/sipariş, finans/onay/RFQ UI
+- `/ops/finance/` — F5-032
+- Yeni F9-012…015 **Django HTML büyütme** → iptal / ertelenmiş; yerine API B1–B7 + Next.js
 
 ## İlişkili
 
-- BACKLOG: F9-001…017  
-- ROADMAP Faz 9; MASTER §12  
-- Mevcut: `siparis.views.buyer_ui`, `buyer_rfq_ui`, `buyer_approval_ui`
+- Yerine: [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md)
+- BACKLOG F9-001; MASTER §12

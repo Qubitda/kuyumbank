@@ -1,10 +1,10 @@
-"""F7-011 — Supplier API: kendi teklif / stok özeti; alıcı kimliği yok."""
+"""F7-011 + API-B1 — Supplier API: kendi teklif / stok özeti; alıcı kimliği yok."""
 
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.masking import assert_masked
+from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import IsAuthenticatedWithFirma
 from api.throttles import SupplierRateThrottle
 from fiyatlama.models import TedarikciTeklif
@@ -20,6 +20,28 @@ def _require_supplier(user) -> None:
         raise PermissionDenied(detail="Supplier API yalnız tedarikçi firması.")
 
 
+def _present_offer(teklif: TedarikciTeklif) -> dict:
+    item = {
+        "id": teklif.pk,
+        "varyant_id": teklif.varyant_id,
+        "durum": teklif.durum,
+        "versiyon": teklif.versiyon,
+    }
+    assert_masked(item)
+    return item
+
+
+def _present_balance(bal: StockBalance) -> dict:
+    item = {
+        "warehouse_id": bal.warehouse_id,
+        "varyant_id": bal.varyant_id,
+        "on_hand": str(bal.on_hand),
+        "reserved": str(bal.reserved),
+    }
+    assert_masked(item)
+    return item
+
+
 class SupplierOfferListView(APIView):
     permission_classes = [IsAuthenticatedWithFirma]
     throttle_classes = [SupplierRateThrottle]
@@ -27,19 +49,9 @@ class SupplierOfferListView(APIView):
     def get(self, request):
         _require_supplier(request.user)
         firma = request.user.firma
-        qs = (
-            TedarikciTeklif.objects.filter(tedarikci=firma)
-            .order_by("-pk")
-            .values("id", "varyant_id", "durum", "versiyon")[:100]
-        )
-        results = []
-        for row in qs:
-            item = dict(row)
-            # Alıcı kimliği asla
-            item.pop("alici_firma_id", None)
-            assert_masked(item)
-            results.append(item)
-        return Response({"count": len(results), "results": results})
+        qs = TedarikciTeklif.objects.filter(tedarikci=firma)
+        qs = apply_ordering(qs, request, whitelist=("pk", "versiyon"), default="-pk")
+        return paginate_queryset(request, qs, present=_present_offer)
 
 
 class SupplierStockSummaryView(APIView):
@@ -49,20 +61,8 @@ class SupplierStockSummaryView(APIView):
     def get(self, request):
         _require_supplier(request.user)
         firma = request.user.firma
-        # Kendi depo bakiyeleri — alıcı yok
-        qs = (
-            StockBalance.objects.filter(warehouse__sahip_firma=firma)
-            .select_related("warehouse")
-            .order_by("pk")[:100]
+        qs = StockBalance.objects.filter(warehouse__sahip_firma=firma).select_related(
+            "warehouse"
         )
-        results = []
-        for bal in qs:
-            item = {
-                "warehouse_id": bal.warehouse_id,
-                "varyant_id": bal.varyant_id,
-                "on_hand": str(bal.on_hand),
-                "reserved": str(bal.reserved),
-            }
-            assert_masked(item)
-            results.append(item)
-        return Response({"count": len(results), "results": results})
+        qs = apply_ordering(qs, request, whitelist=("pk",), default="pk")
+        return paginate_queryset(request, qs, present=_present_balance)

@@ -45,6 +45,17 @@ if not DEBUG:
     if env.bool("SECURE_PROXY_SSL_HEADER", default=False):
         SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# ADR-0017 NX-1 — session cookie (Secure: prod bloğunda; SameSite Lax her ortam)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_HTTPONLY = False  # JS / Next BFF X-CSRFToken okuyabilsin
+# Aynı-origin reverse proxy; cross-site origin listesi (CSRF). CORS B1'de yok.
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+# Ortak üst alan (opsiyonel cookie paylaşımı): .kuyumbank.local
+SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default="") or None
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="") or None
+
 # AUD-001b — X-Forwarded-For güvenilir proxy hop sayısı (0 = yalnız REMOTE_ADDR)
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
@@ -76,13 +87,13 @@ INSTALLED_APPS = [
 
 ]
 
-# --- DRF (PRE ince API, U-012) ---------------------------------------------
-# Token birincil API kimliği; Basic WWW-Authenticate/401 için korunur (Session 403 üretir).
+# --- DRF (PRE ince API, U-012 / ADR-0017) ----------------------------------
+# Session birincil (tarayıcı); Token yalnız S2S; Basic 401 WWW-Authenticate için.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "api.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.BasicAuthentication",
-        "api.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -98,6 +109,8 @@ REST_FRAMEWORK = {
         "buyer": env("DRF_THROTTLE_BUYER", default="300/min"),
         "supplier": env("DRF_THROTTLE_SUPPLIER", default="300/min"),
         "ops": env("DRF_THROTTLE_OPS", default="600/min"),
+        # API-B1: login brute-force
+        "login": env("DRF_THROTTLE_LOGIN", default="10/min"),
     },
     "EXCEPTION_HANDLER": "api.exception_handler.problem_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
@@ -105,6 +118,8 @@ REST_FRAMEWORK = {
 
 # F7-015: API major sürüm yolu sabit /api/v1/ (breaking change → yeni major).
 API_VERSION = "v1"
+# API-B1: Idempotency-Key saklama süresi (saniye); varsayılan 24s.
+IDEMPOTENCY_TTL_SECONDS = env.int("IDEMPOTENCY_TTL_SECONDS", default=86400)
 
 # F7-023 CRM sync opt-in (varsayılan kapalı)
 CRM_SYNC_ENABLED = env.bool("CRM_SYNC_ENABLED", default=False)
@@ -121,6 +136,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.IdempotencyKeyMiddleware',  # PRE-005: header → request.idempotency_key
+    'api.middleware.ApiNoStoreMiddleware',  # API-B1: no-store (kimlikli /api/v1/)
 ]
 
 # F8-002 — yapılandırılmış log (JSON opt-in; secret anahtar dump yok)

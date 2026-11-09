@@ -1,10 +1,13 @@
-"""F6-023 — Buyer sevkiyat takip API (maskeli)."""
+"""F6-023 + B3 — Buyer sevkiyat takip API (maskeli + allowed_actions)."""
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import IsAuthenticatedWithFirma
+from api.presenters.finance_ops import BuyerShipmentPresenter
+from api.throttles import BuyerRateThrottle
 from firmalar.services.yetki_servisi import can_view_all_tenants
 from lojistik.models import Shipment
 from lojistik.services import buyer_shipment_servisi
@@ -25,12 +28,11 @@ class ShipmentListView(APIView):
     """GET /api/v1/shipments/?order_id= — alıcı kendi; ops view_all."""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [BuyerRateThrottle]
 
     def get(self, request):
         _assert_buyer_or_ops(request.user)
-        qs = Shipment.objects.select_related("order").order_by(
-            "-olusturma_tarihi", "-pk"
-        )
+        qs = Shipment.objects.select_related("order")
         qs = buyer_shipment_servisi.scope_shipment_queryset(qs, request.user)
         order_id = request.query_params.get("order_id")
         if order_id:
@@ -43,16 +45,20 @@ class ShipmentListView(APIView):
             except OrderNotFound as exc:
                 raise NotFound(detail="Sipariş bulunamadı.") from exc
             qs = qs.filter(order_id=oid)
-        items = [
-            buyer_shipment_servisi.present_shipment(s) for s in qs[:100]
-        ]
-        return Response({"count": len(items), "results": items})
+        qs = apply_ordering(
+            qs,
+            request,
+            whitelist=("olusturma_tarihi", "pk"),
+            default="-olusturma_tarihi",
+        )
+        return paginate_queryset(request, qs, present=BuyerShipmentPresenter)
 
 
 class ShipmentDetailView(APIView):
     """GET /api/v1/shipments/<pk>/ — tenant 404; tedarikçi 403."""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [BuyerRateThrottle]
 
     def get(self, request, pk: int):
         _assert_buyer_or_ops(request.user)
@@ -62,4 +68,4 @@ class ShipmentDetailView(APIView):
             )
         except ShipmentNotFound as exc:
             raise NotFound(detail="Sevkiyat bulunamadı.") from exc
-        return Response(buyer_shipment_servisi.present_shipment(ship))
+        return Response(BuyerShipmentPresenter(ship))

@@ -1,10 +1,16 @@
-"""HTTP middleware — PRE-005 Idempotency-Key + F8-002 request_id."""
+"""HTTP middleware — PRE-005 Idempotency-Key + F8-002 request_id + B1 no-store."""
 
 from __future__ import annotations
 
 import uuid
 
 from config.logging_utils import request_id_var
+
+_NO_STORE_PREFIX = "/api/v1/"
+_NO_STORE_SKIP = (
+    "/api/v1/health/",
+    "/api/v1/schema/",
+)
 
 
 class IdempotencyKeyMiddleware:
@@ -49,3 +55,22 @@ class RequestIdMiddleware:
             return response
         finally:
             request_id_var.reset(token)
+
+
+class ApiNoStoreMiddleware:
+    """NX-10 — kimlikli API yanıtlarında Cache-Control: no-store."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        path = request.path or ""
+        if not path.startswith(_NO_STORE_PREFIX):
+            return response
+        if any(path.startswith(p) for p in _NO_STORE_SKIP):
+            return response
+        user = getattr(request, "user", None)
+        if user is not None and getattr(user, "is_authenticated", False):
+            response["Cache-Control"] = "no-store"
+        return response

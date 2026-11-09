@@ -88,3 +88,5 @@ class F7ExceptionContractTests(TestCase):
         self.assertIn("type", data)
         self.assertIn("title", data)
         self.assertIn("detail", data)
+        self.assertIn("code", data)
+        self.assertIn("request_id", data)

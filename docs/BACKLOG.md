@@ -855,44 +855,109 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F9-001] Frontend teknoloji ADR (Next.js vs alternatif)
 
 - **Faz:** Faz 9
-- **Durum:** **Taslak ADR** ([ADR-0016](decisions/ADR-0016-faz9-frontend.md)) · **Öncelik:** P1 · **Tip:** Product
-- **Bağımlılıklar:** PRE-001
-- **Kabul kriterleri:** Ürün sahibi kabul (FE-1…FE-5)
-- **Kanıt:** ADR-0016 Taslak; öneri C→A (Django portal önce); F9 kodu Kabul sonrası
+- **Durum:** **Supersede zinciri** — [ADR-0016](decisions/ADR-0016-faz9-frontend.md) Supersede → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** · **Öncelik:** P1 · **Tip:** Product
+- **Bağımlılıklar:** PRE-001 / F7
+- **Kabul kriterleri:** ADR-0017 ürün sahibi **Kabul** (NX-1…12)
+- **Kanıt:** 0016 Kabul 2026-11-09 sonra aynı gün Supersede; 0017 Taslak (Next.js + API B0–B7)
+
+### [API-B0] Next.js API boşluk analizi
+
+- **Faz:** API readiness
+- **Durum:** **UYGULANDI** · **Öncelik:** P0 · **Tip:** Analysis
+- **Bağımlılıklar:** F7
+- **Kanıt:** 11 madde puan + uç envanteri (oturum B0; kod yok)
+
+### [API-B1] Çekirdek API standartları
+
+- **Faz:** API readiness
+- **Durum:** **Kabul** (ürün sahibi Qubit, 2026-11-09) · **Öncelik:** P0 · **Tip:** API
+- **Bağımlılıklar:** API-B0, NX-1/NX-2
+- **Kanıt:** 28 odaklı OK; CORS erteli; ADR-0017 Taslak (NX-1/2 madde Kabul)
+
+### [API-B2] Alıcı ticaret HTTP
+
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P0 · **Tip:** API
+- **Bağımlılıklar:** API-B1 Kabul
+- **Kapsam:** katalog/sepet/quote/lock/checkout/sipariş/iptal/reorder + `allowed_actions` + sızıntı testleri
+- **Kanıt:** `api.tests.test_api_b2_buyer_commerce` (+ order/pre005 regresyon) **11 OK** odaklı
+- **Concurrency:** `api.tests.test_api_b2_concurrency` PG TransactionTestCase **7 OK** (Kabul)
+
+### [API-B3] Alıcı finans/lojistik HTTP
+
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B2 Kabul
+- **Kapsam:** credit/finance/cari/ledger/payment intent + sevkiyat allowed_actions + iade HTTP + ops payments; maske; idempotency
+- **Kanıt:** `api.tests.test_api_b3_finance_ops` **10 OK**
+- **Not:** Buyer iade oluşturma yok (`manage_return` — bilinçli iş kuralı)
+
+### [API-B4] Kurumsal HTTP
+
+- **Faz:** API readiness · **Durum:** **Backlog — henüz başlatılmadı** · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B3 Kabul, F10
+- **Kapsam:** onay / RFQ (+revizyon) / org — mevcut F10 servisleri; icat yok
+- **Not:** Erken ajan WIP dosyaları çalışma ağacında kalabilir; resmi B4 talimatı olmadan UYGULANDI sayılmaz
+
+### [TECH-OPENAPI-01] OpenAPI path çift `/api/v1` önek
+
+- **Faz:** API readiness · **Durum:** **UYGULANDI** (B3 sonrası bakım) · **Öncelik:** P2 · **Tip:** Docs/API
+- **Kök neden:** `SchemaGenerator(url="/api/v1/")` + ROOT_URLCONF `path("api/v1/", …)` → çift önek
+- **Çözüm:** `api_urlpatterns` + `url="/api/v1/"` (`scripts/export_openapi.py`, `api/urls.py` schema_view)
+- **Kanıt:** export sonrası `double_prefix=0`; canlı `/api/v1/*` değişmedi
+- **Not:** NX-4 hâlâ Kabul değil
+
+### [API-B5] Ops API yüzeyi
+
+- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B1
+- **Kapsam:** finans/cari/ledger/QC/sevkiyat/iade + `view_all` testleri
+
+### [API-B6] Tedarikçi API yüzeyi
+
+- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B1
+- **Kapsam:** teklif/stok; ters kör havuz
+
+### [API-B7] API dondurma / frontend-ready
+
+- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Docs/API
+- **Bağımlılıklar:** API-B2…B6
+- **Kapsam:** `docs/API_CONTRACT.md` şemadan; sızıntı/yetki matrisi; checklist
 
 ### [F9-010] Buyer dashboard iskeleti
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-001, F7-010
 - **Kabul kriterleri:** Auth + tenant context
+- **Kanıt:** `/buyer/` `BuyerHomeView` + `buyer_dashboard_servisi`; sepet `/buyer/cart/`; `test_buyer_dashboard_f9_010` **3 OK**
 
 ### [F9-011] Katalog arama/browse UI
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-010, search API
 - **Gizlilik:** kör
 - **Kabul kriterleri:** Maliyet sızıntısı yok
+- **Kanıt:** `/buyer/catalog/` + `buyer_katalog_servisi` (ad/kod ara); `test_buyer_catalog_f9_011` **5 OK**
 
 ### [F9-012] Sepet/sipariş portal akışı
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Ertelendi / iptal yönü** (ADR-0016 Supersede; Next.js + API-B2) · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F4-062, F7-010
-- **Kabul kriterleri:** E2E checkout smoke
+- **Not:** Yeni Django HTML polish yok; mevcut `/buyer/` kalır
 
 ### [F9-013] Supplier dashboard + teklif yönetimi UI
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Ertelendi** → Next.js / API-B6 · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F7-011
 - **Kabul kriterleri:** Alıcı kimliği görünmez
 
 ### [F9-014] Stok/teslimat görünümü (rol bazlı)
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Ertelendi** → Next.js · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F4-012, F6-023
 - **Kabul kriterleri:** Rol kesiti doğru
 

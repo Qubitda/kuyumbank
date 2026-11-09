@@ -1,13 +1,14 @@
-"""PRE-005 — Checkout POST (Idempotency-Key örneği)."""
+"""PRE-005 + API-B2 — Checkout POST (Idempotency-Key)."""
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.exc import raise_drf
 from api.mixins import IdempotencyMixin
 from api.permissions import IsAuthenticatedWithFirma
+from siparis.models import CheckoutAttempt
 from siparis.services import checkout_servisi
 
 
@@ -27,24 +28,18 @@ class CheckoutCreateView(IdempotencyMixin, APIView):
                 actor=request.user, idempotency_key=key
             )
         except DjangoValidationError as exc:
-            messages = getattr(exc, "messages", None) or [str(exc)]
-            response = Response(
-                {"detail": messages[0] if len(messages) == 1 else messages},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-            return self.idempotency_commit(request, response)
-        except ValidationError as exc:
-            response = Response(
-                exc.detail if hasattr(exc, "detail") else {"detail": str(exc)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-            return self.idempotency_commit(request, response)
+            raise_drf(exc)
 
         body = {
             "id": result.attempt.pk,
             "durum": result.attempt.durum,
             "idempotency_key": result.attempt.idempotency_key,
             "line_count": len(result.lines),
+            "allowed_actions": (
+                ["create_order"]
+                if result.attempt.durum == CheckoutAttempt.Durum.BASARILI
+                else []
+            ),
             "lines": [
                 {
                     "cart_line_id": ln.cart_line_id,

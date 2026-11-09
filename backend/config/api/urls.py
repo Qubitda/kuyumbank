@@ -3,10 +3,19 @@ from rest_framework.permissions import AllowAny
 from rest_framework.schemas import get_schema_view
 
 from api.views import (
+    AuthCsrfView,
+    AuthLoginView,
+    AuthLogoutView,
     BulkOrderCreateView,
+    BuyerCariDetailView,
+    BuyerCariListView,
+    BuyerCatalogDetailView,
     BuyerCatalogListView,
     BuyerFinanceSummaryView,
+    BuyerLedgerListView,
     CartDetailView,
+    CartLineCreateView,
+    CartLineDetailView,
     CartMineView,
     CheckoutCreateView,
     CreditCheckView,
@@ -15,40 +24,111 @@ from api.views import (
     MeView,
     OpsFinanceCariListView,
     OpsFinanceLedgerListView,
+    OpsFinancePaymentListView,
     OpsFinanceSummaryView,
     OpsOrderSummaryView,
+    OrderCancelView,
     OrderDetailView,
+    OrderFromCheckoutView,
     OrderListView,
+    OrderReorderView,
+    PaymentIntentCreateView,
     PaymentWebhookView,
+    PriceLockCreateView,
+    PriceLockDetailView,
+    QuoteCreateView,
+    QuoteDetailView,
+    ReturnApproveView,
+    ReturnCancelView,
+    ReturnDetailView,
+    ReturnListCreateView,
+    ReturnRejectView,
+    ReturnSubmitView,
     ShipmentDetailView,
     ShipmentListView,
     SupplierOfferListView,
     SupplierStockSummaryView,
 )
 
-schema_view = get_schema_view(
-    title="Kuyumbank API",
-    description="İnce PRE yüzeyi (U-012). Tam Prosperer API değildir.",
-    version="1.0.0",
-    public=True,
-    permission_classes=[AllowAny],
-)
-
-urlpatterns = [
+# Relative patterns (ROOT mounts under /api/v1/) — TECH-OPENAPI-01 çift önek önleme
+api_urlpatterns = [
     path("health/", HealthView.as_view(), name="api-health"),
+    path("auth/csrf/", AuthCsrfView.as_view(), name="api-auth-csrf"),
+    path("auth/login/", AuthLoginView.as_view(), name="api-auth-login"),
+    path("auth/logout/", AuthLogoutView.as_view(), name="api-auth-logout"),
     path("me/", MeView.as_view(), name="api-me"),
     path("catalog/", BuyerCatalogListView.as_view(), name="api-buyer-catalog"),
+    path(
+        "catalog/<int:pk>/",
+        BuyerCatalogDetailView.as_view(),
+        name="api-buyer-catalog-detail",
+    ),
+    path("quotes/", QuoteCreateView.as_view(), name="api-quote-create"),
+    path("quotes/<int:pk>/", QuoteDetailView.as_view(), name="api-quote-detail"),
+    path("price-locks/", PriceLockCreateView.as_view(), name="api-price-lock-create"),
+    path(
+        "price-locks/<int:pk>/",
+        PriceLockDetailView.as_view(),
+        name="api-price-lock-detail",
+    ),
     path("carts/me/", CartMineView.as_view(), name="api-cart-mine"),
+    path(
+        "carts/me/lines/",
+        CartLineCreateView.as_view(),
+        name="api-cart-line-create",
+    ),
+    path(
+        "carts/me/lines/<int:line_id>/",
+        CartLineDetailView.as_view(),
+        name="api-cart-line-detail",
+    ),
     path("carts/<int:pk>/", CartDetailView.as_view(), name="api-cart-detail"),
     path("checkouts/", CheckoutCreateView.as_view(), name="api-checkout-create"),
     path("bulk-orders/", BulkOrderCreateView.as_view(), name="api-bulk-order-create"),
+    path(
+        "orders/from-checkout/",
+        OrderFromCheckoutView.as_view(),
+        name="api-order-from-checkout",
+    ),
     path("orders/", OrderListView.as_view(), name="api-order-list"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="api-order-detail"),
+    path(
+        "orders/<int:pk>/cancel/",
+        OrderCancelView.as_view(),
+        name="api-order-cancel",
+    ),
+    path(
+        "orders/<int:pk>/reorder/",
+        OrderReorderView.as_view(),
+        name="api-order-reorder",
+    ),
     path("shipments/", ShipmentListView.as_view(), name="api-shipment-list"),
     path(
         "shipments/<int:pk>/",
         ShipmentDetailView.as_view(),
         name="api-shipment-detail",
+    ),
+    path("returns/", ReturnListCreateView.as_view(), name="api-return-list"),
+    path("returns/<int:pk>/", ReturnDetailView.as_view(), name="api-return-detail"),
+    path(
+        "returns/<int:pk>/submit/",
+        ReturnSubmitView.as_view(),
+        name="api-return-submit",
+    ),
+    path(
+        "returns/<int:pk>/approve/",
+        ReturnApproveView.as_view(),
+        name="api-return-approve",
+    ),
+    path(
+        "returns/<int:pk>/reject/",
+        ReturnRejectView.as_view(),
+        name="api-return-reject",
+    ),
+    path(
+        "returns/<int:pk>/cancel/",
+        ReturnCancelView.as_view(),
+        name="api-return-cancel",
     ),
     path(
         "supplier/offers/",
@@ -63,6 +143,18 @@ urlpatterns = [
     path("credit/me/", CreditMineView.as_view(), name="api-credit-mine"),
     path("credit/check/", CreditCheckView.as_view(), name="api-credit-check"),
     path("finance/me/", BuyerFinanceSummaryView.as_view(), name="api-finance-mine"),
+    path("finance/cari/", BuyerCariListView.as_view(), name="api-finance-cari"),
+    path(
+        "finance/cari/<int:pk>/",
+        BuyerCariDetailView.as_view(),
+        name="api-finance-cari-detail",
+    ),
+    path("finance/ledger/", BuyerLedgerListView.as_view(), name="api-finance-ledger"),
+    path(
+        "payments/intents/",
+        PaymentIntentCreateView.as_view(),
+        name="api-payment-intent-create",
+    ),
     path("ops/finance/", OpsFinanceSummaryView.as_view(), name="api-ops-finance"),
     path(
         "ops/finance/cari/",
@@ -75,6 +167,11 @@ urlpatterns = [
         name="api-ops-finance-ledger",
     ),
     path(
+        "ops/finance/payments/",
+        OpsFinancePaymentListView.as_view(),
+        name="api-ops-finance-payments",
+    ),
+    path(
         "ops/orders/summary/",
         OpsOrderSummaryView.as_view(),
         name="api-ops-orders-summary",
@@ -84,5 +181,18 @@ urlpatterns = [
         PaymentWebhookView.as_view(),
         name="api-payment-webhook",
     ),
+]
+
+schema_view = get_schema_view(
+    title="Kuyumbank API",
+    description="API v1 — ADR-0017 (B1–B3 Kabul; B4 sırada).",
+    version="1.0.0",
+    public=True,
+    permission_classes=[AllowAny],
+    patterns=api_urlpatterns,
+    url="/api/v1/",
+)
+
+urlpatterns = api_urlpatterns + [
     path("schema/", schema_view, name="api-schema"),
 ]

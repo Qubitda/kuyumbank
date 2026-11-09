@@ -57,6 +57,9 @@ jobs:
       - name: Docs sync check
         run: python scripts/docs_sync.py --check
 
+      - name: OpenAPI schema drift
+        run: python scripts/export_openapi.py --check
+
       - name: Django system check
         working-directory: backend/config
         run: python manage.py check

@@ -1,0 +1,1405 @@
+{
+  "info": {
+    "description": "API v1 — ADR-0017",
+    "title": "Kuyumbank API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.2",
+  "paths": {
+    "/api/v1/auth/csrf/": {
+      "get": {
+        "description": "GET /api/v1/auth/csrf/ — CSRF çerezi + token.",
+        "operationId": "listAuthCsrves",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login/": {
+      "post": {
+        "description": "POST /api/v1/auth/login/ — {username, password}; session cookie.",
+        "operationId": "createAuthLogin",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout/": {
+      "post": {
+        "description": "POST /api/v1/auth/logout/ — oturumu kapat.",
+        "operationId": "createAuthLogout",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/bulk-orders/": {
+      "post": {
+        "description": "POST /api/v1/bulk-orders/ — CSV veya rows → Order; key zorunlu.",
+        "operationId": "createBulkOrder",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "bulk-orders"
+        ]
+      }
+    },
+    "/api/v1/carts/me/": {
+      "get": {
+        "description": "GET /api/v1/carts/me/ — yoksa oluştur.",
+        "operationId": "listCartMines",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/api/v1/carts/me/lines/": {
+      "post": {
+        "description": "POST /api/v1/carts/me/lines/ — {quote_id, miktar}.",
+        "operationId": "createCartLine",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/api/v1/carts/me/lines/{line_id}/": {
+      "delete": {
+        "description": "PATCH/DELETE /api/v1/carts/me/lines/<id>/.",
+        "operationId": "destroyCartLineDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      },
+      "patch": {
+        "description": "PATCH/DELETE /api/v1/carts/me/lines/<id>/.",
+        "operationId": "partialUpdateCartLineDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/api/v1/carts/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveCartDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "carts"
+        ]
+      }
+    },
+    "/api/v1/catalog/": {
+      "get": {
+        "description": "",
+        "operationId": "listBuyerCatalogs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/{id}/": {
+      "get": {
+        "description": "GET /api/v1/catalog/<pk>/ — yalnız yayınlı+onaylı.",
+        "operationId": "retrieveBuyerCatalogDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/checkouts/": {
+      "post": {
+        "description": "POST /api/v1/checkouts/ — sepet → CheckoutAttempt; key zorunlu.",
+        "operationId": "createCheckout",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "checkouts"
+        ]
+      }
+    },
+    "/api/v1/credit/check/": {
+      "post": {
+        "description": "POST /api/v1/credit/check/ — {tutar, para_birimi?}; Idempotency-Key zorunlu.",
+        "operationId": "createCreditCheck",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "credit"
+        ]
+      }
+    },
+    "/api/v1/credit/me/": {
+      "get": {
+        "description": "GET /api/v1/credit/me/?para_birimi=TRY",
+        "operationId": "listCreditMines",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "credit"
+        ]
+      }
+    },
+    "/api/v1/finance/cari/": {
+      "get": {
+        "description": "GET /api/v1/finance/cari/ — kendi cari hesapları (maskeli).",
+        "operationId": "listBuyerCaris",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/cari/{id}/": {
+      "get": {
+        "description": "GET /api/v1/finance/cari/<pk>/",
+        "operationId": "retrieveBuyerCariDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/ledger/": {
+      "get": {
+        "description": "GET /api/v1/finance/ledger/ — kendi ledger (maskeli; karşı firma yok).",
+        "operationId": "listBuyerLedgers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/finance/me/": {
+      "get": {
+        "description": "GET /api/v1/finance/me/?para_birimi=TRY",
+        "operationId": "listBuyerFinanceSummaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "finance"
+        ]
+      }
+    },
+    "/api/v1/health/": {
+      "get": {
+        "description": "",
+        "operationId": "listHealths",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/me/": {
+      "get": {
+        "description": "",
+        "operationId": "listMes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/ops/finance/": {
+      "get": {
+        "description": "GET /api/v1/ops/finance/ — özet + son hareketler. Client firma_id yok sayılır.",
+        "operationId": "listOpsFinanceSummaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/finance/cari/": {
+      "get": {
+        "description": "GET /api/v1/ops/finance/cari/",
+        "operationId": "listOpsFinanceCaris",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/finance/ledger/": {
+      "get": {
+        "description": "GET /api/v1/ops/finance/ledger/",
+        "operationId": "listOpsFinanceLedgers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/finance/payments/": {
+      "get": {
+        "description": "GET /api/v1/ops/finance/payments/",
+        "operationId": "listOpsFinancePayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/orders/summary/": {
+      "get": {
+        "description": "GET /api/v1/ops/orders/summary/ — view_all zorunlu.",
+        "operationId": "listOpsOrderSummaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/orders/": {
+      "get": {
+        "description": "GET /api/v1/orders/ — alıcı kendi; ops view_all. Client firma_id yok sayılır.",
+        "operationId": "listOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/from-checkout/": {
+      "post": {
+        "description": "POST /api/v1/orders/from-checkout/ — {checkout_id}.",
+        "operationId": "createOrderFromCheckout",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveOrderDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/cancel/": {
+      "post": {
+        "description": "POST /api/v1/orders/<pk>/cancel/.",
+        "operationId": "createOrderCancel",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/reorder/": {
+      "post": {
+        "description": "POST /api/v1/orders/<pk>/reorder/ — {replace_cart?: bool}.",
+        "operationId": "createOrderReorder",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "orders"
+        ]
+      }
+    },
+    "/api/v1/payments/intents/": {
+      "post": {
+        "description": "POST /api/v1/payments/intents/ — {order_id}; Idempotency-Key zorunlu.",
+        "operationId": "createPaymentIntent",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/payments/webhook/": {
+      "post": {
+        "description": "POST /api/v1/payments/webhook/",
+        "operationId": "createPaymentWebhook",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/api/v1/price-locks/": {
+      "post": {
+        "description": "POST /api/v1/price-locks/ — {quote_id} (+ Idempotency-Key).",
+        "operationId": "createPriceLock",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "price-locks"
+        ]
+      }
+    },
+    "/api/v1/price-locks/{id}/": {
+      "get": {
+        "description": "GET /api/v1/price-locks/<pk>/ — expires_at + server_now + gecerli.",
+        "operationId": "retrievePriceLockDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "price-locks"
+        ]
+      }
+    },
+    "/api/v1/quotes/": {
+      "post": {
+        "description": "POST /api/v1/quotes/ — {varyant_id, satis_kanali_id, para_birimi?}.",
+        "operationId": "createQuote",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/quotes/{id}/": {
+      "get": {
+        "description": "GET /api/v1/quotes/<pk>/.",
+        "operationId": "retrieveQuoteDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "quotes"
+        ]
+      }
+    },
+    "/api/v1/returns/": {
+      "get": {
+        "description": "GET liste; POST oluştur (manage_return + Idempotency-Key).",
+        "operationId": "listReturnListCreates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST oluştur (manage_return + Idempotency-Key).",
+        "operationId": "createReturnList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/": {
+      "get": {
+        "description": "GET /api/v1/returns/<pk>/",
+        "operationId": "retrieveReturnDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/approve/": {
+      "post": {
+        "description": "",
+        "operationId": "approveReturn",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/cancel/": {
+      "post": {
+        "description": "",
+        "operationId": "cancelReturn",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/reject/": {
+      "post": {
+        "description": "",
+        "operationId": "rejectReturn",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/submit/": {
+      "post": {
+        "description": "",
+        "operationId": "submitReviewReturnSubmit",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/shipments/": {
+      "get": {
+        "description": "GET /api/v1/shipments/?order_id= — alıcı kendi; ops view_all.",
+        "operationId": "listShipments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "shipments"
+        ]
+      }
+    },
+    "/api/v1/shipments/{id}/": {
+      "get": {
+        "description": "GET /api/v1/shipments/<pk>/ — tenant 404; tedarikçi 403.",
+        "operationId": "retrieveShipmentDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "shipments"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/": {
+      "get": {
+        "description": "",
+        "operationId": "listSupplierOffers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/stock/": {
+      "get": {
+        "description": "",
+        "operationId": "listSupplierStockSummaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    }
+  }
+}

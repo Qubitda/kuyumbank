@@ -22,7 +22,8 @@
 | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) | Faz 6 QC + lojistik | F6-K1…K12 tolerans/inspection/shipment gate | **Kabul** (2026-11-09) | 6 | Quality/Logistics | F6-010…031 + F6-012 UYGULANDI | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) |
 | [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam quote | **Kabul** (2026-11-09, Qubit) | — | Pricing | Sim + KS-6 quote UYGULANDI | `karlilik_simulasyonu` + `quote(hedef_toplam=)` |
 | [ADR-0015](ADR-0015-account-hierarchy.md) | Account Hierarchy (U-014 A) | OrgBirimi firma-içi; tenant=Firma; Order.sube nullable | **Kabul** (2026-11-09, Qubit plan) | 10 | Identity/Org | F10-010+ dilimler | [ADR-0015](ADR-0015-account-hierarchy.md) |
-| [ADR-0016](ADR-0016-faz9-frontend.md) | Faz 9 frontend stack | A Django / B Next / C hibrit (öneri C→A) | **Taslak** | 9 | Experience | Kod yok (Kabul şart) | F9-001 |
+| [ADR-0016](ADR-0016-faz9-frontend.md) | Faz 9 frontend stack (eski) | C→A Django v1 — **yürürlükte değil** | **Supersede** → [0017](ADR-0017-nextjs-api-sozlesmesi.md) | 9 | Experience | F9-010/011 HTML kalır | F9-001 |
+| [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md) | Next.js + `/api/v1/` sözleşme | NX-1/NX-2 **Kabul**; CORS erteli; NX-3…12 açık | **Taslak** | 9 / API | Experience/API | B1…B3 Kabul; B4 sırada | F9-001 / API-B* |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |
@@ -45,3 +46,8 @@
 - 2026-11-09: **ADR-0013** Faz 6 QC/lojistik **Taslak** (F6-001); Kabul + talimat olmadan F6-010 kodu yok.
 - 2026-11-09 (Qubit/Emre): **ADR-0013 Kabul** (soru cevapları kayıtlı); F6-010 `kalite` app UYGULANDI.
 - 2026-11-09: **ADR-0016** Faz 9 frontend **Taslak** (F9-001); Kabul olmadan F9-010 kodu yok.
+- 2026-11-09 (Qubit): **ADR-0016 Kabul** (FE-1…FE-5); F9-010 buyer dashboard UYGULANDI.
+- 2026-11-09 (Qubit): **ADR-0016 Supersede** — birincil ürün yüzeyi Next.js; **ADR-0017 Taslak** (NX-1…12, B0–B7). Mevcut `/buyer/` `/ops/` HTML silinmez. B1+ kodu ADR-0017 **Kabul** sonrası.
+- 2026-11-09: Agent ADR-0017’yi erken Kabul saymıştı → ürün sahibi düzeltmesiyle **Taslak**’a alındı; NX maddeleri ayrı onay; tam suite onaysız yasak; B1 WIP durdu.
+- 2026-11-09 (Qubit): API-B1 **Kabul**; ADR-0017 Taslak kalır; NX-1/NX-2 madde **Kabul**; CORS erteli; B2 buyer commerce.
+- 2026-11-09 (Qubit): API-B2 + concurrency + API-B3 **Kabul**; B4 henüz başlatılmadı; TECH-OPENAPI-01 bakım UYGULANDI; oturum handoff.

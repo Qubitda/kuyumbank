@@ -1,6 +1,8 @@
 # Faz tarihçesi
 
-> Yalnız eklenir. Eski bulgular otomatik olarak güncel durum değildir; güncel durum için [MASTER](MASTER.md) §2 ve §12.
+> **Append-only.** Eski maddeler silinmez / “güncel gibi” yeniden yazılmaz.  
+> Bir satırdaki “açık / sıradaki / Bekliyor” ifadesi **o tarihin anısıdır**; güncel durum yalnız [MASTER](MASTER.md) §2 + §12 (+ [BACKLOG](BACKLOG.md)).  
+> Yapı: üstte faz özetleri (F0–F4), sonra tarih damgalı dilim kayıtları (yeniler alta).
 
 ### Faz 0 — Standartlar / denetim
 - Amaç: Secret, requirements, tenant denetim, agent kuralları.  
@@ -76,8 +78,9 @@
 - Test reorder **4 OK**; `siparis` suite **29 OK**.  
 - Devir: **PRE** veya F4-081. (F4.5 outbox F4-090 ayrı.)
 
-### Açık temalar
-B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-014/015.
+### Açık temalar (tarihsel anı — F4 reorder dilimi sırası; güncel değil)
+> O dönem notu: B-01/B-06; dual stock; DRF; U-*.  
+> **2026-11-09 itibarıyla (MASTER):** B-01/B-06 Kabul (kod bilinçli yok); F4-070b drop; DRF+PRE UYGULANDI; U-014/F10 UYGULANDI. Güncel açıklar → MASTER §12.3.
 
 ### PRE-001…004 — İnce API iskeleti
 | PRE-001 | DRF 3.18.3 pin + INSTALLED_APPS | `requirements.txt` |
@@ -249,3 +252,63 @@ B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-0
 - F10-022: `RFQ.talep_tipi` + `RFQRevizyon` append-only; `revizyon_ekle`; buyer UI.
 - Mig `siparis.0005`; test `test_rfq_ozel_f10_022` **3 OK** (+ RFQ regresyon yeşil).
 - **Sıradaki:** ADR-0016 **Kabul** (ürün sahibi) → F9-010; veya F8-006 / F10-023 supplier.
+
+### 2026-11-09 — ADR-0016 Kabul + F9-010 dashboard
+- Ürün sahibi Qubit: ADR-0016 **Kabul** (FE-1 C→A, FE-2 `/supplier/` Django, FE-3 Session, FE-4 PWA sonra, FE-5 minimal CSS).
+- F9-010: `/buyer/` panel (`BuyerHomeView` + `buyer_dashboard_servisi`); sepet → `/buyer/cart/`.
+- Test `test_buyer_dashboard_f9_010` **3 OK** (+ F4-062 regresyon).
+- **Sıradaki:** F9-011 katalog browse; F9-013 supplier iskelet; F8-006.
+
+### 2026-11-09 — Doküman drift onarımı (ROADMAP/HISTORY/RUNBOOK)
+- Dış inceleme: ROADMAP bayat/çelişkili (5/10); HISTORY yapı; RUNBOOK test/env geride.
+- ROADMAP §1–4 MASTER §12 ile yeniden hizalandı (F4–F10/F8/F9 durumları).
+- HISTORY: append-only kuralı + “Açık temalar” tarihsel anı işareti.
+- RUNBOOK: CI ile aynı test komutu + env satırları.
+
+### 2026-11-09 — Full suite koşusu
+- `manage.py check` + `makemigrations --check` temiz.
+- Suite (CI listesi, `--keepdb`): **555 OK** in 826s.
+- MASTER §2.7 elle güncellendi.
+
+### 2026-11-09 — F9-011 katalog browse UI
+- `/buyer/catalog/` liste+arama+detay; `buyer_katalog_servisi` (yayınlı; kör; `tedarikci_sku`/maliyet yok).
+- Test `test_buyer_catalog_f9_011` **5 OK**.
+- **Sıradaki (o an):** F9-012 sepet/sipariş polish; F9-013 supplier; F8-006.
+
+### 2026-11-09 — ADR-0016 Supersede + ADR-0017 Taslak + API-B0
+- Ürün sahibi: birincil tüketici Next.js App Router; Django HTML ürün büyütmesi yok; `/buyer/` `/ops/` kalır.
+- **ADR-0016** → **Supersede** (eski FE-1 C→A yürürlükte değil).
+- **ADR-0017** → **Taslak** (NX-1 session+CSRF; NX-2 page sayfalama; OpenAPI drift; B0–B7).
+- API-B0 boşluk analizi (kod yok): 11 madde puan + uç envanteri.
+- **Sıradaki (o an):** ADR-0017 **Kabul** → API-B1.
+
+### 2026-11-09 — API-B1 (koşullu)
+- NX-1/NX-2 ürün sahibi kararı; ADR-0017 **Taslak** kaldı; CORS B1’den çıkarıldı (aynı-origin).
+- Session login/csrf/logout; problem+json (`code`/`errors`/`request_id`); page sayfalama + `-pk`; `/me` capabilities; OpenAPI drift CI; no-store.
+- Kova B F9 HTML WIP dokunulmadı (B1 dışı).
+- **Sıradaki (o an):** B1 raporu onayı → B2 talimatı.
+
+### 2026-11-09 — API-B1 Kabul + B2 başlat
+- Ürün sahibi: B1 **Kabul** (28 odaklı OK; tam suite iddiası yok).
+- ADR-0017 **Taslak**; NX-1/NX-2 madde **Kabul**; CORS erteli; NX-3…12 açık.
+- B2: buyer catalog/cart/quote/lock/order HTTP (servis yeniden yazılmaz).
+
+### 2026-11-09 — API-B2 buyer commerce
+- Uçlar: quotes, price-locks, carts/me/lines, orders/from-checkout, cancel, reorder; catalog detail.
+- Buyer* presenters: Decimal string, expires_at/server_now, allowed_actions, maske.
+- Test `test_api_b2_buyer_commerce` + order/pre005 regresyon **11 OK** odaklı.
+- **Sıradaki (o an):** B3 talimatı.
+
+### 2026-11-09 — API-B2 Kabul + concurrency + B3
+- Ürün sahibi B2 **Kabul**.
+- Idempotency: PG `pg_advisory_lock` (firma+key); `test_api_b2_concurrency` **7 OK**.
+- API-B3 UYGULANDI: finance/cari/ledger, payments/intents, ops/finance/payments, shipments `allowed_actions`, returns CRUD+SM; `test_api_b3_finance_ops` **10 OK**.
+- OpenAPI `docs/api/openapi-v1.json` güncellendi. ADR-0017 **Taslak**.
+
+### 2026-11-09 — API-B3 Kabul + OpenAPI bakım + oturum kapanışı
+- Ürün sahibi B3 **Kabul**; B2 concurrency **7 OK** Kabul.
+- TECH-OPENAPI-01 **UYGULANDI**: `api_urlpatterns` + `url=/api/v1/` → çift önek **0**; canlı URL aynı.
+- **API-B4 resmi olarak başlatılmadı** (ürün sahibi faz tablosu). Erken ajan WIP (`org`/`approvals`/`rfq` view dosyaları) commit dışı bırakıldı; UYGULANDI sayılmaz.
+- Kova B F9 HTML WIP commit dışı (silinmedi).
+- Devir: [SESSION_HANDOFF](SESSION_HANDOFF.md). ADR-0017 **Taslak**. Tam suite bu oturumda **yok**.
+

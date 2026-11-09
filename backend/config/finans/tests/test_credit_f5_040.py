@@ -83,6 +83,7 @@ class CreditVisibilityTests(CheckoutFixtureMixin, TestCase):
             reverse("api-credit-check"),
             {"tutar": "50.00", "para_birimi": "TRY"},
             format="json",
+            HTTP_IDEMPOTENCY_KEY="credit-check-ok-1",
         )
         self.assertEqual(ok.status_code, 200)
         self.assertTrue(ok.json()["ok"])
@@ -91,6 +92,7 @@ class CreditVisibilityTests(CheckoutFixtureMixin, TestCase):
             reverse("api-credit-check"),
             {"tutar": "80.00", "para_birimi": "TRY"},
             format="json",
+            HTTP_IDEMPOTENCY_KEY="credit-check-bad-1",
         )
         self.assertEqual(bad.status_code, 400)
 

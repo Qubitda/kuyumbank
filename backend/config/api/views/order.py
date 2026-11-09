@@ -1,9 +1,10 @@
-"""F4-060/061 — buyer order detay/liste + platform ops liste (view_all)."""
+"""F4-060/061 + API-B1 — buyer order detay/liste + platform ops liste."""
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import IsAuthenticatedWithFirma
 from firmalar.services.yetki_servisi import can_view_all_tenants
 from siparis.models import Order
@@ -12,7 +13,7 @@ from siparis.selectors.tenant import (
     get_order_for_actor,
     scope_order_queryset,
 )
-from siparis.services.presenters import present_order
+from api.presenters.buyer import BuyerOrderPresenter
 
 
 def _assert_buyer_or_ops(user) -> None:
@@ -33,28 +34,29 @@ class OrderDetailView(APIView):
             order = get_order_for_actor(request.user, order_id=pk)
         except OrderNotFound as exc:
             raise NotFound(detail="Sipariş bulunamadı.") from exc
-        return Response(present_order(order))
+        return Response(BuyerOrderPresenter(order))
 
 
 class OrderListView(APIView):
-    """GET /api/v1/orders/ — alıcı kendi; ops view_all tümü. Client firma_id yok sayılır."""
+    """GET /api/v1/orders/ — alıcı kendi; ops view_all. Client firma_id yok sayılır."""
 
     permission_classes = [IsAuthenticatedWithFirma]
 
     def get(self, request):
         _assert_buyer_or_ops(request.user)
-        # Client firma_id güvenilmez — yok say
         qs = scope_order_queryset(
-            Order.objects.select_related("alici_firma").order_by(
-                "-olusturma_tarihi", "-pk"
-            ),
+            Order.objects.select_related("alici_firma"),
             request.user,
         )
-        items = [present_order(o, include_lines=False) for o in qs[:100]]
-        return Response(
-            {
-                "count": len(items),
-                "results": items,
-                "ops": can_view_all_tenants(request.user),
-            }
+        qs = apply_ordering(
+            qs,
+            request,
+            whitelist=("olusturma_tarihi", "pk", "durum"),
+            default="-olusturma_tarihi",
+        )
+        return paginate_queryset(
+            request,
+            qs,
+            present=lambda o: BuyerOrderPresenter(o, include_lines=False),
+            extra={"ops": can_view_all_tenants(request.user)},
         )

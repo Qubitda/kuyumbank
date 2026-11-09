@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.mixins import IdempotencyMixin
 from api.permissions import IsAuthenticatedWithFirma
 from django.core.exceptions import (
     PermissionDenied as DjangoPermissionDenied,
@@ -46,12 +47,16 @@ class CreditMineView(APIView):
         return Response(data)
 
 
-class CreditCheckView(APIView):
-    """POST /api/v1/credit/check/ — {tutar, para_birimi?}"""
+class CreditCheckView(IdempotencyMixin, APIView):
+    """POST /api/v1/credit/check/ — {tutar, para_birimi?}; Idempotency-Key zorunlu."""
 
     permission_classes = [IsAuthenticatedWithFirma]
 
     def post(self, request):
+        cached = self.idempotency_begin(request)
+        if cached is not None:
+            return cached
+
         raw = request.data.get("tutar")
         pb = request.data.get("para_birimi") or "TRY"
         try:
@@ -64,9 +69,10 @@ class CreditCheckView(APIView):
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             _map_exc(exc)
-        return Response(
+        response = Response(
             {
                 "ok": True,
                 "credit": credit_servisi.present_credit(summary),
             }
         )
+        return self.idempotency_commit(request, response)

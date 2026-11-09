@@ -31,11 +31,20 @@
 | `SECURE_HSTS_SECONDS` | Hayır | `3600` | Sorunsuzsa artırın |
 | `PLATFORM_BRAND_NAME` | Hayır | boş | Boşsa SEO fallback yalnız ürün/kategori adı |
 | `VARYANT_GRAM_BANDI_ORAN` | Hayır | `0.05` | Gram bandı göreli toleransı (ADR-0005 K3) |
+| `TRUSTED_PROXY_COUNT` | Hayır | `0` | AUD-001b X-Forwarded-For hop |
+| `SECURE_PROXY_SSL_HEADER` | Hayır | `False` | Proxy arkasında `True` |
 | `LOG_LEVEL` | Hayır | `INFO` | F8-002 |
 | `LOG_JSON` | Hayır | `False` | `True` → tek satır JSON + `request_id` |
-| `DRF_THROTTLE_*` | Hayır | bkz. settings | F8-009 ortam bazlı anon/user/buyer/supplier/ops |
+| `DRF_THROTTLE_ANON/USER/BUYER/SUPPLIER/OPS` | Hayır | settings | F8-009; örn. `60/min` |
 | `SENTRY_DSN` | Hayır | boş | F8-003 plan; SDK henüz requirements’ta yok |
+| `PAYMENT_PROVIDER` | Hayır | `fake` | Canlı banka yok |
 | `PAYMENT_WEBHOOK_SECRET` | Prod webhook için | boş | Boşsa webhook 401 (fail-closed) |
+| `CARRIER_PROVIDER` | Hayır | `fake` | Canlı kargo yok |
+| `SHIPMENT_POD_REQUIRED` | Hayır | `False` | POD gate |
+| `QC_GRAM_TOLERANCE_PCT` / `_ABS` | Hayır | `0.50` / `0` | F6-011 |
+| `HAS_POSITION_LIMIT` | Hayır | `0` | 0 = kapalı |
+| `SUPPLIER_ACCRUAL_VADE_GUN` | Hayır | `0` | F5-022 |
+| `CRM_SYNC_ENABLED` | Hayır | `False` | F7 opt-in |
 
 ## 3. Yerel kurulum (geliştirme)
 
@@ -56,16 +65,30 @@ Geliştirme verisi için yönetim komutları (otomatik liste: [MASTER](MASTER.md
 
 ## 4. Test ve kontrol
 
+CI ile aynı paket listesi (`.github/workflows/ci.yml`):
+
 ```bash
 cd backend/config
-python manage.py test firmalar urunler fiyatlama.tests tanimlar stok siparis api.tests --keepdb
-python manage.py makemigrations --check --dry-run     # pending migration olmamalı
-python ../../scripts/docs_sync.py --check             # doküman bayat mı / kırık link var mı
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py test \
+  firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests \
+  stok.tests siparis.tests finans.tests kalite.tests lojistik.tests \
+  belgeler.tests api.tests \
+  --verbosity=1 --keepdb
+python ../../scripts/docs_sync.py --check
 ```
 
+Odaklı örnekler:
 
-- Eşzamanlılık ve kalıcılık kanıtı gereken testler `TransactionTestCase` olmalıdır (ADR-0007 operasyon notu).
-- Son suite koşusu sonucu [MASTER](MASTER.md) §2.7'de elle tutulur; script test koşmaz.
+```bash
+python manage.py test api.tests.test_security_f8_007 --keepdb
+python manage.py test siparis.tests.test_buyer_dashboard_f9_010 --keepdb
+```
+
+- **Yalnız `fiyatlama` (bare) çalıştırmayın** — `admin`/`models` import hatası riski; `fiyatlama.tests` kullanın (AGENTS).
+- Eşzamanlılık/kalıcılık: `TransactionTestCase` + PostgreSQL (ADR-0007).
+- Son full suite sonucu [MASTER](MASTER.md) §2.7’de elle tutulur; `docs_sync` test koşmaz.
 
 ## 5. Migration politikası
 
