@@ -300,47 +300,146 @@ def _lint_banned_phrases(path: Path) -> list[str]:
     return warnings
 
 
+def _parse_master_b_statuses(master: str) -> dict[str, str]:
+    """MASTER §12.1b satırları: B0…B7 → hücre metni."""
+    found: dict[str, str] = {}
+    for m in re.finditer(
+        r"\|\s*\*\*B([0-7])\*\*\s*\|\s*([^|\n]+)\|", master
+    ):
+        found[f"B{m.group(1)}"] = m.group(2).strip()
+    return found
+
+
+def _status_is_kabul(cell: str) -> bool:
+    """Kabul (ama 'Kabul değil' değil)."""
+    return "Kabul" in cell and "Kabul değil" not in cell
+
+
 def _lint_phase_consistency() -> list[str]:
-    """MASTER §12 / ADR-0017 / ROADMAP arasında kaba çelişki."""
+    """MASTER §12.1b tek kaynak; BACKLOG/ADR-0017/ROADMAP ile çapraz kontrol."""
     out: list[str] = []
     master = MASTER.read_text(encoding="utf-8", errors="ignore") if MASTER.is_file() else ""
     adr = ADR_0017.read_text(encoding="utf-8", errors="ignore") if ADR_0017.is_file() else ""
     roadmap = ROADMAP.read_text(encoding="utf-8", errors="ignore") if ROADMAP.is_file() else ""
     readme = ADR_README.read_text(encoding="utf-8", errors="ignore") if ADR_README.is_file() else ""
+    backlog_path = ROOT / "docs" / "BACKLOG.md"
+    backlog = (
+        backlog_path.read_text(encoding="utf-8", errors="ignore")
+        if backlog_path.is_file()
+        else ""
+    )
 
-    # B4 durumu tek kaynak: MASTER §12.1b
-    b4_done = "B4" in master and "inceleme" in master and "Kabul değil" in master
+    statuses = _parse_master_b_statuses(master)
+    if not statuses:
+        out.append("faz tutarsızlığı: MASTER §12.1b B0–B7 tablosu okunamadı")
+        return out
+
+    # Canlı dosyalarda bayat “henüz başlamadı / sırada B2” yasak (tarihsel satır hariç)
     stale_markers = (
         "B4 henüz başlatılmadı",
         "B4 sırada",
         "Sırada: B2",
-        "henüz başlatılmadı",
+        "Sırada:** B2",
+        "B6 | Bekliyor",
+        "B7 | Bekliyor",
+        "**B6** | Bekliyor",
+        "**B7** | Bekliyor",
     )
     for label, text in (
         ("MASTER.md", master),
         ("ROADMAP.md", roadmap),
         ("ADR-0017", adr),
         ("decisions/README.md", readme),
+        ("BACKLOG.md", backlog),
     ):
-        for marker in stale_markers:
-            if marker in text and "tarihsel" not in text[
-                max(0, text.find(marker) - 40) : text.find(marker) + 80
-            ].lower():
-                # README changelog may still contain historical phrase with tarihsel note
-                if label == "decisions/README.md" and "*(tarihsel" in text:
-                    # only flag if marker appears outside tarihsel-annotated lines
-                    for line in text.splitlines():
-                        if marker in line and "tarihsel" not in line.lower():
-                            out.append(
-                                f"faz tutarsızlığı: {label} «{marker}» "
-                                f"(MASTER §12.1b: B4 inceleme)"
-                            )
-                            break
-                elif b4_done:
+        for i, line in enumerate(text.splitlines(), 1):
+            if "tarihsel" in line.lower() or "*(tarihsel" in line:
+                continue
+            for marker in stale_markers:
+                if marker in line:
                     out.append(
-                        f"faz tutarsızlığı: {label} «{marker}» "
-                        f"(MASTER §12.1b: B4 inceleme)"
+                        f"faz tutarsızlığı: {label}:{i} «{marker}» "
+                        f"(MASTER §12.1b güncel)"
                     )
+
+    # B5/B6 Kabul ise canlı metinde “B5/B6 … Kabul değil” kalmamalı (HISTORY hariç)
+    for bn in ("B5", "B6"):
+        cell = statuses.get(bn, "")
+        if not _status_is_kabul(cell):
+            continue
+        bad_bits = (
+            f"{bn} **Kabul değil**",
+            f"{bn} uygulandı (inceleme",
+            f"API-{bn} | **Uygulandı** — Kabul kararına hazır",
+            f"API-{bn} | **Uygulandı** — inceleme",
+        )
+        for label, text in (
+            ("MASTER.md", master),
+            ("ROADMAP.md", roadmap),
+            ("ADR-0017", adr),
+            ("BACKLOG.md", backlog),
+        ):
+            for i, line in enumerate(text.splitlines(), 1):
+                if "tarihsel" in line.lower():
+                    continue
+                for bit in bad_bits:
+                    if bit in line:
+                        out.append(
+                            f"yanlış statü: {label}:{i} «{bit}» "
+                            f"(MASTER {bn}=Kabul)"
+                        )
+
+    # BACKLOG kart Durum ↔ MASTER
+    for bn, card in (
+        ("B5", "API-B5"),
+        ("B6", "API-B6"),
+        ("B7", "API-B7"),
+    ):
+        cell = statuses.get(bn, "")
+        # kart bloğu: ### [API-Bn] ... sonraki ### ye kadar
+        m = re.search(
+            rf"### \[{re.escape(card)}\](.*?)(?=\n### |\Z)",
+            backlog,
+            flags=re.S,
+        )
+        if not m:
+            out.append(f"eksik referans: BACKLOG `{card}` kartı yok")
+            continue
+        block = m.group(1)
+        dm = re.search(r"\*\*Durum:\*\*\s*(.+)", block)
+        if not dm:
+            out.append(f"eksik referans: BACKLOG {card} Durum satırı yok")
+            continue
+        durum = dm.group(1)
+        if _status_is_kabul(cell) and "Kabul" not in durum:
+            out.append(
+                f"yanlış statü: BACKLOG {card} Durum≠Kabul "
+                f"(MASTER {bn}={cell[:40]})"
+            )
+        if bn == "B7" and not _status_is_kabul(cell):
+            # İnceleme / Kabul değil beklenir (Kabul öncesi)
+            if "Kabul" in durum and "Kabul değil" not in durum and "UYGULANDI" not in durum:
+                out.append(
+                    f"yanlış statü: BACKLOG API-B7 «{durum[:48]}» "
+                    f"↔ MASTER B7 «{cell[:48]}»"
+                )
+            if "Kabul değil" not in durum and "inceleme" not in durum.lower():
+                out.append(
+                    "yanlış statü: BACKLOG API-B7 inceleme/Kabul değil ifadesi yok "
+                    f"(MASTER B7 henüz Kabul değil)"
+                )
+
+    # ADR-0017: B6’nın kendisi “Kabul değil” olmamalı (B7 Kabul değil aynı satırda OK)
+    if _status_is_kabul(statuses.get("B6", "")):
+        if "B6" in adr and "Kabul" not in adr:
+            out.append("yanlış statü: ADR-0017 B6 Kabul ifadesi yok (MASTER B6 Kabul)")
+        for i, line in enumerate(adr.splitlines(), 1):
+            if "tarihsel" in line.lower():
+                continue
+            # "B6 … Kabul değil" ama B7 bağlamı değil
+            if re.search(r"\bB6\b(?![^.\n]{0,40}\bB7\b).*Kabul değil", line):
+                out.append(f"yanlış statü: ADR-0017:{i} B6 Kabul değil (MASTER Kabul)")
+
     return out
 
 

@@ -2,7 +2,7 @@
 
 **Durum:** **Taslak** (ADR bütünü henüz Kabul değil — agent Kabul etmez)
 **Bağımlılık:** ADR-0002/0003/0004 **Kabul**; PRE/F7; [ADR-0016](ADR-0016-faz9-frontend.md) **Supersede**
-**Kod:** API-B1…B4 **Kabul** (ürün sahibi 2026-11-09); API-B5 **uygulandı** (ürün sahibi incelemesi bekliyor; agent Kabul etmez)
+**Kod:** API-B1…B7 **Kabul** (ürün sahibi Qubit, 2026-11-09); ADR bütünü hâlâ **Taslak** (NX-3…12 açık)
 
 ## Sabit ürün yönü
 
@@ -30,12 +30,6 @@
 
 ## Fazlar
 
-| Faz | Durum |
-|-----|--------|
-| B0 | **Tamamlandı** |
-| B1 | **Kabul** (ürün sahibi) |
-| B2 | Buyer commerce — **Kabul** (+ concurrency 7 OK) |
-| B3 | Finans/sevkiyat/iade — **Kabul** |
-| B4 | Kurumsal (org/onay/RFQ) — **Kabul** |
-| B5 | Ops QC/sevkiyat — **uygulandı; inceleme bekliyor** (Kabul değil) |
-| B6…B7 | Bekliyor |
+Canlı B0–B7 tablosu **tek kaynak:** [MASTER §12.1b](../MASTER.md). Bu ADR’de kopya tutulmaz.
+
+Özet (yalnız okuma kolaylığı; çelişide MASTER kazanır): B1…B7 **Kabul** — 2026-11-09 (Qubit).

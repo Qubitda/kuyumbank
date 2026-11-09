@@ -73,7 +73,16 @@ from api.views import (
     RfqSendView,
     ShipmentDetailView,
     ShipmentListView,
+    SupplierOfferDeactivateView,
+    SupplierOfferDetailView,
     SupplierOfferListView,
+    SupplierOfferSubmitView,
+    SupplierOfferVersionView,
+    SupplierRfqDetailView,
+    SupplierRfqListView,
+    SupplierRfqMessageView,
+    SupplierRfqRevisionView,
+    SupplierStockAdjustView,
     SupplierStockSummaryView,
 )
 
@@ -163,9 +172,54 @@ api_urlpatterns = [
         name="api-supplier-offers",
     ),
     path(
+        "supplier/offers/<int:pk>/",
+        SupplierOfferDetailView.as_view(),
+        name="api-supplier-offer-detail",
+    ),
+    path(
+        "supplier/offers/<int:pk>/submit/",
+        SupplierOfferSubmitView.as_view(),
+        name="api-supplier-offer-submit",
+    ),
+    path(
+        "supplier/offers/<int:pk>/deactivate/",
+        SupplierOfferDeactivateView.as_view(),
+        name="api-supplier-offer-deactivate",
+    ),
+    path(
+        "supplier/offers/<int:pk>/versions/",
+        SupplierOfferVersionView.as_view(),
+        name="api-supplier-offer-versions",
+    ),
+    path(
         "supplier/stock/",
         SupplierStockSummaryView.as_view(),
         name="api-supplier-stock",
+    ),
+    path(
+        "supplier/stock/adjustments/",
+        SupplierStockAdjustView.as_view(),
+        name="api-supplier-stock-adjust",
+    ),
+    path(
+        "supplier/rfqs/",
+        SupplierRfqListView.as_view(),
+        name="api-supplier-rfq-list",
+    ),
+    path(
+        "supplier/rfqs/<int:pk>/",
+        SupplierRfqDetailView.as_view(),
+        name="api-supplier-rfq-detail",
+    ),
+    path(
+        "supplier/rfqs/<int:pk>/messages/",
+        SupplierRfqMessageView.as_view(),
+        name="api-supplier-rfq-message",
+    ),
+    path(
+        "supplier/rfqs/<int:pk>/revisions/",
+        SupplierRfqRevisionView.as_view(),
+        name="api-supplier-rfq-revision",
     ),
     path("credit/me/", CreditMineView.as_view(), name="api-credit-mine"),
     path("credit/check/", CreditCheckView.as_view(), name="api-credit-check"),

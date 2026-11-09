@@ -23,7 +23,7 @@
 | [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam quote | **Kabul** (2026-11-09, Qubit) | — | Pricing | Sim + KS-6 quote UYGULANDI | `karlilik_simulasyonu` + `quote(hedef_toplam=)` |
 | [ADR-0015](ADR-0015-account-hierarchy.md) | Account Hierarchy (U-014 A) | OrgBirimi firma-içi; tenant=Firma; Order.sube nullable | **Kabul** (2026-11-09, Qubit plan) | 10 | Identity/Org | F10-010+ dilimler | [ADR-0015](ADR-0015-account-hierarchy.md) |
 | [ADR-0016](ADR-0016-faz9-frontend.md) | Faz 9 frontend stack (eski) | C→A Django v1 — **yürürlükte değil** | **Supersede** → [0017](ADR-0017-nextjs-api-sozlesmesi.md) | 9 | Experience | F9-010/011 HTML kalır | F9-001 |
-| [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md) | Next.js + `/api/v1/` sözleşme | NX-1/NX-2 **Kabul**; CORS erteli; NX-3…12 açık | **Taslak** | 9 / API | Experience/API | B1…B4 Kabul; B5 uygulandı (inceleme; Kabul değil) | F9-001 / API-B* · [MASTER](../MASTER.md) §12.1b |
+| [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md) | Next.js + `/api/v1/` sözleşme | NX-1/NX-2 **Kabul**; CORS erteli; NX-3…12 açık | **Taslak** | 9 / API | Experience/API | B1…B7 **Kabul** | F9-001 / API-B* · [MASTER](../MASTER.md) §12.1b · [API_CONTRACT](../API_CONTRACT.md) |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |
@@ -54,3 +54,5 @@
 - 2026-11-09: API-B4 kurumsal HTTP **uygulandı** (ürün sahibi incelemesi; **Kabul değil**); docs bayat metin temizliği. Canlı B0–B7: [MASTER](../MASTER.md) §12.1b. *(tarihsel — B4 sonra Kabul)*
 - 2026-11-09: `SESSION_HANDOFF.md` kaldırıldı; tek oturum girişi `AGENTS.md` → MASTER §12.
 - 2026-11-09: API-B4 **Kabul**; API-B5 ops QC/sevkiyat **uygulandı** (inceleme; Kabul değil).
+- 2026-11-09: API-B6 **Kabul**; API-B7 dondurma **uygulandı** (OpenAPI + API_CONTRACT; inceleme; Kabul değil).
+- 2026-11-09 (Qubit): API-B7 **Kabul**; Next.js `frontend/` ayrı talimat.

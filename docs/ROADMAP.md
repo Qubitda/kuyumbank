@@ -73,7 +73,7 @@
 | 20 | Quick/Bulk | **UYGULANDI** | — | — |
 | 21 | Dynamic pricing | Yok (kilitli) | U-015 açılmadan yok | — |
 
-**Güncel gap sırası (MASTER §12.3 ile hizalı):** API-B5 ops (**uygulandı, inceleme**) → B6…B7 → F8-003/006 → F10-021 → CAP-PIYASA. (B0–B4 Kabul; B5 Kabul değil; F9 HTML büyütme yok; ADR-0017 Taslak.)
+**Güncel gap sırası (MASTER §12.3 ile hizalı):** Next.js `frontend/` → F8-003/006 → F10-021 → CAP-PIYASA. (B0–B7 Kabul; F9 HTML büyütme yok; ADR-0017 Taslak.)
 
 ---
 
@@ -149,7 +149,7 @@ G0–G4 kapandı (3.7 + ADR-0010/0011 + U-002 + ince PRE).
 **KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env). **Açık:** Sentry SDK (F8-003), perf baseline (F8-006), Celery/Redis, hosting/yedek prova.
 
 ### Faz 9 — Portal / API readiness
-**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1/NX-2 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B4 Kabul;** **B5 uygulandı (inceleme / Kabul değil).** **Sırada:** B6…B7 — [MASTER](MASTER.md) §12.1b.
+**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1/NX-2 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B7 Kabul.** **Sırada:** Next.js `frontend/` (ayrı talimat) — [MASTER](MASTER.md) §12.1b.
 
 ### Faz 10 — Kurumsal & RFQ
 **UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI). **Açık:** F10-021 eşleştirme; F10-023 supplier UI.

@@ -339,3 +339,21 @@
 - Test `api.tests.test_api_b5_ops` **7 OK** (idempotency + PG concurrency). OpenAPI güncellendi.
 - B5 **Kabul değil** — inceleme bekliyor. Sıradaki: B6 yalnız ayrı talimat.
 
+### 2026-11-09 — API-B5 Kabul + API-B6 tedarikçi API
+- Ürün sahibi B5 **Kabul**.
+- B6: `/api/v1/supplier/offers/*` (submit/deactivate/versions) + `stock/adjustments/` + `rfqs/*` (ters kör mesaj/revizyon); `teklif_servisi` / `ledger_servisi` / `rfq_servisi`.
+- Test `api.tests.test_api_b6_supplier` **3 OK**. OpenAPI güncellendi. B6 **Kabul değil**.
+
+### 2026-11-09 — API-B6 Kabul + API-B7 dondurma / frontend-ready
+- Ürün sahibi B6 **Kabul**.
+- B7: OpenAPI yeniden üretildi (`--check` OK; çift önek 0; 81 path); `docs/API_CONTRACT.md` (matris + checklist + sınırlar); `test_api_b7_openapi` **1 OK**.
+- B7 **Kabul değil**. Sıradaki: Next.js `frontend/` yalnız ayrı talimat.
+
+### 2026-11-09 — DOC-CONSISTENCY-01 dokümantasyon tutarlılığı
+- Sahiplik: `AGENTS.md` + MASTER’a `API_CONTRACT` / OpenAPI satırı; ADR-0017 faz tablosu MASTER §12.1b’ye yönlendirildi (kopya kaldırıldı).
+- `scripts/docs_sync.py` faz lint’i B4 bayat mantığından B5–B7 / BACKLOG çapraz kontrole güncellendi.
+- HISTORY eski B5/B6 “Kabul değil” satırları **tarihsel** bırakıldı (append-only).
+
+### 2026-11-09 — API-B7 Kabul + B6/B7 commit
+- Ürün sahibi B7 **Kabul** (Qubit). B6 tedarikçi API + B7 dondurma (OpenAPI/API_CONTRACT/docs_sync) working-tree’den commit; F9 HTML WIP dışı.
+

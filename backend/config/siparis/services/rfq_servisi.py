@@ -39,6 +39,22 @@ def _require(actor, *, action: str, entity_id: str = ""):
         raise
 
 
+def _supplier_may_participate(actor, rfq: RFQ) -> bool:
+    """B6: tedarikçi yalnız GONDERILDI havuzunda mesaj/revizyon (ters kör)."""
+    firma = getattr(actor, "firma", None)
+    return bool(
+        firma is not None
+        and getattr(firma, "tedarikci_mi", False)
+        and rfq.durum == RFQ.Durum.GONDERILDI
+    )
+
+
+def _require_participate(actor, rfq: RFQ, *, action: str) -> None:
+    if _supplier_may_participate(actor, rfq):
+        return
+    _require(actor, action=action, entity_id=str(rfq.pk))
+
+
 def olustur(
     *,
     actor,
@@ -128,7 +144,9 @@ def gonder(*, actor, rfq: RFQ) -> RFQ:
 
 
 def mesaj_ekle(*, actor, rfq: RFQ, govde: str) -> RFQMessage:
-    _require(actor, action="siparis.rfq.message_denied", entity_id=str(rfq.pk))
+    _require_participate(
+        actor, rfq, action="siparis.rfq.message_denied"
+    )
     text = (govde or "").strip()
     if len(text) < 2:
         raise ValidationError("Mesaj çok kısa.")
@@ -153,7 +171,9 @@ def mesaj_ekle(*, actor, rfq: RFQ, govde: str) -> RFQMessage:
 
 def revizyon_ekle(*, actor, rfq: RFQ, ozet: str) -> RFQRevizyon:
     """F10-022 — özel üretim revizyon kaydı (append-only)."""
-    _require(actor, action="siparis.rfq.revision_denied", entity_id=str(rfq.pk))
+    _require_participate(
+        actor, rfq, action="siparis.rfq.revision_denied"
+    )
     if rfq.talep_tipi != RFQ.TalepTipi.OZEL_URETIM:
         raise ValidationError("Revizyon yalnız OZEL_URETIM taleplerinde.")
     if rfq.durum in {RFQ.Durum.KAPANDI, RFQ.Durum.IPTAL}:

@@ -907,7 +907,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 ### [API-B5] Ops API yüzeyi
 
-- **Faz:** API readiness · **Durum:** **UYGULANDI** (inceleme; Kabul değil) · **Öncelik:** P1 · **Tip:** API
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P1 · **Tip:** API
 - **Bağımlılıklar:** API-B4 **Kabul**
 - **Kapsam:** `/api/v1/ops/inspections/*` (QC SM + ölçüm) + `/api/v1/ops/shipments/*` (oluştur/geçiş/POD); `manage_qc` / `manage_shipment`; Idempotency-Key; NX-2
 - **Kanıt:** `api.tests.test_api_b5_ops` **7 OK**
@@ -915,16 +915,17 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 ### [API-B6] Tedarikçi API yüzeyi
 
-- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
-- **Bağımlılıklar:** API-B5 inceleme/Kabul ([MASTER](MASTER.md) §12.1b)
-- **Kapsam:** teklif/stok; ters kör havuz; supplier RFQ
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B5 **Kabul** ([MASTER](MASTER.md) §12.1b)
+- **Kapsam:** `/supplier/offers/*` (submit/deactivate/versions) + `/supplier/stock/adjustments/` + `/supplier/rfqs/*` (ters kör; mesaj/revizyon); mevcut `teklif_servisi` / `ledger_servisi` / `rfq_servisi`
+- **Kanıt:** `api.tests.test_api_b6_supplier` **3 OK**
 
 ### [API-B7] API dondurma / frontend-ready
 
-- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Docs/API
-- **Bağımlılıklar:** API-B2…B6
-- **Kapsam:** sözleşme dokümanı `docs/api/openapi-v1.json` (+ isteğe bağlı insan özeti B7’de); sızıntı/yetki matrisi; checklist
-- **Not:** `docs/API_CONTRACT.md` henüz yok — uydurma dosya referansı kullanılmaz
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P1 · **Tip:** Docs/API
+- **Bağımlılıklar:** API-B2…B6 **Kabul**
+- **Kapsam:** `docs/api/openapi-v1.json` (koddan üret + `--check`); [API_CONTRACT.md](API_CONTRACT.md) (yetki/sızıntı matrisi + frontend checklist); B1–B6 path dondurma
+- **Kanıt:** `api.tests.test_api_b7_openapi` **1 OK**; `python scripts/export_openapi.py --check` (çift önek 0; 81 path)
 
 ### [F9-010] Buyer dashboard iskeleti
 

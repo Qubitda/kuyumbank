@@ -1495,7 +1495,7 @@
     },
     "/api/v1/orders/": {
       "get": {
-        "description": "GET /api/v1/orders/ — alıcı kendi; ops view_all. Client firma_id yok sayılır.",
+        "description": "GET /api/v1/orders/ — alıcı kendi; view_all / QC / lojistik tümü. Client firma_id yok.",
         "operationId": "listOrders",
         "parameters": [],
         "responses": {
@@ -2560,6 +2560,304 @@
         ]
       }
     },
+    "/api/v1/supplier/offers/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveSupplierOfferDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/{id}/deactivate/": {
+      "post": {
+        "description": "POST — YAYINDA → PASIF.",
+        "operationId": "createSupplierOfferDeactivate",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/{id}/submit/": {
+      "post": {
+        "description": "POST — TASLAK → ONAY_BEKLIYOR (teklif_servisi.onaya_gonder).",
+        "operationId": "createSupplierOfferSubmit",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/{id}/versions/": {
+      "post": {
+        "description": "POST — YAYINDA → yeni ONAY_BEKLIYOR versiyon.",
+        "operationId": "createSupplierOfferVersion",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/rfqs/": {
+      "get": {
+        "description": "GET — GONDERILDI havuzu; alıcı kimliği yok.",
+        "operationId": "listSupplierRfqs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/rfqs/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveSupplierRfqDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/rfqs/{id}/messages/": {
+      "post": {
+        "description": "",
+        "operationId": "createSupplierRfqMessage",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/rfqs/{id}/revisions/": {
+      "post": {
+        "description": "",
+        "operationId": "createSupplierRfqRevision",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
     "/api/v1/supplier/stock/": {
       "get": {
         "description": "",
@@ -2573,6 +2871,39 @@
                   "items": {},
                   "type": "array"
                 }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/stock/adjustments/": {
+      "post": {
+        "description": "POST — ledger_servisi.duzeltme (manage_own_warehouse).",
+        "operationId": "createSupplierStockAdjust",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             },
             "description": ""

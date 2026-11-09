@@ -68,7 +68,19 @@ from .rfq import (
     RfqSendView,
 )
 from .shipment import ShipmentDetailView, ShipmentListView
-from .supplier import SupplierOfferListView, SupplierStockSummaryView
+from .supplier import (
+    SupplierOfferDeactivateView,
+    SupplierOfferDetailView,
+    SupplierOfferListView,
+    SupplierOfferSubmitView,
+    SupplierOfferVersionView,
+    SupplierRfqDetailView,
+    SupplierRfqListView,
+    SupplierRfqMessageView,
+    SupplierRfqRevisionView,
+    SupplierStockAdjustView,
+    SupplierStockSummaryView,
+)
 
 __all__ = [
     "ApprovalApproveView",
@@ -141,6 +153,15 @@ __all__ = [
     "RfqSendView",
     "ShipmentDetailView",
     "ShipmentListView",
+    "SupplierOfferDeactivateView",
+    "SupplierOfferDetailView",
     "SupplierOfferListView",
+    "SupplierOfferSubmitView",
+    "SupplierOfferVersionView",
+    "SupplierRfqDetailView",
+    "SupplierRfqListView",
+    "SupplierRfqMessageView",
+    "SupplierRfqRevisionView",
+    "SupplierStockAdjustView",
     "SupplierStockSummaryView",
 ]
