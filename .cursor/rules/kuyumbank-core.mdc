@@ -1,11 +1,10 @@
 ---
-description: Kuyumbank core agent constraints — AGENTS.md + docs/KUYUMBANK_MASTER.md only
+description: Kuyumbank core agent constraints — AGENTS.md + docs/MASTER.md
 alwaysApply: true
 ---
-
 # Kuyumbank core
 
-- Follow root `AGENTS.md` and canonical `docs/KUYUMBANK_MASTER.md` (context, decisions, backlog, §12 status). `docs/` = yalnız bu master.
+- Follow root `AGENTS.md` and canonical `docs/MASTER.md` (context, §12 status). Related ADR → `docs/decisions/`; backlog → `docs/BACKLOG.md`.
 - Django docs = framework usage only; project skills = Kuyumbank rules (not official Django skills).
 - Structure: ADR-0004 modular packages; no unsolicited mass WIP refactor.
 - Audit findings: DOĞRULANDI / DOĞRULANAMADI / PLANLAMA BULGUSU + file/line or command evidence.
@@ -17,8 +16,8 @@ alwaysApply: true
 
 ## Faz geçişi ve yetki
 
-- Faz geçişi: master §6’da ilgili ADR "Kabul" olmadan o fazın kodu başlamaz. ADR'yi Kabul olarak işaretleme yetkisi yalnızca proje sahibindedir; agent kendi taslağını onaylamaz.
-- Kapsam: Talimatta açıkça istenmeyen model, migration, servis veya admin değişikliği yapma. Belge/test turlarında (Ek kural B) yalnızca `docs/` ve test dosyaları değişir.
+- Faz geçişi: ilgili ADR "Kabul" olmadan (`docs/decisions/`) o fazın kodu başlamaz. ADR'yi Kabul olarak işaretleme yetkisi yalnızca proje sahibindedir; agent kendi taslağını onaylamaz.
+- Kapsam: Talimatta açıkça istenmeyen model, migration, servis veya admin değişikliği yapma. Belge/test turlarında yalnızca `docs/` ve test dosyaları değişir (aksi istenmedikçe).
 - Yetki ihlali ve reddedilen işlemler: audit kaydı iş transaction'ının rollback'inden etkilenmeyecek şekilde (atomic dışında) yazılır.
 - Gizli veri: `.env` ve gerçek kimlik bilgileri repoya veya arşive girmez; raporlarda değer yazılmaz, yalnızca varlığı belirtilir.
 - docs/ altındaki bir dosyaya atıf yapmadan önce diskte varlığını doğrula (Test-Path / ls); Cursor indeksindeki dosya ismi kanıt sayılmaz.

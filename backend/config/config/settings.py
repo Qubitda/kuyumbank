@@ -41,8 +41,12 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=3600)  # sorunsuzsa artır
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    # Reverse proxy (nginx vb.) arkasındaysan aç:
-    # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Reverse proxy (nginx vb.): env ile aç (varsayılan kapalı).
+    if env.bool("SECURE_PROXY_SSL_HEADER", default=False):
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# AUD-001b — X-Forwarded-For güvenilir proxy hop sayısı (0 = yalnız REMOTE_ADDR)
+TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
 # --- Uygulamalar ------------------------------------------------------------
 INSTALLED_APPS = [
@@ -57,26 +61,38 @@ INSTALLED_APPS = [
     # modüller
     'import_export',
     'rest_framework',
+    'rest_framework.authtoken',  # SEC-001: TokenAuthentication
     'tanimlar.apps.TanimlarConfig',
     'firmalar.apps.FirmalarConfig',
     'fiyatlama.apps.FiyatlamaConfig',
     'urunler.apps.UrunlerConfig',
     'stok.apps.StokConfig',
     'siparis.apps.SiparisConfig',
+    'finans.apps.FinansConfig',
+    'kalite.apps.KaliteConfig',
     'api.apps.ApiConfig',
 
 ]
 
 # --- DRF (PRE ince API, U-012) ---------------------------------------------
+# Token birincil API kimliği; Basic WWW-Authenticate/401 için korunur (Session 403 üretir).
 REST_FRAMEWORK = {
-    # Basic önce: WWW-Authenticate → unauth 401 (Session yalnız header üretmez → 403)
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.BasicAuthentication",
         "api.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": env("DRF_THROTTLE_ANON", default="60/min"),
+        "user": env("DRF_THROTTLE_USER", default="600/min"),
+    },
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
 }
 
@@ -90,9 +106,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'api.middleware.IdempotencyKeyMiddleware',  # PRE-005: header → request.idempotency_key
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+LOGIN_URL = "/buyer/login/"
+LOGIN_REDIRECT_URL = "/buyer/"
+LOGOUT_REDIRECT_URL = "/buyer/login/"
 
 TEMPLATES = [
     {
@@ -157,3 +178,14 @@ PLATFORM_BRAND_NAME = env("PLATFORM_BRAND_NAME", default="")
 # --- Gram bandı varsayılanı (K3, ADR-0005) ----------------------------------
 # Varyant gram bandı yoksa teklif eşlemesinde kullanılan relatif tolerans.
 VARYANT_GRAM_BANDI_ORAN = Decimal(env("VARYANT_GRAM_BANDI_ORAN", default="0.05"))
+
+# --- HAS pozisyon limiti (ADR-0012 F5-K6 / FX-001) --------------------------
+# 0 → limit kapalı (over_limit False). Decimal string env.
+HAS_POSITION_LIMIT = Decimal(env("HAS_POSITION_LIMIT", default="0"))
+
+# --- Ödeme sağlayıcı (F5-020) -----------------------------------------------
+# "fake" = geliştirme/test. Canlı banka yok. Secret asla koda yazılmaz.
+PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="fake")
+PAYMENT_FAKE_FORCE_FAIL = env.bool("PAYMENT_FAKE_FORCE_FAIL", default=False)
+# F5-021 webhook: boşsa endpoint 401 (fail-closed). Secret koda yazılmaz.
+PAYMENT_WEBHOOK_SECRET = env("PAYMENT_WEBHOOK_SECRET", default="")

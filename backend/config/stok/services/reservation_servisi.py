@@ -72,6 +72,75 @@ def _return_or_reject_existing(res: StockReservation, *, now) -> StockReservatio
     )
 
 
+def _sweep_expired_on_balance(
+    *,
+    warehouse: Warehouse,
+    teklif: TedarikciTeklif,
+    birim: str,
+    now,
+) -> int:
+    """Kilitli balance anahtarı için TTL dolmuş AKTIF hold'ları kapatır (lazy F4-022).
+
+    Caller zaten domain_atomic + balance select_for_update tutuyor olmalı.
+    """
+    stale_ids = list(
+        StockReservation.objects.select_for_update()
+        .filter(
+            warehouse=warehouse,
+            teklif=teklif,
+            birim=birim,
+            durum=StockReservation.Durum.AKTIF,
+            gecerlilik_sonu__lte=now,
+        )
+        .order_by("pk")
+        .values_list("pk", flat=True)
+    )
+    n = 0
+    for pk in stale_ids:
+        locked = (
+            StockReservation.objects.select_for_update()
+            .select_related("warehouse", "teklif")
+            .filter(pk=pk, durum=StockReservation.Durum.AKTIF)
+            .first()
+        )
+        if locked is None:
+            continue
+        bal = get_or_create_balance_locked(
+            warehouse=locked.warehouse,
+            teklif=locked.teklif,
+            birim=locked.birim,
+        )
+        if bal.reserved < locked.miktar:
+            raise ValidationError(
+                f"reserved tutarsız: {bal.reserved} < {locked.miktar}"
+            )
+        bal.reserved = bal.reserved - locked.miktar
+        save_balance_fields(bal, update_fields=["reserved"])
+        locked.durum = StockReservation.Durum.SURESI_DOLDU
+        locked.kapanma_tarihi = now
+        locked._allow_status_transition = True
+        try:
+            locked.save(update_fields=["durum", "kapanma_tarihi"])
+        finally:
+            locked._allow_status_transition = False
+        record_audit(
+            actor=None,
+            action="stock_reservation.expire",
+            entity_type="StockReservation",
+            entity_id=str(locked.pk),
+            success=True,
+            detail={
+                "durum": StockReservation.Durum.SURESI_DOLDU,
+                "miktar": str(locked.miktar),
+                "birim": locked.birim,
+                "reserved_after": str(bal.reserved),
+                "via": "lazy_create_sweep",
+            },
+        )
+        n += 1
+    return n
+
+
 def olustur_rezervasyon(
     *,
     actor,
@@ -121,6 +190,11 @@ def olustur_rezervasyon(
                 warehouse=warehouse, teklif=teklif, birim=birim
             )
             assert_ayni_birim(bal.birim, birim, context="reservation")
+            # F4-022: TTL dolmuş AKTIF hold'lar available'ı şişirmesin
+            _sweep_expired_on_balance(
+                warehouse=warehouse, teklif=teklif, birim=birim, now=now
+            )
+            bal.refresh_from_db()
             if bal.available < miktar:
                 raise ValidationError(
                     f"Yetersiz available: {bal.available} < {miktar} ({birim})."
@@ -274,17 +348,53 @@ def sync_reservation_expiration(
     return expire_reservation(res, now=now, actor=None)
 
 
+def expire_stale_reservations(*, now=None, limit: int | None = None) -> int:
+    """TTL dolmuş AKTIF rezervasyonları toplu kapatır (F4-022). actor=None audit."""
+    now = now or timezone.now()
+    qs = (
+        StockReservation.objects.filter(
+            durum=StockReservation.Durum.AKTIF,
+            gecerlilik_sonu__lte=now,
+        )
+        .order_by("pk")
+        .values_list("pk", flat=True)
+    )
+    if limit is not None:
+        if limit <= 0:
+            return 0
+        qs = qs[:limit]
+    ids = list(qs)
+    n = 0
+    for pk in ids:
+        res = StockReservation.objects.filter(pk=pk).first()
+        if res is None:
+            continue
+        before = res.durum
+        expire_reservation(res, now=now, actor=None)
+        res.refresh_from_db()
+        if (
+            before == StockReservation.Durum.AKTIF
+            and res.durum == StockReservation.Durum.SURESI_DOLDU
+        ):
+            n += 1
+    return n
+
+
 def tuket_rezervasyon(
     res: StockReservation, *, actor, now=None
 ) -> StockReservation:
-    """Hold → satış: reserved ve on_hand düşer; SATIS movement yazılır."""
+    """Hold → satış: reserved ve on_hand düşer; SATIS movement yazılır.
+
+    Süre dolmuşsa önce expire (ayrı atomic). Order create gibi DIŞ atomic
+    içinden çağrılıyorsa expire savepoint'i dış rollback ile silinir —
+    `olustur_from_checkout` bu yüzden expire'ı atomic dışında önceden yapar.
+    """
     now = now or timezone.now()
     sync_reservation_expiration(res, now=now)
     res.refresh_from_db()
     if res.durum != StockReservation.Durum.AKTIF:
         raise ValidationError(f"Tüketilemez; durum={res.durum}")
 
-    expired_in_tx = False
     with domain_atomic():
         locked = (
             StockReservation.objects.select_for_update()
@@ -295,6 +405,8 @@ def tuket_rezervasyon(
         if locked is None:
             res.refresh_from_db()
             raise ValidationError("Rezervasyon aktif değil.")
+        if now >= locked.gecerlilik_sonu:
+            raise ValidationError("Rezervasyon süresi dolmuş; tüketilemez.")
 
         bal = get_or_create_balance_locked(
             warehouse=locked.warehouse,
@@ -303,76 +415,46 @@ def tuket_rezervasyon(
         )
         if bal.reserved < locked.miktar:
             raise ValidationError("reserved tutarsız.")
+        if bal.on_hand < locked.miktar:
+            raise ValidationError("on_hand yetersiz (tüketim).")
 
-        if now >= locked.gecerlilik_sonu:
-            # Expire commit edilir; ValidationError atomic dışında yükseltilir.
-            bal.reserved = bal.reserved - locked.miktar
-            save_balance_fields(bal, update_fields=["reserved"])
-            locked.durum = StockReservation.Durum.SURESI_DOLDU
-            locked.kapanma_tarihi = now
-            locked._allow_status_transition = True
-            try:
-                locked.save(update_fields=["durum", "kapanma_tarihi"])
-            finally:
-                locked._allow_status_transition = False
-            record_audit(
-                actor=actor,
-                action="stock_reservation.expire",
-                entity_type="StockReservation",
-                entity_id=str(locked.pk),
-                success=True,
-                detail={
-                    "durum": StockReservation.Durum.SURESI_DOLDU,
-                    "miktar": str(locked.miktar),
-                    "birim": locked.birim,
-                    "reserved_after": str(bal.reserved),
-                    "via": "consume_ttl",
-                },
-            )
-            expired_in_tx = True
-        else:
-            if bal.on_hand < locked.miktar:
-                raise ValidationError("on_hand yetersiz (tüketim).")
+        bal.reserved = bal.reserved - locked.miktar
+        bal.on_hand = bal.on_hand - locked.miktar
+        save_balance_fields(bal, update_fields=["reserved", "on_hand"])
 
-            bal.reserved = bal.reserved - locked.miktar
-            bal.on_hand = bal.on_hand - locked.miktar
-            save_balance_fields(bal, update_fields=["reserved", "on_hand"])
+        mv = StockMovement(
+            warehouse=locked.warehouse,
+            teklif=locked.teklif,
+            varyant_id=locked.varyant_id,
+            birim=locked.birim,
+            miktar=-locked.miktar,
+            tip=StockMovement.Tip.SATIS,
+            neden=f"reservation:{locked.pk}",
+            olusturan=actor,
+        )
+        mv.save()
 
-            mv = StockMovement(
-                warehouse=locked.warehouse,
-                teklif=locked.teklif,
-                varyant_id=locked.varyant_id,
-                birim=locked.birim,
-                miktar=-locked.miktar,
-                tip=StockMovement.Tip.SATIS,
-                neden=f"reservation:{locked.pk}",
-                olusturan=actor,
-            )
-            mv.save()
+        locked.durum = StockReservation.Durum.TUKETILDI
+        locked.kapanma_tarihi = now
+        locked._allow_status_transition = True
+        try:
+            locked.save(update_fields=["durum", "kapanma_tarihi"])
+        finally:
+            locked._allow_status_transition = False
 
-            locked.durum = StockReservation.Durum.TUKETILDI
-            locked.kapanma_tarihi = now
-            locked._allow_status_transition = True
-            try:
-                locked.save(update_fields=["durum", "kapanma_tarihi"])
-            finally:
-                locked._allow_status_transition = False
-
-            record_audit(
-                actor=actor,
-                action="stock_reservation.consume",
-                entity_type="StockReservation",
-                entity_id=str(locked.pk),
-                success=True,
-                detail={
-                    "miktar": str(locked.miktar),
-                    "birim": locked.birim,
-                    "movement_id": mv.pk,
-                    "on_hand": str(bal.on_hand),
-                    "reserved": str(bal.reserved),
-                },
-            )
+        record_audit(
+            actor=actor,
+            action="stock_reservation.consume",
+            entity_type="StockReservation",
+            entity_id=str(locked.pk),
+            success=True,
+            detail={
+                "miktar": str(locked.miktar),
+                "birim": locked.birim,
+                "movement_id": mv.pk,
+                "on_hand": str(bal.on_hand),
+                "reserved": str(bal.reserved),
+            },
+        )
     res.refresh_from_db()
-    if expired_in_tx:
-        raise ValidationError("Rezervasyon süresi dolmuş; tüketilemez.")
     return res

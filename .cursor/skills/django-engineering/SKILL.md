@@ -19,7 +19,7 @@ This skill states **project** engineering rules. For framework behavior, read Dj
 - Apps: `firmalar`, `tanimlar`, `urunler`, `fiyatlama`, `stok`, `siparis`, `api` under `backend/config/`
 - Manage: `backend/config/manage.py`
 - HTTP: admin + ince PRE API `/api/v1/` (DRF); Celery yok
-- **Binding structure:** ADR-0004 — see `docs/KUYUMBANK_MASTER.md` §3 / §6
+- **Binding structure:** ADR-0004 — see `docs/MASTER.md` §3 + `docs/decisions/ADR-0004-*.md`
 
 ### ADR-0004 package layout (per app)
 

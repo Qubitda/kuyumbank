@@ -55,10 +55,12 @@ class Varyant(models.Model):
     )
 
     stok = models.PositiveIntegerField(
-        "Stok",
+        "Stok (legacy)",
         default=1,
+        editable=False,
         help_text=(
             "LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). "
+            "F4-070: güncelleme yazımı kapalı; stok için StockMovement/Balance. "
             "GRAM teklif stokuyla toplanmaz/dönüştürülmez (U-002)."
         ),
     )
@@ -215,6 +217,9 @@ class Varyant(models.Model):
     # Kayıt
     # ------------------------------------------------------------------ #
     def save(self, *args, **kwargs):
+        from stok.services.dual_stock_envanter import assert_legacy_stock_unchanged
+
+        assert_legacy_stock_unchanged(instance=self, field_name="stok")
         yeni = self.pk is None
         super().save(*args, **kwargs)
         if yeni and not self.sku:

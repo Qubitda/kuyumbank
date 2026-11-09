@@ -1,0 +1,29 @@
+{% extends "buyer/base.html" %}
+{% block title %}Sipariş #{{ order.id }} — Kuyumbank Alıcı{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0;">Sipariş #{{ order.id }}</h1>
+  <p class="muted">{{ order.durum }} · {{ order.olusturma_tarihi }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Varyant</th>
+        <th>Miktar</th>
+        <th>Birim</th>
+        <th>Satır tutarı</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in order.lines %}
+      <tr>
+        <td>{{ line.varyant_id }}</td>
+        <td>{{ line.miktar }}</td>
+        <td>{{ line.birim }}</td>
+        <td>{{ line.snapshot_satir_tutari_vergisiz }} {{ line.para_birimi }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p style="margin-top:1rem;"><a href="{% url 'buyer-order-list' %}">← Siparişler</a></p>
+</section>
+{% endblock %}

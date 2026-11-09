@@ -10,23 +10,30 @@ Jewelry B2B platform. Django modular monolith. Alıcı–tedarikçi **kör havuz
 ## İlk okuma sırası
 
 1. Bu `AGENTS.md`
-2. `docs/KUYUMBANK_MASTER.md` — özellikle **§2** (gerçek durum) ve **§12** (sıradaki adım)
+2. `docs/MASTER.md` — özellikle **§2** (gerçek durum) ve **§12** (sıradaki adım)
 3. Görevle ilgili **tek** skill (aşağıdaki tablo)
 4. İlgili mevcut kod (model/servis/test) — yeniden yazmadan önce
 
-Kurulum komutları: kök `README.md` → `backend/README.md`.
+Kurulum komutları: `docs/RUNBOOK.md` + kök `README.md` → `backend/README.md`.
 
 ## Bilgi kaynakları (tek sahiplik)
 
 | Bilgi | Tek kaynak |
 |-------|------------|
 | Agent kuralları / yasaklar / süreç | **Bu dosya** |
-| Vizyon, mimari, ADR, faz, backlog, U-*, risk, §12 | **`docs/KUYUMBANK_MASTER.md`** |
-| Kurulum / migrate / test / run | **`README.md` + `backend/README.md`** |
+| Canlı durum, standartlar, §12 | **`docs/MASTER.md`** |
+| ADR / kararlar | **`docs/decisions/`** |
+| İş havuzu / U-* | **`docs/BACKLOG.md`** |
+| Yol haritası / capability gap | **`docs/ROADMAP.md`** |
+| Faz tarihçesi | **`docs/HISTORY.md`** |
+| Kurulum / işletim | **`docs/RUNBOOK.md`** + `README.md` |
+| Veri sözlüğü (otomatik) | **`docs/DATA_DICTIONARY.md`** |
 | Framework API | Django 6.1 docs / kaynak |
 | İş/mimari skill | `.cursor/skills/*` (Django resmi skill değil) |
 
-`docs/` = yalnız `KUYUMBANK_MASTER.md`. Yeni faz raporu, ikinci yol haritası, dağınık backlog veya ayrı `ADR-*.md` **üretilmez**. Cursor indeksindeki silinmiş dosya adı kanıt sayılmaz (diskte `Test-Path` / `ls`).
+`docs/` düzeni: her bilgi tek yerde (MASTER + decisions/BACKLOG/ROADMAP/HISTORY/RUNBOOK/DATA_DICTIONARY).  
+Yeni faz raporu / ikinci yol haritası / dağınık rapor **üretilmez**. Cursor indeksindeki silinmiş dosya adı kanıt sayılmaz (diskte `Test-Path` / `ls`).  
+AUTO blokları ve veri sözlüğü: `python scripts/docs_sync.py` (+ CI `--check`).
 
 ## Hedef runtime
 
@@ -42,11 +49,11 @@ Kurulum komutları: kök `README.md` → `backend/README.md`.
 
 ## Görev yürütme protokolü (token tasarrufu)
 
-1. Master §2 / §10 / §11 / §12 + ilgili ADR satırına bak.
+1. Master §2 / §12 + ilgili ADR / backlog kartına bak.
 2. Yalnız görev dosyalarını oku; tüm repoyu yeniden tarama.
 3. Kabul edilmiş ADR’yi yeniden tartışma; Taslak’ı kendi kendine Kabul etme.
 4. Analiz yeterliyse kodla; bitince master’ı güncelle (kod + test + docs birlikte).
-5. Odak test → (dilim kapanışında) suite bir kez. PG kısıtını SQLite ile “geçti” sayma.
+5. Odak test → (dilim kapanışında / kullanıcı isterse) suite. PG kısıtını SQLite ile “geçti” sayma.
 6. Üretim `migrate` / secret / yıkıcı git **kullanıcı onayı olmadan yok**.
 7. Rapor: Tamamlananlar / Testler / Riskler / Sonraki faz (+ değişen dosyalar).
 
@@ -61,16 +68,16 @@ Kurulum komutları: kök `README.md` → `backend/README.md`.
 
 ## Faz sırası (bağlayıcı)
 
-Kod: master §6’da ilgili ADR **Kabul** + açık talimat olmadan o fazın uygulaması başlamaz.
+Kod: ilgili ADR **Kabul** + açık talimat olmadan o fazın uygulaması başlamaz (`docs/decisions/`).
 
 1. Faz 0 — standartlar (tarihsel)
 2. Faz 1 — firma, kullanıcı, RBAC, izolasyon
 3. Faz 2 — katalog
-4. Faz 3 — teklif / fiyatlama / quote / PriceLock (3a–3b uygulandı; ADR-0010 **Kabul**)
-5. Faz 4 — stok ledger → rezervasyon → cart → checkout/lock → order+iptal (ADR-0011 **Kabul**; dilim 1–7 uygulandı: WH…Order+IADE)
-6. Faz 5+ — finans, QC, API, ops, portal — master §9–§10
+4. Faz 3 — teklif / fiyatlama / quote / PriceLock (ADR-0010 **Kabul**)
+5. Faz 4 — stok → rezervasyon → cart → checkout → order (+ bulk/PRE)
+6. Faz 5+ — finans, QC, API, ops — `docs/MASTER.md` §12 + ROADMAP
 
-Canlı durum: master **§2** + **§12** (YAPILDI / SIRADA). Suite **348 OK**. Sıradaki: PRE-005 → F4-081. Finans ADR-0012 **Taslak**.
+Canlı durum: master **§2** + **§12**. Finans ADR-0012 **Kabul**.
 
 ## Temel iş kuralları
 
@@ -80,7 +87,7 @@ Canlı durum: master **§2** + **§12** (YAPILDI / SIRADA). Suite **348 OK**. S�
 - Katalog platform; teklif tedarikçi; alıcı fiyatı quote.
 - Fiyat: Decimal; siparişte snapshot zorunlu (`OrderLine` + L-11 `price_lock`).
 - Stok: Movement (immutable) ≠ Balance (projeksiyon) ≠ Reservation (TTL hold); sipariş tüketimi SATIS, iptal IADE.
-- Kritik işlem audit; fail audit `domain_atomic` dışında durable.
+- Kritik işlem audit; fail audit `domain_atomic` dışında durable; AuditOlay UPDATE/DELETE yasak.
 - Alanın modelde olması kuralın uygulandığı anlamına gelmez.
 
 ## Teknik standartlar
@@ -96,6 +103,7 @@ Canlı durum: master **§2** + **§12** (YAPILDI / SIRADA). Suite **348 OK**. S�
 - Çalıştırılmayan test başarılı gösterilmez.
 - `makemigrations` üretilebilir; **üretim migrate kullanıcı onayı**.
 - Migration’ı oku; veri kaybı riskini açıkla.
+- Test etiketi: `fiyatlama.tests` (bare `fiyatlama` `admin`/`models` import hatası üretebilir).
 
 ## Ek kural A — Kanıt etiketleri
 
@@ -117,4 +125,4 @@ Canlı durum: master **§2** + **§12** (YAPILDI / SIRADA). Suite **348 OK**. S�
 
 ## Belirsizlik
 
-Net gereksinim → uygula. Eksik detay → güvenli varsayım + master §6 **Taslak** ADR. Veri kaybı / finans / güvenlik / geri dönülemez mimari → dur, karar iste.
+Net gereksinim → uygula. Eksik detay → güvenli varsayım + `docs/decisions/` **Taslak** ADR. Veri kaybı / finans / güvenlik / geri dönülemez mimari → dur, karar iste.

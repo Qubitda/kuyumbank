@@ -12,7 +12,9 @@ from firmalar.services.audit_servisi import (
     record_audit,
     record_audit_durable,
 )
+from firmalar.services import outbox_servisi
 from fiyatlama.models import PriceLock
+from siparis.birim_constants import SepetBirimi
 from siparis.models import CartLine, CheckoutAttempt, Order, OrderLine
 from siparis.services.cart_servisi import _assert_buyer_actor
 from stok.models import StockMovement, StockReservation
@@ -20,13 +22,36 @@ from stok.services.ledger_servisi import (
     get_or_create_balance_locked,
     save_balance_fields,
 )
-from stok.services.reservation_servisi import tuket_rezervasyon
+from stok.services.reservation_servisi import (
+    expire_reservation,
+    tuket_rezervasyon,
+)
 
 _CENT = Decimal("0.01")
 
 
 def _q2(value: Decimal) -> Decimal:
     return Decimal(value).quantize(_CENT, rounding=ROUND_HALF_UP)
+
+
+def _snapshot_from_lock(*, lock, miktar: Decimal, birim: str) -> tuple[Decimal, Decimal]:
+    """Lock toplamı → satır snapshot.
+
+    ADET: toplam = parça; × miktar.
+    GRAM/KARAT: toplam = quote.gram için; gram başına ölçekle (çift sayım yok).
+    """
+    toplam = Decimal(lock.toplam_vergisiz)
+    if birim == SepetBirimi.ADET:
+        return toplam, _q2(toplam * miktar)
+
+    quote_gram = getattr(lock.quote, "gram", None)
+    if quote_gram is None or Decimal(quote_gram) <= 0:
+        raise ValidationError(
+            "GRAM sipariş için PriceQuote.gram zorunlu; satır tutarı hesaplanamaz."
+        )
+    qg = Decimal(quote_gram)
+    birim_fiyat = _q2(toplam / qg)
+    return birim_fiyat, _q2(birim_fiyat * miktar)
 
 
 def olustur_from_checkout(
@@ -77,6 +102,34 @@ def olustur_from_checkout(
         raise ValidationError("Checkout sonucunda satır yok.")
 
     try:
+        # F4-022: TTL expire, order domain_atomic DIŞINDA kalıcı yazılır.
+        # (İç içe atomic/savepoint rollback expire'ı silerdi.)
+        for row in rows:
+            res = StockReservation.objects.filter(
+                pk=int(row["reservation_id"])
+            ).first()
+            if res is None:
+                continue
+            if (
+                res.durum == StockReservation.Durum.AKTIF
+                and now >= res.gecerlilik_sonu
+            ):
+                expire_reservation(res, now=now, actor=None)
+
+        for row in rows:
+            res = StockReservation.objects.filter(
+                pk=int(row["reservation_id"])
+            ).first()
+            if res is None or res.durum != StockReservation.Durum.AKTIF:
+                raise ValidationError(
+                    "Rezervasyon aktif değil veya süresi dolmuş; "
+                    "sipariş oluşturulamaz."
+                )
+            if now >= res.gecerlilik_sonu:
+                raise ValidationError(
+                    "Rezervasyon süresi dolmuş; sipariş oluşturulamaz."
+                )
+
         with domain_atomic():
             # Yarış: aynı attempt
             locked_attempt = (
@@ -122,8 +175,9 @@ def olustur_from_checkout(
 
                 miktar = Decimal(row["miktar"])
                 birim = row["birim"]
-                birim_fiyat = lock.toplam_vergisiz
-                satir_tutar = _q2(birim_fiyat * miktar)
+                birim_fiyat, satir_tutar = _snapshot_from_lock(
+                    lock=lock, miktar=miktar, birim=birim
+                )
                 res_id = res.pk
                 varyant_id = lock.quote.varyant_id
 
@@ -142,7 +196,6 @@ def olustur_from_checkout(
                     para_birimi=lock.para_birimi,
                 )
                 line.save()
-
             # Sepet satırlarını temizle (sipariş sonrası)
             if locked_attempt.cart_id:
                 CartLine.objects.filter(cart_id=locked_attempt.cart_id).delete()
@@ -157,6 +210,16 @@ def olustur_from_checkout(
                     "checkout_attempt_id": locked_attempt.pk,
                     "line_count": len(rows),
                     "idempotency_key": order.idempotency_key,
+                },
+            )
+            # F4-090: aynı atomic — rollback outbox'ı da siler
+            outbox_servisi.enqueue(
+                event_type="order.created",
+                payload={
+                    "order_id": order.pk,
+                    "alici_firma_id": alici_firma.pk,
+                    "idempotency_key": order.idempotency_key,
+                    "line_count": len(rows),
                 },
             )
             return order

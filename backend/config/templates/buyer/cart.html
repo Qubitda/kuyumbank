@@ -1,0 +1,39 @@
+{% extends "buyer/base.html" %}
+{% block title %}Sepet — Kuyumbank Alıcı{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0;">Sepet #{{ cart.id }}</h1>
+  <p class="muted">{{ cart.line_count }} satır · firma {{ cart.alici_firma_id }}</p>
+  {% if cart.lines %}
+  <table>
+    <thead>
+      <tr>
+        <th>Varyant</th>
+        <th>Miktar</th>
+        <th>Birim</th>
+        <th>Quote</th>
+        <th>Fiyat</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line in cart.lines %}
+      <tr>
+        <td>{{ line.varyant_id }}</td>
+        <td>{{ line.miktar }}</td>
+        <td>{{ line.birim }}</td>
+        <td>{{ line.quote_id }}</td>
+        <td>{{ line.birim_fiyat_vergisiz }} {{ line.para_birimi }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <form method="post" action="{% url 'buyer-checkout' %}" style="margin-top:1.25rem;">
+    {% csrf_token %}
+    <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+    <button type="submit">Checkout + sipariş oluştur</button>
+  </form>
+  {% else %}
+  <p class="muted">Sepet boş. Satır ekleme bu iskelette API/admin üzerinden yapılır.</p>
+  {% endif %}
+</section>
+{% endblock %}

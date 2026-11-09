@@ -39,9 +39,9 @@ python manage.py makemigrations --check --dry-run
 python manage.py test firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests stok.tests siparis.tests api.tests --verbosity=1
 ```
 
-Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer explicit `*.tests` modules.
+Avoid bare `manage.py test fiyatlama` — discovery can import `admin`/`models` packages as tests. Prefer `fiyatlama.tests`.
 
-Baseline (2026-11-08 tam senkron): **348 OK** (`firmalar|urunler|fiyatlama|tanimlar|stok|siparis|api`; PG). Güncel: master §12.
+Güncel suite sayısı: `docs/MASTER.md` §2.7 / §12 (full suite yalnız kullanıcı isterse).
 ## Migration review checklist
 
 - Read generated migration file

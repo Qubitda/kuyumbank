@@ -11,6 +11,7 @@ import contextvars
 import json
 from contextlib import contextmanager
 
+from django.conf import settings
 from django.db import DEFAULT_DB_ALIAS, connections, router, transaction
 from django.utils import timezone
 
@@ -32,6 +33,31 @@ def domain_atomic():
         _in_domain_atomic.reset(token)
 
 
+def client_ip(request) -> str | None:
+    """İstek IP — TRUSTED_PROXY_COUNT kadar X-Forwarded-For sağdan güvenilir.
+
+    TRUSTED_PROXY_COUNT=0 → yalnız REMOTE_ADDR (spoof'a karşı varsayılan).
+    """
+    if request is None:
+        return None
+    meta = getattr(request, "META", None) or {}
+    remote = (meta.get("REMOTE_ADDR") or "").strip() or None
+    trusted = int(getattr(settings, "TRUSTED_PROXY_COUNT", 0) or 0)
+    if trusted <= 0:
+        return remote
+    forwarded = (meta.get("HTTP_X_FORWARDED_FOR") or "").strip()
+    if not forwarded:
+        return remote
+    parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+    if not parts:
+        return remote
+    # Sağdan trusted hop atla; kalan listenin sonu client
+    idx = len(parts) - trusted - 1
+    if idx < 0:
+        return parts[0]
+    return parts[idx]
+
+
 def record_audit(
     *,
     actor,
@@ -41,6 +67,8 @@ def record_audit(
     success: bool = True,
     detail: dict | None = None,
     reason: str = "",
+    ip_address: str | None = None,
+    changes: dict | None = None,
 ) -> AuditOlay:
     return AuditOlay.objects.create(
         actor=actor if getattr(actor, "pk", None) else None,
@@ -51,6 +79,8 @@ def record_audit(
         success=success,
         detail=detail or {},
         reason=reason or "",
+        ip_address=ip_address or None,
+        changes=changes or {},
     )
 
 
@@ -63,6 +93,8 @@ def _insert_audit_sidecar(**kwargs) -> AuditOlay:
     firma = getattr(actor, "firma", None) if actor else None
     firma_id = getattr(firma, "pk", None) if firma else None
     detail = kwargs.get("detail") or {}
+    changes = kwargs.get("changes") or {}
+    ip_address = kwargs.get("ip_address") or None
     created = timezone.now()
 
     conn = connections.create_connection(alias)
@@ -73,8 +105,8 @@ def _insert_audit_sidecar(**kwargs) -> AuditOlay:
                 f"""
                 INSERT INTO {table}
                     (actor_id, actor_firma_id, action, entity_type, entity_id,
-                     success, detail, reason, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+                     success, detail, reason, ip_address, changes, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s::jsonb, %s)
                 RETURNING id
                 """,
                 [
@@ -86,6 +118,8 @@ def _insert_audit_sidecar(**kwargs) -> AuditOlay:
                     bool(kwargs.get("success", True)),
                     json.dumps(detail),
                     kwargs.get("reason") or "",
+                    ip_address,
+                    json.dumps(changes),
                     created,
                 ],
             )

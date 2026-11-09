@@ -133,15 +133,9 @@ class OrderAdmin(_SiparisReadOnlyAdmin):
     inlines = [OrderLineInline]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        from firmalar.services.yetki_servisi import can_view_all_tenants
+        from siparis.selectors.tenant import scope_order_queryset
 
-        if can_view_all_tenants(request.user):
-            return qs
-        firma_id = getattr(request.user, "firma_id", None)
-        if not firma_id:
-            return qs.none()
-        return qs.filter(alici_firma_id=firma_id)
+        return scope_order_queryset(super().get_queryset(request), request.user)
 
 
 @admin.register(OrderLine)

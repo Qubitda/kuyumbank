@@ -103,6 +103,24 @@ def scope_fiyat_sozlesmesi_kalemi_queryset(qs, user):
     return qs.filter(sozlesme__firma_id=firma_id)
 
 
+def scope_contract_release_plan_queryset(qs, user):
+    if can_view_all_tenants(user):
+        return qs
+    firma_id = getattr(user, "firma_id", None)
+    if not firma_id:
+        return qs.none()
+    return qs.filter(sozlesme__firma_id=firma_id)
+
+
+def scope_contract_release_event_queryset(qs, user):
+    if can_view_all_tenants(user):
+        return qs
+    firma_id = getattr(user, "firma_id", None)
+    if not firma_id:
+        return qs.none()
+    return qs.filter(plan__sozlesme__firma_id=firma_id)
+
+
 def scope_price_log_queryset(qs, user):
     """PriceCalculationLog — alıcı/tedarikçi görmez; yalnız maliyet yetkisi."""
     if not user_may_see_fiyat_maliyet(user):

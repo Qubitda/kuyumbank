@@ -5,6 +5,7 @@ from .fiyat_sozlesmesi_kalemi import FiyatSozlesmesiKalemi
 from .price_calculation_log import PriceCalculationLog
 from .price_quote import PriceQuote, PriceQuoteLine
 from .price_lock import PriceLock
+from .contract_release import ContractReleaseEvent, ContractReleasePlan
 
 # K-011: eski import adı — geçiş uyumluluğu (yeni kod TeklifTasMaliyeti kullanır)
 UrunTasi = TeklifTasMaliyeti
@@ -19,4 +20,6 @@ __all__ = [
     "PriceQuote",
     "PriceQuoteLine",
     "PriceLock",
+    "ContractReleasePlan",
+    "ContractReleaseEvent",
 ]

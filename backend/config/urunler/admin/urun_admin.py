@@ -65,7 +65,7 @@ class VaryantInline(TenantScopedInlineMixin, admin.TabularInline):
         "sku", "tedarikci_sku", "renk", "beden", "gram", "sabit_fiyat", "ek_bedel",
         "stok", "benzersiz_parca", "aktif",
     )
-    readonly_fields = ("sku",)
+    readonly_fields = ("sku", "stok")  # F4-070: legacy stok yazımı kapalı
     autocomplete_fields = ("renk", "beden")
 
 
@@ -328,12 +328,13 @@ class VaryantAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
         "sku", "urun", "renk", "beden", "gram", "sabit_fiyat", "ek_bedel",
         "stok", "benzersiz_parca", "aktif",
     )
-    list_editable = ("gram", "sabit_fiyat", "ek_bedel", "stok", "aktif")
+    # F4-070: stok list_editable'dan çıkarıldı (legacy yazım kapalı)
+    list_editable = ("gram", "sabit_fiyat", "ek_bedel", "aktif")
     list_filter = ("aktif", "benzersiz_parca", "renk")
     search_fields = ("sku", "tedarikci_sku", "urun__ad", "urun__platform_kodu")
     list_select_related = ("urun", "renk", "beden")
     autocomplete_fields = ("urun", "renk", "beden")
-    readonly_fields = ("sku",)
+    readonly_fields = ("sku", "stok")
     list_per_page = 50
 
     def get_changelist_instance(self, request):

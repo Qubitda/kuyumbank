@@ -33,12 +33,14 @@ class OrderServiceTests(CheckoutFixtureMixin, TestCase):
         line = order.lines.get()
         self.assertEqual(line.miktar, Decimal("2"))
         self.assertEqual(line.price_lock_id, co.lines[0].lock_id)
-        lock = PriceLock.objects.get(pk=line.price_lock_id)
-        self.assertEqual(line.snapshot_birim_fiyat_vergisiz, lock.toplam_vergisiz)
+        lock = PriceLock.objects.select_related("quote").get(pk=line.price_lock_id)
+        # GRAM: lock.toplam = quote.gram için; birim = gram başına, satır = × miktar
+        birim = (lock.toplam_vergisiz / lock.quote.gram).quantize(Decimal("0.01"))
+        self.assertEqual(line.snapshot_birim_fiyat_vergisiz, birim)
         self.assertEqual(line.para_birimi, lock.para_birimi)
         self.assertEqual(
             line.snapshot_satir_tutari_vergisiz,
-            (lock.toplam_vergisiz * Decimal("2")).quantize(Decimal("0.01")),
+            (birim * Decimal("2")).quantize(Decimal("0.01")),
         )
 
     def test_reservation_consumed_and_satis_movement(self):

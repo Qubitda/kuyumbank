@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ops Finans — Kuyumbank</title>
+  <style>
+    :root {
+      --bg: #101418;
+      --panel: #1b232c;
+      --text: #e7eef5;
+      --muted: #95a6b7;
+      --accent: #6a9bb8;
+      --line: #2c3642;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      background: linear-gradient(160deg, #152029, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex; gap: 1rem; align-items: center;
+      padding: 1rem 1.5rem; border-bottom: 1px solid var(--line);
+    }
+    header strong { color: var(--accent); letter-spacing: 0.04em; }
+    main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+    .panel {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem;
+    }
+    .muted { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.5rem 0.35rem; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 0.85rem; }
+    .stats { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .stats div { min-width: 8rem; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>KUYUMBANK OPS</strong>
+    <span class="muted">Finans</span>
+    <span style="flex:1"></span>
+    <span class="muted">{{ user.username }}</span>
+    <a href="/admin/">Admin</a>
+  </header>
+  <main>
+    <section class="panel">
+      <h1>Finans özeti</h1>
+      <div class="stats">
+        <div><div class="muted">Cari</div><strong>{{ ozet.cari_count }}</strong></div>
+        <div><div class="muted">Ledger</div><strong>{{ ozet.ledger_count }}</strong></div>
+        <div><div class="muted">PaymentIntent</div><strong>{{ ozet.payment_intent_count }}</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Cari hesaplar</h2>
+      {% if cari %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Firma</th>
+            <th>PB</th>
+            <th>Bakiye</th>
+            <th>Limit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in cari %}
+          <tr>
+            <td>#{{ h.id }}</td>
+            <td>{{ h.firma_id }}</td>
+            <td>{{ h.para_birimi }}</td>
+            <td>{{ h.bakiye }}</td>
+            <td>{{ h.kredi_limiti }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">Cari kayıt yok.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Son ledger</h2>
+      {% if ozet.recent_ledger %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Firma</th>
+            <th>Yön</th>
+            <th>Tutar</th>
+            <th>Tip</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in ozet.recent_ledger %}
+          <tr>
+            <td>#{{ e.id }}</td>
+            <td>{{ e.firma_id }}</td>
+            <td>{{ e.yon }}</td>
+            <td>{{ e.tutar }} {{ e.para_birimi }}</td>
+            <td>{{ e.hareket_tipi }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">Ledger boş.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

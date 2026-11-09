@@ -4,6 +4,8 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from firmalar.models import Firma
 from firmalar.services.yetki_servisi import can_view_all_tenants
 from fiyatlama.models import (
+    ContractReleaseEvent,
+    ContractReleasePlan,
     FiyatSozlesmesi,
     FiyatSozlesmesiKalemi,
     PriceCalculationLog,
@@ -14,6 +16,8 @@ from fiyatlama.models import (
     TeklifTasMaliyeti,
 )
 from fiyatlama.selectors.tenant import (
+    scope_contract_release_event_queryset,
+    scope_contract_release_plan_queryset,
     scope_fiyat_sozlesmesi_kalemi_queryset,
     scope_fiyat_sozlesmesi_queryset,
     scope_price_lock_queryset,
@@ -284,6 +288,9 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         for f in self._servis_alanlari:
             if f not in ro:
                 ro.append(f)
+        # F4-070: legacy stok_adet her durumda readonly
+        if "stok_adet" not in ro:
+            ro.append("stok_adet")
         if not can_view_all_tenants(request.user) and "tedarikci" not in ro:
             ro.append("tedarikci")
         # ADR-0009 H2: oncelik yalnız platform (view_all) yazar
@@ -637,6 +644,86 @@ class PriceLockAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return scope_price_lock_queryset(super().get_queryset(request), request.user)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ContractReleasePlan)
+class ContractReleasePlanAdmin(admin.ModelAdmin):
+    """F5-041 — salt okunur; yazım release_servisi."""
+
+    list_display = (
+        "id",
+        "sozlesme",
+        "varyant",
+        "birim",
+        "toplam_taahhut",
+        "durum",
+        "olusturma_tarihi",
+    )
+    list_filter = ("durum", "birim")
+    list_select_related = ("sozlesme", "varyant")
+    readonly_fields = (
+        "sozlesme",
+        "varyant",
+        "birim",
+        "toplam_taahhut",
+        "durum",
+        "aciklama",
+        "olusturan",
+        "olusturma_tarihi",
+        "guncelleme_tarihi",
+    )
+
+    def get_queryset(self, request):
+        return scope_contract_release_plan_queryset(
+            super().get_queryset(request), request.user
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ContractReleaseEvent)
+class ContractReleaseEventAdmin(admin.ModelAdmin):
+    """F5-041 — append-only; salt okunur."""
+
+    list_display = (
+        "id",
+        "plan",
+        "miktar",
+        "donem_baslangic",
+        "donem_bitis",
+        "olusturma_tarihi",
+    )
+    list_select_related = ("plan", "plan__sozlesme")
+    readonly_fields = (
+        "plan",
+        "miktar",
+        "donem_baslangic",
+        "donem_bitis",
+        "aciklama",
+        "olusturan",
+        "olusturma_tarihi",
+    )
+
+    def get_queryset(self, request):
+        return scope_contract_release_event_queryset(
+            super().get_queryset(request), request.user
+        )
 
     def has_add_permission(self, request):
         return False

@@ -27,6 +27,10 @@ P = {
     "manage_warehouse": "stok.manage_warehouse",
     "manage_own_warehouse": "stok.manage_own_warehouse",
     "manage_kur": "tanimlar.manage_kur",
+    "post_ledger": "finans.post_ledger",
+    "manage_qc": "kalite.manage_qc",
+    "view_qc": "kalite.view_qc",
+    "manage_qc_override": "kalite.manage_qc_override",
 }
 
 _KUR_ADMIN = (
@@ -59,8 +63,8 @@ _FIYATLAMA_TEKLIF_ADMIN = (
     "fiyatlama.view_tedarikciteklif",
     "fiyatlama.change_tedarikciteklif",
     "fiyatlama.add_tedarikciteklif",
-    "fiyatlama.view_uruntasi",
-    "fiyatlama.change_uruntasi",
+    "fiyatlama.view_tekliftasmaliyeti",
+    "fiyatlama.change_tekliftasmaliyeti",
 )
 _FIYATLAMA_SOZLESME_ADMIN = (
     "fiyatlama.view_fiyatsozlesmesi",
@@ -97,6 +101,7 @@ ROLE_PERMISSION_MATRIX = {
         P["lock_quote_on_behalf"],
         P["manage_warehouse"],
         P["manage_kur"],
+        P["post_ledger"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
@@ -117,6 +122,7 @@ ROLE_PERMISSION_MATRIX = {
         P["lock_quote_on_behalf"],
         P["manage_warehouse"],
         P["manage_kur"],
+        P["post_ledger"],
         *_FIRMA_ADMIN,
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
@@ -134,6 +140,7 @@ ROLE_PERMISSION_MATRIX = {
         P["view_all_tenants"],
         P["manage_sozlesme"],
         P["manage_kur"],
+        P["post_ledger"],
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
@@ -147,8 +154,16 @@ ROLE_PERMISSION_MATRIX = {
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
     ),
-    roles.PLATFORM_QUALITY: (),
-    roles.PLATFORM_LOGISTICS: (),
+    roles.PLATFORM_QUALITY: (
+        P["manage_qc"],
+        P["view_qc"],
+        P["manage_qc_override"],
+        "kalite.view_qualityinspection",
+    ),
+    roles.PLATFORM_LOGISTICS: (
+        P["view_qc"],
+        "kalite.view_qualityinspection",
+    ),
     roles.PLATFORM_SUPPORT: (),
     roles.ALICI_YONETICI: (
         P["manage_users"],

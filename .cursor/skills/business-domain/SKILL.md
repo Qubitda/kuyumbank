@@ -10,7 +10,7 @@ description: >-
 # Business Domain (Kuyumbank)
 
 **Prepared for:** Django **6.1** + Kuyumbank rapor v1.0  
-**Canonical:** `docs/KUYUMBANK_MASTER.md` (§4–§5 domain/sektör; K-* özeti §5–§6)
+**Canonical:** `docs/MASTER.md` + `docs/ROADMAP.md` / `docs/BACKLOG.md`; ADR → `docs/decisions/`
 
 Django docs explain *how* to implement; this skill states *what* Kuyumbank must enforce.  
 Field presence ≠ rule enforcement. Label uncertain claims DOĞRULANAMADI / PLANLAMA BULGUSU.
@@ -61,11 +61,11 @@ Legacy `Varyant.stok` / `TedarikciTeklif.stok_adet` dual borç (F4-070).
 ## Commerce / ops state
 
 Cart/Checkout/Order/Reorder **UYGULANDI** (`siparis`); ince PRE HTTP (`api`, okuma iskeleti). Transitions yalnız servis + audit.  
-QC / finance → Faz 5–6 (ADR-0012 Taslak). Ödeme iadesi yok (U-004). Sıradaki: master §12.3.
+Finance (ADR-0012 **Kabul**): `finans.LedgerEntry` (append-only + contra); `HedgeEntry` + `fx_servisi.open_has` (interim Quote.gram). Cari F5-011. Ödeme iadesi yok (U-004). Sıradaki: master §12.3.
 
 ## When implementing
 
 1. Read related existing models/services only.
 2. Match rapor §9 behavior.
-3. If detail missing: safe default + Taslak ADR entry in `docs/KUYUMBANK_MASTER.md` §6.
+3. If detail missing: safe default + Taslak ADR under `docs/decisions/`.
 4. Stop for irreversible finance/legal/security guesses.
