@@ -158,8 +158,8 @@ Servisleri B4’te yeniden yazma; HTTP sarmala.
 |------|--------|
 | Branch | `adim-1-ilerleme` (origin ile senkron) |
 | Teslimat commit | `b529e5ecc030590e169707e2757a67e5c8a93633` — B1–B3 + OpenAPI + docs |
-| HEAD | `6193454f4ce0d3f20b87da0335292a91826e827b` — handoff hash senkronu |
-| Push | **Başarılı** → `origin/adim-1-ilerleme` (`943b35c..6193454`) |
+| HEAD | `a234008` — handoff push durumu (önceki: `6193454` hash senkronu) |
+| Push | **Başarılı** → `origin/adim-1-ilerleme` |
 
 **Commit kapsamı:** B1–B3 API + testler + OpenAPI + ADR-0017 + docs + SESSION_HANDOFF.  
 **Commit dışı (working tree’de kalır):** Kova B F9 HTML; B4 premature WIP (`org.py`/`approvals.py`/`rfq.py`/`enterprise.py`/`test_api_b4_enterprise.py`).
