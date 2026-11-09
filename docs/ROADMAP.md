@@ -2,7 +2,7 @@
 
 > Planlama dokümanıdır; **kod/canlı durum için [MASTER](MASTER.md) §2 + §12 kazanır.**  
 > Faz kodu = ilgili ADR **Kabul** + açık talimat. Prosperer/SAP sütunları hedef kıyastır (**DOĞRULANAMADI**).  
-> Son senkron: **2026-11-09** (F4–F8; F9-010/011 HTML miras; ADR-0016 **Supersede** / 0017 **Taslak**; API-B0).
+> Canlı durum / B0–B7: [MASTER](MASTER.md) §12. (Bu dosyada sabit “son senkron” tarihi tutulmaz.)
 
 ## 1. Hedef mimari ve capability gap
 
@@ -51,7 +51,7 @@
 
 | # | Yetenek | Mevcut | Hedef eksik (özet) | Öncelik |
 |---|---------|--------|--------------------|---------|
-| 1 | B2B katalog | KISMİ | Search API + F9-011 browse | P1 |
+| 1 | B2B katalog | KISMİ | Search API; F9-011 browse **WIP commit dışı** | P1 |
 | 2 | Firma/şube org | **UYGULANDI** çekirdek | Zengin org UI | P2 |
 | 3 | Fiyat listesi/koşul | UYGULANDI | Liste UI | P2 |
 | 4 | Teklif/RFQ | **UYGULANDI** SM+buyer UI | Eşleştirme motoru; supplier UI | P1 |
@@ -62,7 +62,7 @@
 | 9 | Ödeme/cari/kredi | **KISMİ** iskelet | Gerçek provider; oran | P1 |
 | 10 | Sevkiyat | **UYGULANDI** fake carrier | Canlı carrier | P2 |
 | 11 | İade | **UYGULANDI** stok-only | Ödeme iadesi yok (U-004); F6-032 UI | P2 |
-| 12 | Portallar | **KISMİ** `/buyer` F9-010 | F9-011…015; `/supplier` | **P1** |
+| 12 | Portallar | **KISMİ** `/buyer` F4-062 (+ F9-010 WIP) | F9-011…015 erteli; `/supplier` Next | **P1** |
 | 13 | Onay workflow | **UYGULANDI** + minimal UI | Escalation zinciri | P2 |
 | 14 | Raporlama | Yok | F11 | P2 |
 | 15 | Entegrasyon/EDI | **KISMİ** stub | Canlı ERP/SAP | P2 |
@@ -82,7 +82,7 @@
 | Domain | Durum | Eksik (kısa) |
 |--------|-------|--------------|
 | Identity & RBAC | UYGULANDI | — |
-| Product Catalog | KISMİ | Search / F9-011 |
+| Product Catalog | KISMİ | Search; F9-011 WIP commit dışı |
 | Supplier Mgmt | UYGULANDI | Supplier portal |
 | Pricing Engine | UYGULANDI | B-01/B-06 bilinçli kapalı |
 | PriceLock | UYGULANDI (L-11) | — |
@@ -101,7 +101,7 @@
 | Audit | UYGULANDI (+ AUD-001b) | — |
 | Reporting | PLANLANDI | F11 |
 | Integration Hub | **KISMİ** stub | Canlı bağ |
-| Search | PLANLANDI | F9-011 bağımlı |
+| Search | PLANLANDI | F9-011 WIP / Next.js sonrası |
 
 ## 3. B2B capability alanları
 
@@ -149,7 +149,7 @@ G0–G4 kapandı (3.7 + ADR-0010/0011 + U-002 + ince PRE).
 **KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env). **Açık:** Sentry SDK (F8-003), perf baseline (F8-006), Celery/Redis, hosting/yedek prova.
 
 ### Faz 9 — Portal / API readiness
-**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1/NX-2 madde Kabul; CORS erteli). **HTML miras.** **API-B1 Kabul.** **Sırada:** B2…B7.
+**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1/NX-2 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B3 Kabul;** **B4 uygulandı (inceleme / Kabul değil).** **Sırada:** B5…B7 — [MASTER](MASTER.md) §12.1b.
 
 ### Faz 10 — Kurumsal & RFQ
 **UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI). **Açık:** F10-021 eşleştirme; F10-023 supplier UI.

@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-09 — doküman yeniden yapılandırma; kod↔docs senkronu `scripts/docs_sync.py` ile
+**Güncelleme:** 2026-11-09 — API-B4 uygulandı (inceleme bekliyor); docs bayat metin temizliği; `scripts/docs_sync.py`
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -13,14 +13,16 @@
 
 | Bilgi | Tek kaynak |
 |-------|------------|
-| Agent kuralları | `AGENTS.md` |
-| Canlı durum, standartlar, sıradaki iş | **Bu dosya** |
+| Agent kuralları / yeni oturum | `AGENTS.md` → **bu dosya §2 + §12** |
+| Canlı durum, B0–B7, sıradaki iş | **Bu dosya** (§12) |
 | Kararlar (ADR) | [decisions/](decisions/README.md) |
 | İş havuzu / U-* kararları | [BACKLOG](BACKLOG.md) |
 | Hedef mimari, capability gap, yol haritası | [ROADMAP](ROADMAP.md) |
-| Faz tarihçesi | [HISTORY](HISTORY.md) |
+| Faz tarihçesi (append-only) | [HISTORY](HISTORY.md) |
 | Kurulum / işletim / prod öncesi | [RUNBOOK](RUNBOOK.md) |
 | Veri sözlüğü (otomatik) | [DATA_DICTIONARY](DATA_DICTIONARY.md) |
+
+**Yasak:** ikinci master, `SESSION_HANDOFF`, ayrı “durum raporu” veya paralel özet dosyası üretmek.
 
 **Eski § numaraları:** §4 tablo/§4.1 → ROADMAP §2–3 · §6 → decisions/ · §7 → HISTORY · §8–9 → ROADMAP · §10–11 → BACKLOG. (§12 numarası korundu.)
 
@@ -145,17 +147,17 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 - API: ince PRE tenant 404 (cart/order); client `firma_id` yok sayılır; Token + Basic + Session; throttle.  
 - AuditOlay: create OK; instance/QuerySet UPDATE/DELETE yasak (AUD-001); `ip_address`/`changes` (AUD-001b).  
 - F8-002: `X-Request-ID` + structured log; secret scrub (`logging_utils`). F8-007 IDOR smoke paketi.  
-- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Sentry SDK; F9 portal.
+- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Sentry SDK; Next.js portal (`frontend/`). Django `/buyer/` `/ops/` HTML miras kalır.
 
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **597** — `api` 73 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 55 · `stok` 31 · `tanimlar` 20 · `urunler` 95
-_Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
+Statik test sayısı (`def test_`): **589** — `api` 73 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 47 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+_(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son suite aşağıda elle._
 <!-- /AUTO:tests -->
 
-**Son suite koşusu (elle):** **555 OK** in 826s (2026-11-09, `--keepdb`; CI paket listesi). `makemigrations --check` temiz; `migrate` pending yok.
-`makemigrations --check`: temiz. **Yerel/dev migrate güncel** (son: `siparis.0005` F10-022; pending yok).
+**Son suite koşusu (elle):** **597 OK** (2026-11-09, PG `--keepdb`; CI paket listesi + diskteki Kova B WIP testleri suite’e girebilir). `makemigrations --check` temiz; `migrate` pending yok.
+**Yerel/dev migrate güncel** (son: `siparis.0005` F10-022; pending yok).
 
 <!-- AUTO:migrations -->
 | App | Migration sayısı | Son migration |
@@ -302,7 +304,7 @@ Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 | Yazım | `domain_atomic`; fail audit durable dışı | audit_servisi |
 | Concurrency | `select_for_update` + DB kısıt | standart |
 | Migration | Üretim migrate onaysız yok; satır silerek NOT NULL yok | AGENTS |
-| API | İnce PRE (`/api/v1/`); tam Prosperer yok | PRE-001…004 UYGULANDI |
+| API | `/api/v1/` PRE + B1–B4 HTTP; tam Prosperer yok | PRE + B1–B3 Kabul; B4 inceleme — §12.1b |
 | Test | Risk bazlı; PG constraint SQLite ile “geçti” sayılmaz | AGENTS Ek C |
 
 ### 3.2 Doküman ve agent kuralı
@@ -352,6 +354,22 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B3 Kabul** · **API-B4 uygulandı (inceleme bekliyor)** · F10 **UYGULANDI** |
 | ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** (NX-1/2 madde Kabul) |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`siparis.0005` F10-022) |
+
+### 12.1b API-B0…B7 (ürün sahibi kesin tablo)
+
+| Faz | Durum |
+|-----|--------|
+| **B0** | Tamamlandı |
+| **B1** | Kullanıcı tarafından **Kabul** |
+| **B2** | Kullanıcı tarafından **Kabul** |
+| **B2 concurrency** | PG TransactionTestCase **7 OK** — doğrulandı / Kabul |
+| **B3** | Kullanıcı tarafından **Kabul** |
+| **B4** | **Uygulandı** — ürün sahibi incelemesi bekliyor (**Kabul değil**) |
+| **B5** | Bekliyor |
+| **B6** | Bekliyor |
+| **B7** | Bekliyor |
+
+Sabit kararlar (özet): ADR-0017 **Taslak**; NX-1/NX-2 **Kabul**; NX-3…12 açık; CORS erteli; yeni Django HTML yok; `frontend/` yalnız B7 sonrası; tam suite / prod migrate yalnız açık onay. Ayrıntı: [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md).
 
 ### 12.2 YAPILDI (kodda var)
 
@@ -414,8 +432,8 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F8-007 | IDOR güvenlik smoke | `test_security_f8_007` **5 OK** |
 | F8-003 | Sentry plan | RUNBOOK §11 KISMİ (SDK yok) |
 | F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** |
-| F9-010 | Buyer dashboard (HTML miras) | `/buyer/` panel; `test_buyer_dashboard_f9_010` **3 OK** — yeni HTML büyütülmez |
-| F9-011 | Katalog browse (HTML miras) | `/buyer/catalog/`; kör; `test_buyer_catalog_f9_011` **5 OK** |
+| F9-010 | Buyer dashboard | **WIP commit dışı** (Kova B); HEAD’te yok — bkz §12.3 |
+| F9-011 | Katalog browse | **WIP commit dışı** (Kova B); HEAD’te yok — bkz §12.3 |
 | API-B0 | Next.js API boşluk analizi | **Tamamlandı** |
 | API-B1 | Çekirdek API standartları | **Kabul** (Qubit 2026-11-09); odaklı **28 OK**; CORS erteli |
 | API-B2 | Buyer commerce HTTP | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
@@ -443,11 +461,14 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 Celery/Redis · gerçek ödeme/kargo/SAP · Dynamic Pricing (U-015 kilitli) · GraphQL/websocket · yeni Django app yağmuru.  
 Next.js `frontend/` iskeleti: API B7 frontend-ready sonrası (ayrı dilim). Mevcut `/buyer/` `/ops/` HTML **silinmez**.
 
-### 12.5 Yeni session handoff
+### 12.5 Yeni oturum başlangıcı
 
-1. Oku: [SESSION_HANDOFF](SESSION_HANDOFF.md) → `AGENTS.md` → §2 + §12 → ADR-0017 **Taslak**.  
-2. Sıradaki: **API-B5** yalnız B4 inceleme sonrası ayrı talimat; **tam suite onaysız yok**.  
-3. Odaklı: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11**. Tam suite sonucu: bu oturumda koşulduysa handoff’a yazılır.  
-4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; ADR-0017 **Taslak**; NX-3…12 açık; B4 **Kabul değil**.
+Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.  
+**Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
-*Son güncelleme: 2026-11-09 — API-B4 uygulandı (inceleme bekliyor); B5 sırada.*
+1. Oku: `AGENTS.md` → **§2** (gerçek durum) + **§12** (B0–B7, sıradaki, oturum) → ADR-0017 **Taslak** (gerekirse).  
+2. Sıradaki kod: **API-B5** yalnız B4 inceleme/Kabul + açık talimat; **tam suite onaysız yok**.  
+3. Odaklı iddia: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11**. Tam suite: **§2.7**. B0–B7: **§12.1b**.  
+4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; NX-3…12 açık; B4 **Kabul değil**.
+
+*Son güncelleme: 2026-11-09 — SESSION_HANDOFF kaldırıldı; tek başlangıç AGENTS→MASTER §12.*

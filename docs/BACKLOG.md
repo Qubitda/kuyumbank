@@ -908,37 +908,40 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [API-B5] Ops API yüzeyi
 
 - **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
-- **Bağımlılıklar:** API-B1
-- **Kapsam:** finans/cari/ledger/QC/sevkiyat/iade + `view_all` testleri
+- **Bağımlılıklar:** API-B4 inceleme/Kabul ([MASTER](MASTER.md) §12.1b)
+- **Kapsam:** B3’te olmayan ops genişletme (QC/ops kuyruk, ek `view_all` yüzeyleri) — finans/sevkiyat/iade HTTP **B3’te var**
+- **Not:** Canlı durum [MASTER](MASTER.md) §12.3
 
 ### [API-B6] Tedarikçi API yüzeyi
 
 - **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
-- **Bağımlılıklar:** API-B1
-- **Kapsam:** teklif/stok; ters kör havuz
+- **Bağımlılıklar:** API-B5
+- **Kapsam:** teklif/stok; ters kör havuz; supplier RFQ
 
 ### [API-B7] API dondurma / frontend-ready
 
 - **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Docs/API
 - **Bağımlılıklar:** API-B2…B6
-- **Kapsam:** `docs/API_CONTRACT.md` şemadan; sızıntı/yetki matrisi; checklist
+- **Kapsam:** sözleşme dokümanı `docs/api/openapi-v1.json` (+ isteğe bağlı insan özeti B7’de); sızıntı/yetki matrisi; checklist
+- **Not:** `docs/API_CONTRACT.md` henüz yok — uydurma dosya referansı kullanılmaz
 
 ### [F9-010] Buyer dashboard iskeleti
 
 - **Faz:** Faz 9
-- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **WIP commit dışı** (Kova B; HEAD’te yok) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-001, F7-010
 - **Kabul kriterleri:** Auth + tenant context
-- **Kanıt:** `/buyer/` `BuyerHomeView` + `buyer_dashboard_servisi`; sepet `/buyer/cart/`; `test_buyer_dashboard_f9_010` **3 OK**
+- **Kanıt (disk WIP, commit yok):** `buyer_dashboard_servisi` / `test_buyer_dashboard_f9_010` — [MASTER](MASTER.md) §12.3
+- **Not:** Mevcut committed alıcı UI: F4-062 `/buyer/`
 
 ### [F9-011] Katalog arama/browse UI
 
 - **Faz:** Faz 9
-- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **WIP commit dışı** (Kova B; HEAD’te yok) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-010, search API
 - **Gizlilik:** kör
 - **Kabul kriterleri:** Maliyet sızıntısı yok
-- **Kanıt:** `/buyer/catalog/` + `buyer_katalog_servisi` (ad/kod ara); `test_buyer_catalog_f9_011` **5 OK**
+- **Kanıt (disk WIP, commit yok):** `buyer_katalog_servisi` / `test_buyer_catalog_f9_011` — [MASTER](MASTER.md) §12.3
 
 ### [F9-012] Sepet/sipariş portal akışı
 

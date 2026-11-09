@@ -258,6 +258,7 @@
 - F9-010: `/buyer/` panel (`BuyerHomeView` + `buyer_dashboard_servisi`); sepet → `/buyer/cart/`.
 - Test `test_buyer_dashboard_f9_010` **3 OK** (+ F4-062 regresyon).
 - **Sıradaki:** F9-011 katalog browse; F9-013 supplier iskelet; F8-006.
+- > **Dipnot (2026-11-09 docs temizlik):** F9-010 kaynakları şu an **commit dışı** (Kova B WIP); canlı durum MASTER §12.3.
 
 ### 2026-11-09 — Doküman drift onarımı (ROADMAP/HISTORY/RUNBOOK)
 - Dış inceleme: ROADMAP bayat/çelişkili (5/10); HISTORY yapı; RUNBOOK test/env geride.
@@ -274,6 +275,7 @@
 - `/buyer/catalog/` liste+arama+detay; `buyer_katalog_servisi` (yayınlı; kör; `tedarikci_sku`/maliyet yok).
 - Test `test_buyer_catalog_f9_011` **5 OK**.
 - **Sıradaki (o an):** F9-012 sepet/sipariş polish; F9-013 supplier; F8-006.
+- > **Dipnot (2026-11-09 docs temizlik):** F9-011 kaynakları şu an **commit dışı** (Kova B WIP); canlı durum MASTER §12.3.
 
 ### 2026-11-09 — ADR-0016 Supersede + ADR-0017 Taslak + API-B0
 - Ürün sahibi: birincil tüketici Next.js App Router; Django HTML ürün büyütmesi yok; `/buyer/` `/ops/` kalır.
@@ -310,7 +312,7 @@
 - TECH-OPENAPI-01 **UYGULANDI**: `api_urlpatterns` + `url=/api/v1/` → çift önek **0**; canlı URL aynı.
 - **API-B4 resmi olarak başlatılmadı** (ürün sahibi faz tablosu). Erken ajan WIP (`org`/`approvals`/`rfq` view dosyaları) commit dışı bırakıldı; UYGULANDI sayılmaz.
 - Kova B F9 HTML WIP commit dışı (silinmedi).
-- Devir: [SESSION_HANDOFF](SESSION_HANDOFF.md). ADR-0017 **Taslak**. Tam suite bu oturumda **yok**.
+- Devir (tarihsel): ayrı `SESSION_HANDOFF.md` kullanılıyordu — sonradan kaldırıldı; tek giriş `AGENTS.md` → [MASTER](MASTER.md) §12. ADR-0017 **Taslak**. Tam suite bu oturumda **yok**.
 
 ### 2026-11-09 — API-B4 kurumsal HTTP
 - Org / onay / RFQ REST: mevcut `org_servisi` / `onay_servisi` / `rfq_servisi` HTTP sarmalı; WIP entegre.
@@ -320,4 +322,14 @@
 - Test `api.tests.test_api_b4_enterprise` odaklı **11 OK** (idempotency + PG concurrency dahil).
 - OpenAPI güncellendi (çift önek yok). ADR-0017 **Taslak**; B4 **Kabul değil** — ürün sahibi incelemesi bekliyor.
 - Kova B F9 HTML’e dokunulmadı. Sıradaki: B5 yalnız ayrı talimat.
+
+### 2026-11-09 — Docs bayat metin temizliği + docs_sync lint
+- Canlı docs: suite 555→597; F9-010/011 UYGULANDI→WIP commit dışı; ROADMAP/ADR indeks B4 hizası; API_CONTRACT ölü ref kaldırıldı.
+- `scripts/docs_sync.py`: git-tracked test sayımı; `--lint-docs` / `--lint-docs-strict` (CI soft `continue-on-error`).
+- Tek kaynak (o an): B0–B7 → SESSION_HANDOFF §3 *(tarihsel)*; canlı → MASTER §12; ADR → decisions/.
+
+### 2026-11-09 — SESSION_HANDOFF kaldırıldı; tek oturum girişi MASTER §12
+- `docs/SESSION_HANDOFF.md` silindi. B0–B7 tablosu → [MASTER](MASTER.md) §12.1b; yeni oturum → §12.5 (`AGENTS.md` → MASTER).
+- ROADMAP / BACKLOG / decisions/README / docs_sync faz lint’i MASTER’a yönlendirildi.
+- Yasak: ikinci handoff / durum raporu / paralel özet dosyası.
 

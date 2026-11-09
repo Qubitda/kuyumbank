@@ -83,7 +83,8 @@ Odaklı örnekler:
 
 ```bash
 python manage.py test api.tests.test_security_f8_007 --keepdb
-python manage.py test siparis.tests.test_buyer_dashboard_f9_010 --keepdb
+python manage.py test siparis.tests.test_buyer_ui_f4_062 --keepdb
+# F9-010/011 testleri yalnız Kova B WIP diskteyse: test_buyer_dashboard_f9_010 (HEAD’te yok)
 ```
 
 - **Yalnız `fiyatlama` (bare) çalıştırmayın** — `admin`/`models` import hatası riski; `fiyatlama.tests` kullanın (AGENTS).

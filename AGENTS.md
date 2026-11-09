@@ -31,8 +31,9 @@ Kurulum komutları: `docs/RUNBOOK.md` + kök `README.md` → `backend/README.md`
 | Framework API | Django 6.1 docs / kaynak |
 | İş/mimari skill | `.cursor/skills/*` (Django resmi skill değil) |
 
-`docs/` düzeni: her bilgi tek yerde (MASTER + decisions/BACKLOG/ROADMAP/HISTORY/RUNBOOK/DATA_DICTIONARY).  
-Yeni faz raporu / ikinci yol haritası / dağınık rapor **üretilmez**. Cursor indeksindeki silinmiş dosya adı kanıt sayılmaz (diskte `Test-Path` / `ls`).  
+`docs/` düzeni: her bilgi tek yerde (MASTER + decisions/BACKLOG/ROADMAP/HISTORY/RUNBOOK/DATA_DICTIONARY). 
+Yeni oturum: **bu dosya → `docs/MASTER.md` §2 + §12**.  
+`SESSION_HANDOFF` / durum raporu / ikinci yol haritası / dağınık özet **üretilmez**. Cursor indeksindeki silinmiş dosya adı kanıt sayılmaz (diskte `Test-Path` / `ls`). 
 AUTO blokları ve veri sözlüğü: `python scripts/docs_sync.py` (+ CI `--check`).
 
 ## Hedef runtime

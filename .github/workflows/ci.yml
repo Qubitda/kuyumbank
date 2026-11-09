@@ -57,6 +57,10 @@ jobs:
       - name: Docs sync check
         run: python scripts/docs_sync.py --check
 
+      - name: Docs lint (uyarı; soft)
+        continue-on-error: true
+        run: python scripts/docs_sync.py --lint-docs-strict
+
       - name: OpenAPI schema drift
         run: python scripts/export_openapi.py --check
 

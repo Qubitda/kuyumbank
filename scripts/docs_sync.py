@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""Kuyumbank docs AUTO blokları + kırık markdown link kontrolü.
+"""Kuyumbank docs AUTO blokları + kırık markdown link + docs lint.
 
 Kullanım:
-  python scripts/docs_sync.py          # MASTER.md AUTO bloklarını günceller
-  python scripts/docs_sync.py --check  # değişiklik gerekirse exit 1
+  python scripts/docs_sync.py                 # MASTER AUTO + DATA_DICTIONARY güncelle
+  python scripts/docs_sync.py --check         # drift/link → exit 1; lint → UYARI (exit bozmaz)
+  python scripts/docs_sync.py --lint-docs     # yalnız lint UYARI (exit 0)
+  python scripts/docs_sync.py --lint-docs-strict  # lint ihlali → exit 1
 """
 
 from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MASTER = ROOT / "docs" / "MASTER.md"
 DATA_DICTIONARY = ROOT / "docs" / "DATA_DICTIONARY.md"
+ROADMAP = ROOT / "docs" / "ROADMAP.md"
+ADR_README = ROOT / "docs" / "decisions" / "README.md"
+ADR_0017 = ROOT / "docs" / "decisions" / "ADR-0017-nextjs-api-sozlesmesi.md"
 BACKEND = ROOT / "backend" / "config"
 APPS = (
     "api",
@@ -31,8 +37,60 @@ APPS = (
     "urunler",
 )
 
+# Canlı (non-tarihsel) markdown — hash / bayat ifade taraması
+_LIVE_MD = (
+    MASTER,
+    ROADMAP,
+    ADR_README,
+    ROOT / "docs" / "BACKLOG.md",
+    ROOT / "docs" / "RUNBOOK.md",
+)
+
+_HASH_RE = re.compile(r"(?<![0-9a-fA-F/`])\b([0-9a-f]{7,40})\b(?![0-9a-fA-F])")
+_FENCE_RE = re.compile(r"```.*?```", flags=re.S)
+_INLINE_CODE_RE = re.compile(r"`[^`]+`")
+
+# Bilinçli allowlist: teslimat etiketi / bilinen kısa hash
+_HASH_ALLOW = frozenset(
+    {
+        "b529e5e",  # B1–B3 teslimat etiketi (tarihsel)
+        "b529e5ecc030590e169707e2757a67e5c8a93633",
+    }
+)
+
+_BANNED_PHRASES = (
+    "B4 henüz başlatılmadı",
+    "Sırada: B2",
+    "Sırada:** B2",
+    "**555 OK**",
+)
+
+
+def _git_ls_files(*patterns: str) -> set[Path]:
+    """Repo köküne göre tracked dosya seti; git yoksa boş → caller disk’e düşer."""
+    try:
+        proc = subprocess.run(
+            ["git", "ls-files", "-z", "--", *patterns],
+            cwd=str(ROOT),
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return set()
+    if proc.returncode != 0:
+        return set()
+    out: set[Path] = set()
+    for raw in proc.stdout.split(b"\0"):
+        if not raw:
+            continue
+        out.add((ROOT / raw.decode("utf-8", errors="replace")).resolve())
+    return out
+
 
 def _count_tests() -> dict[str, int]:
+    """Yalnız git-tracked test_*.py (WIP disk dosyaları sayıyı şişirmesin)."""
+    tracked = _git_ls_files("backend/config/*/tests/**")
+    use_git = bool(tracked)
     counts: dict[str, int] = {}
     total = 0
     for app in APPS:
@@ -40,6 +98,8 @@ def _count_tests() -> dict[str, int]:
         tests_root = BACKEND / app / "tests"
         if tests_root.is_dir():
             for py in tests_root.rglob("test_*.py"):
+                if use_git and py.resolve() not in tracked:
+                    continue
                 text = py.read_text(encoding="utf-8", errors="ignore")
                 n += len(re.findall(r"^\s*def test_", text, flags=re.M))
         counts[app] = n
@@ -105,22 +165,14 @@ def _installed_apps_snippet() -> str:
         return "`INSTALLED_APPS` okunamadı"
     raw = m.group(1)
     names = re.findall(r"['\"]([^'\"]+)['\"]", raw)
-    short = []
-    for n in names:
-        if n.startswith("django.contrib."):
-            continue
-        short.append(n.split(".")[0] if ".apps." in n or n.endswith("Config") else n)
-    # Config class paths → app label
     cleaned = []
     for n in names:
         if "django.contrib" in n:
             continue
         if n.endswith("Config"):
-            # firmalar.apps.FirmalarConfig → firmalar
             cleaned.append(n.split(".")[0])
         else:
             cleaned.append(n)
-    # unique preserve order
     seen = set()
     uniq = []
     for c in cleaned:
@@ -149,13 +201,20 @@ def _replace_auto_block(text: str, name: str, body: str) -> str:
 def render_master(text: str) -> str:
     counts = _count_tests()
     parts = " · ".join(f"`{a}` {counts[a]}" for a in APPS)
+    note = (
+        "_(git-tracked `test_*.py`; WIP untracked sayılmaz). "
+        "Koşu sonucu değildir; son suite aşağıda elle._"
+    )
     tests_body = (
         f"Statik test sayısı (`def test_`): **{counts['_total']}** — {parts}\n"
-        "_Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._"
+        f"{note}"
     )
     text = _replace_auto_block(text, "tests", tests_body)
 
-    mig_lines = ["| App | Migration sayısı | Son migration |", "|-----|-----------------|---------------|"]
+    mig_lines = [
+        "| App | Migration sayısı | Son migration |",
+        "|-----|-----------------|---------------|",
+    ]
     for app, n, last in _migrations():
         mig_lines.append(f"| `{app}` | {n} | `{last}` |")
     text = _replace_auto_block(text, "migrations", "\n".join(mig_lines))
@@ -199,10 +258,140 @@ def check_md_links() -> list[str]:
     return errors
 
 
+def _strip_code(text: str) -> str:
+    text = _FENCE_RE.sub("", text)
+    text = _INLINE_CODE_RE.sub("", text)
+    return text
+
+
+def _lint_hashes(path: Path) -> list[str]:
+    """Canlı docs’ta sabit commit hash yasak (HISTORY hariç; allowlist hariç)."""
+    if path.name == "HISTORY.md":
+        return []
+    raw = path.read_text(encoding="utf-8", errors="ignore")
+    scanned = _strip_code(raw)
+    hits: list[str] = []
+    rel = path.relative_to(ROOT)
+    for m in _HASH_RE.finditer(scanned):
+        h = m.group(1).lower()
+        if h in _HASH_ALLOW:
+            continue
+        # Saf hex olmayan / çok kısa bağlam: zaten 7–40
+        line_no = scanned[: m.start()].count("\n") + 1
+        hits.append(f"{rel}:{line_no}: sabit commit hash `{h}` (git log kullan)")
+    return hits
+
+
+def _lint_banned_phrases(path: Path) -> list[str]:
+    if path.name == "HISTORY.md":
+        return []
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    # Changelog satırlarında "(tarihsel" varsa o satırı atla
+    warnings: list[str] = []
+    rel = path.relative_to(ROOT)
+    for i, line in enumerate(text.splitlines(), 1):
+        if "tarihsel" in line.lower() or "append-only" in line.lower():
+            continue
+        if "*(tarihsel" in line:
+            continue
+        for phrase in _BANNED_PHRASES:
+            if phrase in line:
+                warnings.append(f"{rel}:{i}: yasaklı ifade «{phrase}»")
+    return warnings
+
+
+def _lint_phase_consistency() -> list[str]:
+    """MASTER §12 / ADR-0017 / ROADMAP arasında kaba çelişki."""
+    out: list[str] = []
+    master = MASTER.read_text(encoding="utf-8", errors="ignore") if MASTER.is_file() else ""
+    adr = ADR_0017.read_text(encoding="utf-8", errors="ignore") if ADR_0017.is_file() else ""
+    roadmap = ROADMAP.read_text(encoding="utf-8", errors="ignore") if ROADMAP.is_file() else ""
+    readme = ADR_README.read_text(encoding="utf-8", errors="ignore") if ADR_README.is_file() else ""
+
+    # B4 durumu tek kaynak: MASTER §12.1b
+    b4_done = "B4" in master and "inceleme" in master and "Kabul değil" in master
+    stale_markers = (
+        "B4 henüz başlatılmadı",
+        "B4 sırada",
+        "Sırada: B2",
+        "henüz başlatılmadı",
+    )
+    for label, text in (
+        ("MASTER.md", master),
+        ("ROADMAP.md", roadmap),
+        ("ADR-0017", adr),
+        ("decisions/README.md", readme),
+    ):
+        for marker in stale_markers:
+            if marker in text and "tarihsel" not in text[
+                max(0, text.find(marker) - 40) : text.find(marker) + 80
+            ].lower():
+                # README changelog may still contain historical phrase with tarihsel note
+                if label == "decisions/README.md" and "*(tarihsel" in text:
+                    # only flag if marker appears outside tarihsel-annotated lines
+                    for line in text.splitlines():
+                        if marker in line and "tarihsel" not in line.lower():
+                            out.append(
+                                f"faz tutarsızlığı: {label} «{marker}» "
+                                f"(MASTER §12.1b: B4 inceleme)"
+                            )
+                            break
+                elif b4_done:
+                    out.append(
+                        f"faz tutarsızlığı: {label} «{marker}» "
+                        f"(MASTER §12.1b: B4 inceleme)"
+                    )
+    return out
+
+
+def _lint_adr_status_table() -> list[str]:
+    """ADR dosyası **Durum:** ↔ decisions/README satırı (kaba)."""
+    if not ADR_README.is_file():
+        return []
+    readme = ADR_README.read_text(encoding="utf-8", errors="ignore")
+    warnings: list[str] = []
+    decisions = ROOT / "docs" / "decisions"
+    for adr in sorted(decisions.glob("ADR-*.md")):
+        text = adr.read_text(encoding="utf-8", errors="ignore")
+        m = re.search(r"\*\*Durum:\*\*\s*\*\*([^*]+)\*\*", text)
+        if not m:
+            continue
+        status = m.group(1).split("(")[0].strip()
+        # README satırında dosya adı + durum geçmeli
+        if adr.name not in readme:
+            warnings.append(f"decisions/README: {adr.name} indeks satırı yok")
+            continue
+        # Supersede / Taslak / Kabul / Kapandı
+        row_hit = False
+        for line in readme.splitlines():
+            if adr.name.replace(".md", "") in line or adr.name in line:
+                if status.split()[0] in line or (
+                    "Supersede" in status and "Supersede" in line
+                ):
+                    row_hit = True
+                    break
+        if not row_hit:
+            warnings.append(
+                f"ADR durum drift: {adr.name} «{status}» ↔ decisions/README satırı"
+            )
+    return warnings
+
+
+def lint_docs() -> list[str]:
+    """Bayat metin / hash / faz tutarlılığı — uyarı listesi."""
+    warnings: list[str] = []
+    for path in _LIVE_MD:
+        if not path.is_file():
+            continue
+        warnings.extend(_lint_hashes(path))
+        warnings.extend(_lint_banned_phrases(path))
+    warnings.extend(_lint_phase_consistency())
+    warnings.extend(_lint_adr_status_table())
+    return warnings
+
+
 def _render_data_dictionary() -> str:
     """Django model meta → DATA_DICTIONARY.md (ayrı süreç: Django setup)."""
-    import subprocess
-
     gen = ROOT / "scripts" / "gen_data_dictionary.py"
     proc = subprocess.run(
         [sys.executable, str(gen)],
@@ -223,9 +412,29 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Dosyayı yazma; AUTO drift veya kırık link varsa exit 1",
+        help="Dosyayı yazma; AUTO drift veya kırık link varsa exit 1; lint UYARI",
+    )
+    parser.add_argument(
+        "--lint-docs",
+        action="store_true",
+        help="Yalnız docs lint; ihlaller UYARI, exit 0",
+    )
+    parser.add_argument(
+        "--lint-docs-strict",
+        action="store_true",
+        help="Docs lint ihlali exit 1 (CI soft→hard geçişi)",
     )
     args = parser.parse_args()
+
+    if args.lint_docs or args.lint_docs_strict:
+        warns = lint_docs()
+        for w in warns:
+            print(f"UYARI lint: {w}", file=sys.stderr)
+        if not warns:
+            print("docs_sync lint: OK")
+        if args.lint_docs_strict and warns:
+            return 1
+        return 0
 
     if not MASTER.is_file():
         print(f"MASTER yok: {MASTER}", file=sys.stderr)
@@ -240,6 +449,7 @@ def main() -> int:
         else ""
     )
     link_errors = check_md_links()
+    lint_warns = lint_docs()
 
     if args.check:
         drift = original != updated or dict_original != dict_body
@@ -249,9 +459,13 @@ def main() -> int:
             print("docs_sync --check: DATA_DICTIONARY.md bayat", file=sys.stderr)
         for err in link_errors:
             print(err, file=sys.stderr)
+        for w in lint_warns:
+            print(f"UYARI lint: {w}", file=sys.stderr)
         if drift or link_errors:
             return 1
         print("docs_sync --check: OK")
+        if lint_warns:
+            print(f"docs_sync --check: {len(lint_warns)} lint uyarısı (exit 0)")
         return 0
 
     if updated != original:
@@ -268,6 +482,8 @@ def main() -> int:
 
     for err in link_errors:
         print(f"UYARI: {err}", file=sys.stderr)
+    for w in lint_warns:
+        print(f"UYARI lint: {w}", file=sys.stderr)
     return 1 if link_errors else 0
 
 
