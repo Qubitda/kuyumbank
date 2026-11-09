@@ -1,3 +1,11 @@
+from .buyer_rfq_ui import (
+    BuyerRfqCreateView,
+    BuyerRfqDetailView,
+    BuyerRfqListView,
+    BuyerRfqMessageView,
+    BuyerRfqRevisionView,
+    BuyerRfqSendView,
+)
 from .buyer_ui import (
     BuyerCartView,
     BuyerCheckoutView,
@@ -12,4 +20,10 @@ __all__ = [
     "BuyerLoginView",
     "BuyerOrderDetailView",
     "BuyerOrderListView",
+    "BuyerRfqCreateView",
+    "BuyerRfqDetailView",
+    "BuyerRfqListView",
+    "BuyerRfqMessageView",
+    "BuyerRfqRevisionView",
+    "BuyerRfqSendView",
 ]

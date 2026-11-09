@@ -14,6 +14,11 @@ class RFQ(models.Model):
         KAPANDI = "KAPANDI", "Kapandı"
         IPTAL = "IPTAL", "İptal"
 
+    class TalepTipi(models.TextChoices):
+        STANDART = "STANDART", "Standart"
+        KATALOG_DISI = "KATALOG_DISI", "Katalog dışı"
+        OZEL_URETIM = "OZEL_URETIM", "Özel üretim / tasarım"
+
     alici_firma = models.ForeignKey(
         "firmalar.Firma",
         on_delete=models.PROTECT,
@@ -27,6 +32,11 @@ class RFQ(models.Model):
         related_name="rfqlar",
     )
     baslik = models.CharField(max_length=200)
+    talep_tipi = models.CharField(
+        max_length=16,
+        choices=TalepTipi.choices,
+        default=TalepTipi.STANDART,
+    )
     durum = models.CharField(
         max_length=16, choices=Durum.choices, default=Durum.TASLAK
     )
@@ -56,9 +66,20 @@ class RFQ(models.Model):
                 ),
                 name="rfq_durum_gecerli",
             ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    talep_tipi__in=[
+                        "STANDART",
+                        "KATALOG_DISI",
+                        "OZEL_URETIM",
+                    ]
+                ),
+                name="rfq_talep_tipi_gecerli",
+            ),
         ]
         indexes = [
             models.Index(fields=["alici_firma", "durum"]),
+            models.Index(fields=["alici_firma", "talep_tipi"]),
         ]
 
     def __str__(self) -> str:
@@ -137,3 +158,46 @@ class RFQMessage(models.Model):
         if not self._state.adding:
             raise ValidationError("RFQMessage değişmez.")
         return super().save(*args, **kwargs)
+
+
+class RFQRevizyon(models.Model):
+    """F10-022 — özel üretim/tasarım revizyon geçmişi (append-only; kör rol)."""
+
+    rfq = models.ForeignKey(RFQ, on_delete=models.CASCADE, related_name="revizyonlar")
+    sira = models.PositiveIntegerField()
+    ozet = models.CharField(max_length=500)
+    gonderen_rol = models.CharField(max_length=32, blank=True)
+    olusturan = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="rfq_revizyonlari",
+    )
+    olusturma_tarihi = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "RFQ revizyonu"
+        verbose_name_plural = "RFQ revizyonları"
+        ordering = ["sira", "pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["rfq", "sira"], name="rfqrevizyon_rfq_sira_unique"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(sira__gte=1),
+                name="rfqrevizyon_sira_pozitif",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"RFQR#{self.pk or '?'} RFQ#{self.rfq_id} v{self.sira}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError("RFQRevizyon değişmez.")
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("RFQRevizyon silinemez.")

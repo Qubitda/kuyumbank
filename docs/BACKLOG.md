@@ -47,9 +47,9 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-014] Onay kuyruğu UI
 
 - **Faz:** Faz 10
-- **Durum:** **KISMİ** · **Öncelik:** P2 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (minimal `/buyer/approvals/`; zengin F9 portal değil) · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-013
-- **Kanıt:** salt-okunur admin (`OnayTalebiAdmin`/`HarcamaLimitiAdmin`); portal UI F9’a
+- **Kanıt:** `buyer_approval_ui` + selector; `test_approval_ui_f10_014` **5 OK**; admin salt-okunur duruyor
 
 ### [F10-020] RFQ / RFQLine / RFQMessage modelleri
 
@@ -61,23 +61,26 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-021] Katalog dışı ürün talebi
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **KISMİ** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F10-020
 - **Kabul kriterleri:** Platform aracılı eşleştirme
+- **Kanıt:** `/buyer/rfq/new/` varyantsız RFQ satırı (F10-023 UI); eşleştirme motoru yok
 
 ### [F10-022] Özel üretim / tasarım talep akışı
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F10-020, F6 QC bağ opsiyonel
 - **Kabul kriterleri:** Revizyon geçmişi
+- **Kanıt:** `RFQ.talep_tipi` + `RFQRevizyon`; `revizyon_ekle`; mig `siparis.0005`; `test_rfq_ozel_f10_022` **3 OK**
 
 ### [F10-023] RFQ buyer/supplier UI (maskeli)
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (buyer minimal; supplier UI yok) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-020, F7 APIs
 - **Kabul kriterleri:** Kimlik sızıntısı yok
+- **Kanıt:** `buyer_rfq_ui` + `selectors.rfq`; `test_rfq_ui_f10_023` **4 OK**
 
 ### [F11-001] Raporlama veri modeli / read-model kararı
 
@@ -782,37 +785,41 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F8-001] CI pipeline (lint + test PG)
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** —
 - **Kabul kriterleri:** PR’da test koşar
+- **Kanıt:** `.github/workflows/ci.yml` — docs_sync, `manage.py check`, makemigrations, PG suite (3.12/3.14)
 
 ### [F8-002] Structured logging standardı
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** —
 - **Kabul kriterleri:** request_id; secret log yok
+- **Kanıt:** `RequestIdMiddleware` + `config.logging_utils`; `test_logging_f8_002`
 
 ### [F8-003] Hata izleme (Sentry veya eşdeğer) bağlama planı
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **KISMİ** (plan RUNBOOK §11; SDK/staging event yok) · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** F8-002
 - **Kabul kriterleri:** staging’de event görülür
 
 ### [F8-004] Backup/restore runbook
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** (şablon; prod prova **DOĞRULANAMADI**) · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** PostgreSQL
 - **Kabul kriterleri:** Dokümanlı restore tatbikatı
+- **Kanıt:** RUNBOOK §7
 
 ### [F8-005] Secret yönetimi kontrol listesi
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Security
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Security
 - **Bağımlılıklar:** —
 - **Kabul kriterleri:** `.env` repo dışı; rotation notu
+- **Kanıt:** RUNBOOK §9 + `.env.example`
 
 ### [F8-006] Performans smoke (quote/lock/order kritik yollar)
 
@@ -824,30 +831,34 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F8-007] Güvenlik test paketi (tenant/IDOR regresyon)
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Security
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Security
 - **Bağımlılıklar:** API yüzeyleri
 - **Kabul kriterleri:** Checklist yeşil
+- **Kanıt:** `api.tests.test_security_f8_007` **5 OK**
 
 ### [F8-008] Operasyon runbook (deploy/migrate)
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** (şablon) · **Öncelik:** P2 · **Tip:** Infrastructure
 - **Bağımlılıklar:** F8-001
 - **Kabul kriterleri:** Adım adım doküman
+- **Kanıt:** RUNBOOK §10
 
 ### [F8-009] Rate limit prod konfig
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Infrastructure
 - **Bağımlılıklar:** F7-013
 - **Kabul kriterleri:** Ortam bazlı ayar
+- **Kanıt:** `DRF_THROTTLE_*` env + `.env.example`
 
 ### [F9-001] Frontend teknoloji ADR (Next.js vs alternatif)
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Product
+- **Durum:** **Taslak ADR** ([ADR-0016](decisions/ADR-0016-faz9-frontend.md)) · **Öncelik:** P1 · **Tip:** Product
 - **Bağımlılıklar:** PRE-001
-- **Kabul kriterleri:** Ürün sahibi kabul
+- **Kabul kriterleri:** Ürün sahibi kabul (FE-1…FE-5)
+- **Kanıt:** ADR-0016 Taslak; öneri C→A (Django portal önce); F9 kodu Kabul sonrası
 
 ### [F9-010] Buyer dashboard iskeleti
 

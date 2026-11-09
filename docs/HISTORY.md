@@ -230,3 +230,22 @@ B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-0
 - F7-020…024: `WebhookDelivery`, FakeERP/CRM, `ConnectorRegistry`, punchout stub.
 - Mig: `firmalar.0007`, `siparis.0004`, `fiyatlama.0017` (KS-6 kalem); odaklı test **22 OK**.
 - **Sıradaki:** F10-014/021–023 UI veya F8 CI/ops; Celery yok.
+
+### 2026-11-09 — F10-014 onay UI + F10-023 RFQ buyer UI
+- `/buyer/approvals/` (manage_approval; tenant 404); `/buyer/rfq/` liste/create/detail/send/message.
+- F10-021 KISMİ: katalog dışı = varyantsız RFQ satırı; eşleştirme motoru yok.
+- Selector: `firmalar.selectors.onay`, `siparis.selectors.rfq`.
+- Test: `test_approval_ui_f10_014` **5 OK** + `test_rfq_ui_f10_023` **4 OK**.
+- **Sıradaki:** F8 ops veya F9-001 ADR; F10-022 / F10-021 eşleştirme; F10-023 supplier UI.
+
+### 2026-11-09 — F8 ops çekirdek
+- F8-001 CI: `manage.py check` adımı; F8-002 `RequestIdMiddleware` + JSON/secret-aware logging.
+- F8-004/005/008 RUNBOOK §7–§10; F8-003 Sentry plan §11 (SDK yok); F8-009 throttle env.
+- F8-007 IDOR smoke: `test_security_f8_007` **5 OK**; logging **5 OK** birleşik **10 OK**.
+- **Sıradaki:** F9-001 ADR; F8-006 perf; Sentry SDK; F10-022.
+
+### 2026-11-09 — ADR-0016 Taslak + F10-022 özel üretim
+- **ADR-0016** frontend stack **Taslak** (öneri C→A Django önce); F9 kodu Kabul şart.
+- F10-022: `RFQ.talep_tipi` + `RFQRevizyon` append-only; `revizyon_ekle`; buyer UI.
+- Mig `siparis.0005`; test `test_rfq_ozel_f10_022` **3 OK** (+ RFQ regresyon yeşil).
+- **Sıradaki:** ADR-0016 **Kabul** (ürün sahibi) → F9-010; veya F8-006 / F10-023 supplier.

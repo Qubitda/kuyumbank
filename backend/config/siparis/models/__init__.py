@@ -3,7 +3,7 @@ from .cart_line import CartLine
 from .checkout_attempt import CheckoutAttempt
 from .order import Order
 from .order_line import OrderLine
-from .rfq import RFQ, RFQLine, RFQMessage
+from .rfq import RFQ, RFQLine, RFQMessage, RFQRevizyon
 
 __all__ = [
     "Cart",
@@ -14,4 +14,5 @@ __all__ = [
     "RFQ",
     "RFQLine",
     "RFQMessage",
+    "RFQRevizyon",
 ]

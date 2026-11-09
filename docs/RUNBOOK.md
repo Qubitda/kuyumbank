@@ -31,6 +31,11 @@
 | `SECURE_HSTS_SECONDS` | Hayır | `3600` | Sorunsuzsa artırın |
 | `PLATFORM_BRAND_NAME` | Hayır | boş | Boşsa SEO fallback yalnız ürün/kategori adı |
 | `VARYANT_GRAM_BANDI_ORAN` | Hayır | `0.05` | Gram bandı göreli toleransı (ADR-0005 K3) |
+| `LOG_LEVEL` | Hayır | `INFO` | F8-002 |
+| `LOG_JSON` | Hayır | `False` | `True` → tek satır JSON + `request_id` |
+| `DRF_THROTTLE_*` | Hayır | bkz. settings | F8-009 ortam bazlı anon/user/buyer/supplier/ops |
+| `SENTRY_DSN` | Hayır | boş | F8-003 plan; SDK henüz requirements’ta yok |
+| `PAYMENT_WEBHOOK_SECRET` | Prod webhook için | boş | Boşsa webhook 401 (fail-closed) |
 
 ## 3. Yerel kurulum (geliştirme)
 
@@ -105,8 +110,37 @@ Hosting seçilince: yedek sıklığı, saklama süresi, **geri yükleme provası
 - **Stok:** `StockBalance` doğrudan düzenlenmez; yalnız ledger servisi yazar. Rezervasyon expire yolu için F4-022 durumuna bakın ([BACKLOG](BACKLOG.md)).
 - **Para:** yalnız `Decimal`; `float` yok. Quote/PriceLock/Movement değişmezdir (uygulama + DB trigger); düzeltme yeni kayıtla yapılır.
 - **Kör havuz:** alıcı yüzeylerinde tedarikçi kimliği ve iç maliyet görünmez; log/export eklerken bu kuralı koruyun.
+- **request_id (F8-002):** `X-Request-ID` middleware; log satırında `request_id=…`. Secret alanları log `extra`/mesajına yazmayın (`config.logging_utils.redact_mapping`).
 
-## 9. Yeni geliştirici testi
+## 9. Secret yönetimi (F8-005)
+
+| Madde | Kural |
+|-------|--------|
+| Repo | `.env` commit edilmez; yalnız `.env.example` (placeholder) |
+| Rotasyon | `SECRET_KEY`, DB şifresi, `PAYMENT_WEBHOOK_SECRET` — olay sonrası + periyodik (işletim) |
+| Dağıtım | Secret’lar host secret store / CI secrets; log/artifact’a yazılmaz |
+| Kod | `env(...)`; hardcode yasak (AGENTS) |
+
+## 10. Deploy / migrate (F8-008 — şablon)
+
+Hosting henüz yok (**DOĞRULANAMADI**). Hedef sıra:
+
+1. CI yeşil (`.github/workflows/ci.yml`: docs_sync, `check`, makemigrations, suite).
+2. Bakım penceresi + DB yedek (§7).
+3. Kod deploy (immutable artifact tercihen).
+4. **`migrate` yalnız ürün sahibi onayı ile** (AGENTS); rollback planı (önceki dump).
+5. `seed_role_permissions` (idempotent) gerekirse.
+6. Smoke: `/api/v1/health/`, alıcı login, kritik quote→order yolu.
+7. `X-Request-ID` + hata oranı izleme (Sentry planı §11).
+
+## 11. Hata izleme planı (F8-003)
+
+1. Staging’de `SENTRY_DSN` + SDK pin (requirements’a eklenince) — **henüz kod yok**.
+2. `before_send` ile PII/secret scrub (`redact_mapping` ile aynı anahtar seti).
+3. Release tag = git SHA; sample rate düşük başlar.
+4. Kabul: staging’de bilerek 500 → event görünür.
+
+## 12. Yeni geliştirici testi
 
 Temiz bir klonla, yalnız bu doküman ve [MASTER](MASTER.md) ile şunlar yardımsız yapılabilmeli:
 
@@ -114,5 +148,6 @@ Temiz bir klonla, yalnız bu doküman ve [MASTER](MASTER.md) ile şunlar yardım
 2. §4'teki tam test suite'in PostgreSQL'de koşması.
 3. `python scripts/docs_sync.py --check` → `docs senkron: OK`.
 4. Bir domain akışı için ilgili ADR ve servis dosyasını bulabilme (MASTER §2.5 + [decisions](decisions/README.md)).
+5. F8-007 smoke: `python manage.py test api.tests.test_security_f8_007 --keepdb`.
 
 Takıldığı adım, bu dokümanın eksik olduğu yerdir; düzeltilir.

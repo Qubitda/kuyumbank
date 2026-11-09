@@ -22,6 +22,7 @@
 | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) | Faz 6 QC + lojistik | F6-K1…K12 tolerans/inspection/shipment gate | **Kabul** (2026-11-09) | 6 | Quality/Logistics | F6-010…031 + F6-012 UYGULANDI | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) |
 | [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam quote | **Kabul** (2026-11-09, Qubit) | — | Pricing | Sim + KS-6 quote UYGULANDI | `karlilik_simulasyonu` + `quote(hedef_toplam=)` |
 | [ADR-0015](ADR-0015-account-hierarchy.md) | Account Hierarchy (U-014 A) | OrgBirimi firma-içi; tenant=Firma; Order.sube nullable | **Kabul** (2026-11-09, Qubit plan) | 10 | Identity/Org | F10-010+ dilimler | [ADR-0015](ADR-0015-account-hierarchy.md) |
+| [ADR-0016](ADR-0016-faz9-frontend.md) | Faz 9 frontend stack | A Django / B Next / C hibrit (öneri C→A) | **Taslak** | 9 | Experience | Kod yok (Kabul şart) | F9-001 |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |
@@ -43,3 +44,4 @@
 - 2026-11-09 (Emre): **U-016** → ADR-0001 doküman düzeni **Kabul**; **ADR-0012** Kabul (tasarım; kod ayrı talimat). U-003…007, 009…011, U-013…015 **Kabul** (Önerilen; dış onaylı kartlarda ürün sahibi override). B-01/B-06 dokunulmadı. Ayrıntı: [BACKLOG](../BACKLOG.md).
 - 2026-11-09: **ADR-0013** Faz 6 QC/lojistik **Taslak** (F6-001); Kabul + talimat olmadan F6-010 kodu yok.
 - 2026-11-09 (Qubit/Emre): **ADR-0013 Kabul** (soru cevapları kayıtlı); F6-010 `kalite` app UYGULANDI.
+- 2026-11-09: **ADR-0016** Faz 9 frontend **Taslak** (F9-001); Kabul olmadan F9-010 kodu yok.

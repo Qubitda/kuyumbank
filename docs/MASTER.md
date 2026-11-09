@@ -73,7 +73,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | PostgreSQL + psycopg | varsayılan DB | UYGULANDI |
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis / Next.js | requirements’ta yok (bilinçli) | PLANLANDI |
-| HTTP yüzeyi | `admin/` + ince PRE API (yalnız GET) | KISMİ |
+| HTTP yüzeyi | `admin/` + `/api/v1/` (GET+POST) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
@@ -103,7 +103,9 @@ Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `
 | FX / hedge / cari / PI / credit / webhook | **Tamamlanmış (iskelet)** | ADR-0012; F5-010…032; F5-041; F5-022 hak ediş; F5-023 mahsup |
 | QC QualityInspection SM | **UYGULANDI** | F6-010+011 |
 | Shipment / lojistik | **UYGULANDI** | F6-020…023 + F6-030/031 return SM + stok IADE |
-| İnce PRE API | **Tamamlanmış** | PRE-001…005 (+ credit/finance/ops/webhook) |
+| İnce PRE API | **Tamamlanmış** | PRE-001…005 (+ credit/finance/ops/webhook/catalog/supplier) |
+| Org / limit / onay / RFQ | **Tamamlanmış (çekirdek)** | F10-010…014/020/022/023; F10-021 KISMİ |
+| Ops readiness (F8) | **Kısmi** | 001/002/004/005/007/008/009 var; Sentry SDK + perf smoke yok |
 | Ödeme provider / kargo / tam Prosperer API | **Uygulanmamış** | Fake payment adapter var; gerçek provider yok |
 
 ### 2.4 Veri modelleri
@@ -116,13 +118,13 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 
 | Servis | Rol | Etiket |
 |--------|-----|--------|
-| `firmalar`: yetki / rol / audit / platform_kurulum | RBAC, durable fail audit | UYGULANDI |
+| `firmalar`: yetki / rol / audit / org / limit / onay + buyer approval UI | RBAC, F10, durable fail audit | UYGULANDI |
 | `urunler`: onay / eslestirme / kategori / gram_bandi / seo | katalog SM | UYGULANDI |
 | `tanimlar`: kur_servisi / currency_conversion | kur + PB | UYGULANDI |
 | `fiyatlama`: teklif / sozlesme / pricing / `release_servisi` | teklif+quote+lock+release | UYGULANDI |
 | `fiyatlama.selectors.buyer_quote` | B-02 alıcı yüzeyi | UYGULANDI |
 | `stok`: warehouse / ledger / reservation / birim | F4 stok | UYGULANDI |
-| `siparis`: cart / checkout / order / reorder / bulk / buyer_ui | F4 sipariş + UI | UYGULANDI |
+| `siparis`: cart / checkout / order / reorder / bulk / buyer_ui / rfq_ui | F4 + F10-023 RFQ UI | UYGULANDI |
 | `finans`: ledger / cari / payment / credit / webhook / buyer+ops | F5 finans | UYGULANDI |
 | `kalite`: `inspection_servisi` / `olcum_servisi` / `tolerans_motoru` | F6-010 SM + F6-011 ölçüm | UYGULANDI |
 | `lojistik`: `shipment`/`pod`/`buyer_shipment` + `carriers` | F6-020…023 | UYGULANDI |
@@ -141,17 +143,18 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 - Stok: movement immutable; reservation create/cancel/expire fiziksel movement yazmaz; consume → SATIS; iptal → IADE.  
 - API: ince PRE tenant 404 (cart/order); client `firma_id` yok sayılır; Token + Basic + Session; throttle.  
 - AuditOlay: create OK; instance/QuerySet UPDATE/DELETE yasak (AUD-001); `ip_address`/`changes` (AUD-001b).  
-- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi.
+- F8-002: `X-Request-ID` + structured log; secret scrub (`logging_utils`). F8-007 IDOR smoke paketi.  
+- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Sentry SDK; F9 portal.
 
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **530** — `api` 26 · `firmalar` 67 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 40 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+Statik test sayısı (`def test_`): **552** — `api` 36 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 47 · `stok` 31 · `tanimlar` 20 · `urunler` 95
 _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 <!-- /AUTO:tests -->
 
-**Son suite koşusu (elle):** birleşik **354 OK** (tarihsel 2026-11-09) — **bayat**; bu sync turunda full suite koşulmadı. Odaklı: F5 finans / F5-041 / AUD-001b / F5-032 / F6-010 yeşil.
-`makemigrations --check`: temiz. **Yerel/dev migrate uygulandı** (2026-11-09: `firmalar.0006`, `urunler.0009`, `fiyatlama.0014–0015`, `kalite.0001–0002`, `lojistik.0001–0002`).
+**Son suite koşusu (elle):** full suite **bayat** (tarihsel 354 OK). Bu sync: `makemigrations --check` temiz; `migrate` pending yok; odaklı F10 UI + F8 log/IDOR **19 OK** (2026-11-09).
+`makemigrations --check`: temiz. **Yerel/dev migrate güncel** (son: `firmalar.0007` / `siparis.0004` / `fiyatlama.0017`; pending yok).
 
 <!-- AUTO:migrations -->
 | App | Migration sayısı | Son migration |
@@ -163,7 +166,7 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | `kalite` | 2 | `0002_f6_011_quality_measurement` |
 | `lojistik` | 3 | `0003_f6_030_return_request` |
 | `belgeler` | 1 | `0001_f6_012_document_tas_sertifika` |
-| `siparis` | 4 | `0004_f10_f7_org_rfq_webhook` |
+| `siparis` | 5 | `0005_f10_022_rfq_talep_revizyon` |
 | `stok` | 3 | `0003_faz4_3_stock_reservation` |
 | `tanimlar` | 3 | `0003_faz3_3_kur_index_rename` |
 | `urunler` | 10 | `0010_f4_070b_drop_legacy_stock` |
@@ -171,7 +174,7 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 
 > Not: `api.0001` yerel/dev `migrate` uygulandı; **üretim migrate ürün sahibi onayı olmadan yok.**
 
-**HTTP yüzeyi** (`/admin/` + aşağıdaki ince PRE API; yazma endpoint'i yok):
+**HTTP yüzeyi** (`/admin/` + `/buyer/` + `/ops/finance/` + aşağıdaki `/api/v1/`; yazma: checkout/bulk/webhook POST):
 
 <!-- AUTO:api_urls -->
 | Yol | Ad |
@@ -230,6 +233,11 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | ADR-0001 doküman düzeni (U-016) | **Kabul** |
 | B-01 / B-06 | **Kabul** (Qubit 2026-11-09); kod bilinçli yok |
 | ADR-0014 | **Kabul** — sim UYGULANDI; quote hedef ayrı dilim |
+| F8-003 Sentry SDK / F8-006 perf | Plan var; SDK + baseline **yok** |
+| F9 portal / F9-001 | **ADR-0016 Taslak** — FE-1…FE-5 ürün sahibi Kabul şart |
+| F10-021 eşleştirme | Match motoru **yok** (create UI KISMİ) |
+| F10-022 özel üretim | **UYGULANDI** (`siparis.0005`) |
+| F10-023 supplier UI | **yok** (buyer UI var) |
 
 Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 
@@ -303,9 +311,9 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4–F6 **UYGULANDI** · F7 API/entegrasyon iskelet **UYGULANDI** · F10 org/limit/onay/RFQ **UYGULANDI** (UI portal kısmi) |
-| ADR | 0010–0015 **Kabul** — [indeks](decisions/README.md) |
-| Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate uygulandı (2026-11-09; `firmalar.0007`/`siparis.0004`) |
+| Faz | F4–F8 çekirdek **UYGULANDI** · F9 **ADR-0016 Taslak** · F10 org/RFQ/UI/özel üretim **UYGULANDI** |
+| ADR | 0010–0015 **Kabul** · **0016 Taslak** — [indeks](decisions/README.md) |
+| Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`siparis.0005` F10-022) |
 
 ### 12.2 YAPILDI (kodda var)
 
@@ -356,28 +364,40 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F10-001/010 | Account Hierarchy | ADR-0015 **Kabul**; `OrgBirimi`/`OrgUyeligi`; `Order`/`Cart.sube`; `test_org_f10_010` |
 | F10-011…013 | Org scope + limit + onay | `require_org_scope`; `HarcamaLimiti`; `OnayTalebi` SM; `test_limit_onay_f10_012` |
 | F10-020 | RFQ modelleri | `RFQ`/`RFQLine`/`RFQMessage` + `rfq_servisi`; `test_rfq_f10_020` |
+| F10-014 | Onay kuyruğu UI | `/buyer/approvals/`; `test_approval_ui_f10_014` **5 OK** |
+| F10-023 | RFQ buyer UI | `/buyer/rfq/`; kör mesaj; `test_rfq_ui_f10_023` **4 OK** |
+| F10-021 | Katalog dışı (KISMİ) | varyantsız RFQ create UI; eşleştirme motoru yok |
+| F10-022 | Özel üretim + revizyon | `talep_tipi` + `RFQRevizyon`; mig `siparis.0005`; `test_rfq_ozel_f10_022` **3 OK** |
 | F7-010…015 | API std | maske + catalog/supplier/ops; problem+json; throttle scopes; `/api/v1/` |
 | F7-020…024 | Entegrasyon iskelet | `WebhookDelivery`; FakeERP/CRM; `ConnectorRegistry`; punchout stub; **22 OK** odaklı |
+| F8-001 | CI pipeline | `ci.yml` + `manage.py check`; PG 3.12/3.14 |
+| F8-002 | Structured logging | `RequestIdMiddleware` + `logging_utils`; `test_logging_f8_002` |
+| F8-004/005/008/009 | Ops/secret/deploy/throttle | RUNBOOK §7–§10; `DRF_THROTTLE_*` env |
+| F8-007 | IDOR güvenlik smoke | `test_security_f8_007` **5 OK** |
+| F8-003 | Sentry plan | RUNBOOK §11 KISMİ (SDK yok) |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| **1** | F8 / F9 | CI ops / buyer portal UI | ROADMAP; Celery yok |
-| — | F10-014/021–023 | Onay/RFQ portal UI | F10 çekirdek UYGULANDI; admin salt-okunur |
-| — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | F6-030 sonrası; P2 |
+| **1** | ADR-0016 / F9-001 | Frontend stack **Kabul** | Taslak hazır; FE-1…FE-5 ürün sahibi |
+| — | F9-010… | Portal dilimleri | ADR-0016 **Kabul** şart |
+| — | F8-003/006 | Sentry SDK · perf smoke | plan var; baseline yok |
+| — | F10-021 eşleştirme | Katalog dışı match motoru | create UI var |
+| — | F10-023 supplier | RFQ tedarikçi UI (maskeli) | buyer UI UYGULANDI |
+| — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 |
 | — | CAP-PIYASA | Canlı altın/döviz beslemesi | kod yok |
 
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
-Celery/Redis · gerçek ödeme/kargo/SAP · zengin F10 onay/RFQ portal · Dynamic Pricing (U-015 kilitli).  
-(Org/RFQ/F7 iskelet + QC/Shipment/return + KS-6 var; ödeme iadesi yok.)
+Celery/Redis · gerçek ödeme/kargo/SAP · zengin F9 Next portal (ADR-0016 Taslak) · Dynamic Pricing (U-015 kilitli).  
+(F8 ops + F10-022 özel üretim + Org/RFQ/F7 + minimal buyer UI + QC/Shipment/return + KS-6 var; ödeme iadesi yok.)
 
 ### 12.5 Yeni session handoff
 
-1. Oku: `AGENTS.md` → bu dosya **§2 + §12** → ADR-0013/0012/0014/0015 (Kabul).  
-2. Sıradaki kod (açık talimat): F8/F9 veya F10 UI dilimleri.  
-3. Yerel migrate güncel (`firmalar.0007`/`siparis.0004`); full suite bayat.  
+1. Oku: `AGENTS.md` → bu dosya **§2 + §12** → ADR-0016 **Taslak** + 0013/0012/0014/0015 **Kabul**.  
+2. Sıradaki: **ADR-0016 Kabul** (ürün sahibi) → F9-010; veya F8-006/Sentry; F10-021 eşleştirme / F10-023 supplier.  
+3. Yerel migrate güncel (`siparis.0005`); full suite bayat.  
 4. B-01/B-06 Kabul (servis payı/KDV kapalı); K-014 storage yok.
 
-*Son güncelleme: 2026-11-09 — F10 hierarchy + F7 API/entegrasyon iskeleti.*
+*Son güncelleme: 2026-11-09 — ADR-0016 Taslak + F10-022 özel üretim/revizyon.*

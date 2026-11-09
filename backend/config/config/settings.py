@@ -113,6 +113,7 @@ AUTH_USER_MODEL = "firmalar.Kullanici"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'api.middleware.RequestIdMiddleware',  # F8-002: X-Request-ID + log context
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,6 +122,46 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.IdempotencyKeyMiddleware',  # PRE-005: header → request.idempotency_key
 ]
+
+# F8-002 — yapılandırılmış log (JSON opt-in; secret anahtar dump yok)
+LOG_JSON = env.bool("LOG_JSON", default=False)
+_LOG_FORMATTERS = {
+    "verbose": {
+        "format": "[{asctime}] {levelname} request_id={request_id} {name}: {message}",
+        "style": "{",
+    },
+    "structured": {
+        "()": "config.logging_utils.StructuredFormatter",
+    },
+}
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "request_id": {
+            "()": "config.logging_utils.RequestIdFilter",
+        },
+    },
+    "formatters": _LOG_FORMATTERS,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": "structured" if LOG_JSON else "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env("LOG_LEVEL", default="INFO"),
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
 
 ROOT_URLCONF = 'config.urls'
 

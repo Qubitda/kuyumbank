@@ -1,0 +1,89 @@
+{% extends "buyer/base.html" %}
+{% block title %}RFQ #{{ rfq.id }} — Kuyumbank Alıcı{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0;">RFQ #{{ rfq.id }}</h1>
+  <p><strong>{{ rfq.baslik }}</strong> · {{ rfq.durum }} · {{ rfq.talep_tipi }}</p>
+  <p class="muted">{{ rfq.olusturma_tarihi }}</p>
+
+  <h2>Satırlar</h2>
+  <table>
+    <thead>
+      <tr><th>Açıklama</th><th>Miktar</th><th>Birim</th><th>Tip</th></tr>
+    </thead>
+    <tbody>
+      {% for ln in rfq.lines %}
+      <tr>
+        <td>{{ ln.aciklama }}</td>
+        <td>{{ ln.miktar }}</td>
+        <td>{{ ln.birim }}</td>
+        <td class="muted">{% if ln.katalog_disi %}katalog dışı{% else %}katalog{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if rfq.can_send %}
+  <form method="post" action="{% url 'buyer-rfq-send' rfq.id %}" style="margin:1rem 0">
+    {% csrf_token %}
+    <button type="submit">Gönder</button>
+  </form>
+  {% endif %}
+
+  <h2>Mesajlar</h2>
+  <p class="muted">Yalnız rol etiketi; tedarikçi/alıcı kimliği yok.</p>
+  {% if rfq.messages %}
+  <ul class="stack" style="list-style:none;padding:0">
+    {% for m in rfq.messages %}
+    <li class="panel" style="padding:0.75rem">
+      <span class="muted">{{ m.gonderen_rol }} · {{ m.olusturma_tarihi }}</span>
+      <div>{{ m.govde }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Mesaj yok.</p>
+  {% endif %}
+
+  {% if rfq.can_message %}
+  <form method="post" action="{% url 'buyer-rfq-message' rfq.id %}" class="stack" style="margin-top:1rem;max-width:480px">
+    {% csrf_token %}
+    <label for="id_govde">Yeni mesaj</label>
+    <input id="id_govde" type="text" name="govde" maxlength="2000" required>
+    <button type="submit">Gönder</button>
+  </form>
+  {% endif %}
+
+  {% if rfq.talep_tipi == "OZEL_URETIM" %}
+  <h2>Revizyon geçmişi</h2>
+  <p class="muted">F10-022 — yalnız rol etiketi; kimlik yok.</p>
+  {% if rfq.revizyonlar %}
+  <table>
+    <thead><tr><th>v</th><th>Özet</th><th>Rol</th><th>Tarih</th></tr></thead>
+    <tbody>
+      {% for r in rfq.revizyonlar %}
+      <tr>
+        <td>{{ r.sira }}</td>
+        <td>{{ r.ozet }}</td>
+        <td class="muted">{{ r.gonderen_rol }}</td>
+        <td class="muted">{{ r.olusturma_tarihi }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Revizyon yok.</p>
+  {% endif %}
+  {% if rfq.can_revise %}
+  <form method="post" action="{% url 'buyer-rfq-revision' rfq.id %}" class="stack" style="margin-top:1rem;max-width:480px">
+    {% csrf_token %}
+    <label for="id_ozet">Yeni revizyon özeti</label>
+    <input id="id_ozet" type="text" name="ozet" maxlength="500" required>
+    <button type="submit">Revizyon ekle</button>
+  </form>
+  {% endif %}
+  {% endif %}
+
+  <p style="margin-top:1.25rem"><a href="{% url 'buyer-rfq-list' %}">RFQ listesi</a></p>
+</section>
+{% endblock %}

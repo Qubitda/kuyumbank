@@ -757,19 +757,20 @@ Kur değişimi satır tutarını etkilemez — snapshot alanları sabit.
 
 ### RFQ
 
-RFQ(id, alici_firma, sube, baslik, durum, olusturan, olusturma_tarihi, guncelleme_tarihi)
+RFQ(id, alici_firma, sube, baslik, talep_tipi, durum, olusturan, olusturma_tarihi, guncelleme_tarihi)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
 | `alici_firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
 | `sube` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null |  |
 | `baslik` | CharField | max 200 |  |  |
+| `talep_tipi` | CharField | max 16, choices |  |  |
 | `durum` | CharField | max 16, choices |  |  |
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
 
-**Kısıtlar:** `rfq_durum_gecerli` (CheckConstraint)
+**Kısıtlar:** `rfq_durum_gecerli` (CheckConstraint); `rfq_talep_tipi_gecerli` (CheckConstraint)
 
 ### RFQLine
 
@@ -796,6 +797,21 @@ Platform aracılı mesaj; alıcı↔tedarikçi kimliği yok (kör).
 | `gonderen_rol` | CharField | max 32 | blank |  |
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+### RFQRevizyon
+
+F10-022 — özel üretim/tasarım revizyon geçmişi (append-only; kör rol).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `rfq` | ForeignKey | siparis.RFQ (CASCADE) |  |  |
+| `sira` | PositiveIntegerField |  |  |  |
+| `ozet` | CharField | max 500 |  |  |
+| `gonderen_rol` | CharField | max 32 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `rfqrevizyon_rfq_sira_unique` (UniqueConstraint); `rfqrevizyon_sira_pozitif` (CheckConstraint)
 
 ## `stok`
 

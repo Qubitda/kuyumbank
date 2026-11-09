@@ -14,7 +14,7 @@ from firmalar.services.audit_servisi import (
 )
 from firmalar.services.org_servisi import assert_org_in_firma
 from firmalar.services.yetki_servisi import require_perm
-from siparis.models import RFQ, RFQLine, RFQMessage
+from siparis.models import RFQ, RFQLine, RFQMessage, RFQRevizyon
 
 _TRANSITIONS = {
     RFQ.Durum.TASLAK: {RFQ.Durum.GONDERILDI, RFQ.Durum.IPTAL},
@@ -45,6 +45,7 @@ def olustur(
     baslik: str,
     line_specs: list[dict],
     sube=None,
+    talep_tipi: str = RFQ.TalepTipi.STANDART,
 ) -> RFQ:
     _require(actor, action="siparis.rfq.create_denied")
     firma = getattr(actor, "firma", None)
@@ -53,12 +54,16 @@ def olustur(
     assert_org_in_firma(org=sube, firma=firma)
     if not line_specs:
         raise ValidationError("En az bir RFQ satırı gerekir.")
+    tip = (talep_tipi or RFQ.TalepTipi.STANDART).strip().upper()
+    if tip not in {c.value for c in RFQ.TalepTipi}:
+        raise ValidationError({"talep_tipi": "Geçersiz talep tipi."})
 
     with domain_atomic():
         rfq = RFQ(
             alici_firma=firma,
             sube=sube,
             baslik=(baslik or "").strip()[:200] or "RFQ",
+            talep_tipi=tip,
             durum=RFQ.Durum.TASLAK,
             olusturan=actor if getattr(actor, "pk", None) else None,
         )
@@ -74,13 +79,21 @@ def olustur(
                 birim=spec.get("birim") or "ADET",
                 varyant=spec.get("varyant"),
             ).save()
+        if tip == RFQ.TalepTipi.OZEL_URETIM:
+            RFQRevizyon(
+                rfq=rfq,
+                sira=1,
+                ozet="İlk özel üretim talebi açıldı.",
+                gonderen_rol=getattr(actor, "rol", "") or "",
+                olusturan=actor if getattr(actor, "pk", None) else None,
+            ).save()
         record_audit(
             actor=actor,
             action="siparis.rfq.created",
             entity_type="RFQ",
             entity_id=str(rfq.pk),
             success=True,
-            detail={"line_count": len(line_specs)},
+            detail={"line_count": len(line_specs), "talep_tipi": tip},
         )
         return rfq
 
@@ -136,3 +149,41 @@ def mesaj_ekle(*, actor, rfq: RFQ, govde: str) -> RFQMessage:
             detail={"rfq_id": rfq.pk, "gonderen_rol": msg.gonderen_rol},
         )
         return msg
+
+
+def revizyon_ekle(*, actor, rfq: RFQ, ozet: str) -> RFQRevizyon:
+    """F10-022 — özel üretim revizyon kaydı (append-only)."""
+    _require(actor, action="siparis.rfq.revision_denied", entity_id=str(rfq.pk))
+    if rfq.talep_tipi != RFQ.TalepTipi.OZEL_URETIM:
+        raise ValidationError("Revizyon yalnız OZEL_URETIM taleplerinde.")
+    if rfq.durum in {RFQ.Durum.KAPANDI, RFQ.Durum.IPTAL}:
+        raise ValidationError("Kapalı/iptal RFQ’ya revizyon eklenemez.")
+    text = (ozet or "").strip()
+    if len(text) < 2:
+        raise ValidationError("Revizyon özeti çok kısa.")
+    with domain_atomic():
+        locked = RFQ.objects.select_for_update().get(pk=rfq.pk)
+        last = (
+            RFQRevizyon.objects.filter(rfq=locked)
+            .order_by("-sira")
+            .values_list("sira", flat=True)
+            .first()
+        )
+        sira = int(last or 0) + 1
+        rev = RFQRevizyon(
+            rfq=locked,
+            sira=sira,
+            ozet=text[:500],
+            gonderen_rol=getattr(actor, "rol", "") or "",
+            olusturan=actor if getattr(actor, "pk", None) else None,
+        )
+        rev.save()
+        record_audit(
+            actor=actor,
+            action="siparis.rfq.revision",
+            entity_type="RFQRevizyon",
+            entity_id=str(rev.pk),
+            success=True,
+            detail={"rfq_id": locked.pk, "sira": sira},
+        )
+        return rev
