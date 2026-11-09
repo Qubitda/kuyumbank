@@ -11,7 +11,7 @@ from django.db import models
 
 
 class TeklifTasMaliyeti(models.Model):
-    """Teklife bağlı taş maliyet satırı (eski ad: fiyatlama.UrunTasi)."""
+    """Teklife bağlı taş maliyet satırı (K-011)."""
 
     class TasGrubu(models.TextChoices):
         PIRLANTA = "PIRLANTA", "Pırlanta"

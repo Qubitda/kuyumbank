@@ -9,54 +9,54 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-001] Org/şube modeli ADR (Account Hierarchy)
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 (stratejik) · **Tip:** Product
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 (stratejik) · **Tip:** Product
 - **Bağımlılıklar:** **U-014**; ADR-0003 Kabul metni değişmeden uygulanamaz
 - **Amaç:** Firma içi hiyerarşi; tenant sınırı `Firma` kalır
-- **Kabul kriterleri:** Ürün sahibi kabul + geriye uyumlu migrate planı
-- **Not:** F4 Order’da şube zorunlu olmaz; nullable rezerv (F4-050)
+- **Kanıt:** [ADR-0015](decisions/ADR-0015-account-hierarchy.md) **Kabul** (2026-11-09, Qubit plan)
+- **Not:** F4 Order’da şube zorunlu olmaz; nullable rezerv dolduruldu (OH-3)
 
 ### [F10-010] Şube / org birimi modeli
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F10-001 / U-014
-- **Kabul kriterleri:** İzolasyon testleri; kullanıcı-firma tekilliği korunur veya U-014’te tanımlanan üyelik modeli
+- **Kanıt:** `OrgBirimi`/`OrgUyeligi`; `Order`/`Cart.sube`; mig `firmalar.0007`/`siparis.0004`; `test_org_f10_010`
 
 ### [F10-011] Satın alma yetki matrisi genişlemesi
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Security
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Security
 - **Bağımlılıklar:** F10-010
-- **Kabul kriterleri:** has_perm; rol string switch yok
+- **Kanıt:** `require_org_scope`; `manage_org` RBAC; rol string switch yok
 
 ### [F10-012] Harcama limiti motoru
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** F10-011, Order
-- **Kabul kriterleri:** Limit aşımı blok
+- **Kanıt:** `HarcamaLimiti` + `assert_order_limit` order create; `test_limit_onay_f10_012`
 
 ### [F10-013] Onay iş akışı (çok adımlı)
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F10-012, F4-050 (Order), F10-010 (org)
 - **Audit:** her onay kararı (AuditOlay)
-- **Kabul kriterleri:** Atlanan adım yok; tenant izolasyonu
+- **Kanıt:** `OnayTalebi` SM `onay_servisi`; audit her geçiş
 
 ### [F10-014] Onay kuyruğu UI
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Frontend
+- **Durum:** **KISMİ** · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-013
-- **Kabul kriterleri:** Yetkisiz onay butonu yok
+- **Kanıt:** salt-okunur admin (`OnayTalebiAdmin`/`HarcamaLimitiAdmin`); portal UI F9’a
 
 ### [F10-020] RFQ / RFQLine / RFQMessage modelleri
 
 - **Faz:** Faz 10
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** Catalog, Pricing
-- **Kabul kriterleri:** SM servisten
+- **Kanıt:** `rfq_servisi` SM; mig `siparis.0004`; `test_rfq_f10_020`
 
 ### [F10-021] Katalog dışı ürün talebi
 
@@ -362,11 +362,20 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F4-070] Legacy stok alanlarını read-only / kaldırma dilimi
 
 - **Faz:** Faz 4
-- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend — yazma kilidi; **kolon drop yok**
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend — yazma kilidi (tarihsel); kolon drop → **F4-070b**
 - **Bağımlılıklar:** F4-012, F4-002
-- **Kanıt:** `assert_legacy_stock_unchanged` (`Varyant.save` / `TedarikciTeklif.save`); `editable=False`; admin readonly + `list_editable`’dan `stok` çıkarıldı; mig `urunler.0009` / `fiyatlama.0014` (AlterField, veri kaybı yok)
-- **Test:** `stok.tests.test_legacy_stock_f4_070` **4 OK**
-- **Kalan (opsiyonel F4-070b):** kolon `RemoveField` — **ürün sahibi onayladı** (2026-11-09); uygulama ayrı dilim + `teklif_servisi` `stok_adet` kopya yolu temizliği; henüz kod yok
+- **Kanıt (F4-070):** `editable=False` + save freeze (sonra drop edildi); mig `urunler.0009` / `fiyatlama.0014`
+- **Devam:** F4-070b UYGULANDI
+
+### [F4-070b] Legacy stok kolon drop
+
+- **Faz:** Faz 4
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
+- **Bağımlılıklar:** F4-070; ürün sahibi **Kabul** (2026-11-09)
+- **Kanıt:** `Varyant.stok` + `TedarikciTeklif.stok_adet` RemoveField; `varyant_benzersiz_parca_stok` constraint drop; `dual_stock_envanter` silindi; `teklif_servisi` kopya yolu temiz; mig `urunler.0010` / `fiyatlama.0016` (`lock_timeout=2s`)
+- **Veri kaybı:** legacy ADET sayaç kolonları silinir — truth zaten ledger
+- **Test:** `stok.tests.test_legacy_stock_f4_070b` + warehouse/admin regresyon
+
 
 ### [F4-080] Quick Reorder (önceki siparişten)
 
@@ -497,20 +506,21 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F5-022] Tedarikçi hak ediş iskeleti (politika sonrası)
 
 - **Faz:** Faz 5
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** U-006 **Kabul**, F5-010
-- **Kapsam:** Placeholder model; oran sabitleme yok
-- **Politika (2026-11-09, Qubit Kabul):** hak ediş tetik = **QC PASS** (F6); vade günü konfig (varsayılan 0 = geçişte hak ediş kaydı)
-- **Kabul kriterleri:** iskelet + audit; production oran ayrı talimat
-- **Not:** Blocked kaldırıldı — kod dilimi açık talimatla başlar
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
+- **Bağımlılıklar:** U-006 **Kabul**, F5-010, F6-010
+- **Kanıt:** `TedarikciHakEdis`; `hak_edis_servisi.kaydet_qc_pass` (QC PASS hook); `SUPPLIER_ACCRUAL_VADE_GUN` (default 0 → HAKEDILDI); `fx_servisi.unpaid_supplier_has` bağ; mig `finans.0006`
+- **RBAC:** `manage_hak_edis` → PLATFORM_FINANCE (+ SUPER/ADMIN)
+- **Test:** `finans.tests.test_hak_edis_f5_022` **5 OK**
+- **Kapsam dışı:** üretim oranı / tutar sabitleme (`tutar` null)
 
 ### [F5-023] İade / mahsup hareketleri
 
 - **Faz:** Faz 5
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** U-004 **Kabul**, F6-030
-- **Politika (2026-11-09, Qubit Kabul):** v1 **ödeme iadesi yok**; mahsup/ledger yalnız açık talimat + F6-030 sonrası
-- **Kabul kriterleri:** Politika metni + test
+- **Kanıt:** `mahsup_servisi.iade_mahsup` → LedgerEntry MAHSUP ALACAK (platform↔alıcı); `odeme_iadesi_yap` fail-closed (U-004)
+- **Test:** `finans.tests.test_mahsup_f5_023` **3 OK**
+- **Politika:** v1 **ödeme iadesi yok**; mahsup isteğe bağlı (onay sonrası)
 
 ### [F5-030] Buyer finans özeti API (maskeli)
 
@@ -633,18 +643,19 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F6-030] Return/Dispute SM
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** U-004 **Kabul**, F6-020
-- **Politika (2026-11-09, Qubit Kabul):** v1 **stok-only iade SM**; ödeme iadesi / finans mahsup yok (F5-023 ayrı)
-- **Kabul kriterleri:** SM + audit; finans hareketi yok
-- **Not:** Blocked kaldırıldı — kod dilimi açık talimatla başlar
+- **Kanıt:** `ReturnRequest`/`ReturnLine` SM `TASLAK→INCELENIYOR→ONAYLANDI|REDDEDILDI|IPTAL`; TESLIM sevkiyat gate; `manage_return`; mig `lojistik.0003`
+- **Test:** `lojistik.tests.test_return_f6_030` **5 OK** (F6-031 ile)
+- **Politika:** v1 stok-only SM; mahsup F5-023 ayrı / isteğe bağlı
 
 ### [F6-031] İade stok hareketi
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** F6-030, F4-011
-- **Kabul kriterleri:** Ledger ile iade
+- **Kanıt:** `return_servisi.onayla` → `StockMovement.IADE` + `on_hand` artışı; kısmi miktar
+- **Test:** `test_return_f6_030` happy path
 
 ### [F6-032] Platform uyuşmazlık ops kuyruğu
 
@@ -692,83 +703,81 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F7-010] Buyer API yüzey standardı
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** PRE-003, F4-060
-- **Gizlilik:** kör havuz zorunlu test
-- **Kabul kriterleri:** Maliyet/tedarikçi sızıntı assert
+- **Kanıt:** `assert_masked` + `/api/v1/catalog/`; `present_order` maske; `test_f7_api_std`
 
 ### [F7-011] Supplier API yüzey standardı
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** PRE-003
-- **Kabul kriterleri:** Yalnız kendi teklif/iş; alıcı kimliği yok
+- **Kanıt:** `/api/v1/supplier/offers|stock/`; alıcı kimliği yok
 
 ### [F7-012] Admin/operations API
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** PRE-003, view_all
-- **Kabul kriterleri:** Perm matrisi
+- **Kanıt:** `/api/v1/ops/orders/summary/`; view_all zorunlu
 
 ### [F7-013] Rate limiting
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** PRE-002
-- **Kabul kriterleri:** Limit aşımında 429
+- **Kanıt:** buyer/supplier/ops throttle scopes + mevcut 429 test
 
 ### [F7-014] Hata sözleşmesi (problem+json veya proje standardı)
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** PRE-002
-- **Kabul kriterleri:** Doküman + test
+- **Kanıt:** `problem_exception_handler` (`type`/`title`/`status`/`detail`)
 
 ### [F7-015] API versioning politikası
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Product
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Product
 - **Bağımlılıklar:** PRE-004
-- **Kabul kriterleri:** ADR notu
+- **Kanıt:** `/api/v1/` sabit; `settings.API_VERSION=v1` (yeni major yok)
 
 ### [F7-020] Webhook outbox modeli
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** Order events
-- **Kabul kriterleri:** Retry + idempotent delivery kaydı
+- **Kanıt:** `WebhookDelivery` + `webhook_delivery_servisi`; `test_webhook_f7_020`
 
 ### [F7-021] ERP adapter iskeleti (SAP hedefi)
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Integration
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Integration
 - **Bağımlılıklar:** F7-020
 - **Kapsam dışı:** Canlı SAP
-- **Kabul kriterleri:** Fake ERP roundtrip test
+- **Kanıt:** `integrations.erp.FakeERPAdapter` roundtrip
 
 ### [F7-022] Ödeme/lojistik connector kayıt defteri
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Integration
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Integration
 - **Bağımlılıklar:** F5-020, F6-021
-- **Kabul kriterleri:** Tek registry
+- **Kanıt:** `integrations.ConnectorRegistry` (payment+carrier+erp+crm)
 
 ### [F7-023] CRM sync iskeleti
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Integration
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Integration
 - **Bağımlılıklar:** F7-020
-- **Kabul kriterleri:** Opt-in mapping
+- **Kanıt:** `FakeCRMAdapter` + `CRM_SYNC_ENABLED` opt-in
 
 ### [F7-024] EDI / Punchout iskeleti
 
 - **Faz:** Faz 7
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Integration
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Integration
 - **Bağımlılıklar:** PRE-*, F7-010, F4-050, kör havuz kuralları
-- **Amaç:** Kurumsal satın alma sistemi ↔ Kuyumbank sipariş/katalog köprüsü
 - **Kapsam dışı:** Tam SAP sertifikasyonu
-- **Kabul kriterleri:** Tenant + maske; idempotent mesaj; secret env-only
+- **Kanıt:** `process_inbound_punchout` maske + idempotent; `test_integrations_f7_021`
 
 ### [F8-001] CI pipeline (lint + test PG)
 
@@ -1033,7 +1042,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
   B) Kullanıcı çoklu firma (ADR-0003 kırılır — ağır migrate)  
   C) Şube ayrı tenant (kör havuz/finans karmaşası — önerilmez)
 - **Önerilen:** **A** — F4’te şube zorunlu değil; F10’da model
-- **Karar:** **A** — ADR-0003 metni değişmez; şube/org için **ayrı ADR** gerekir; kod/migration bu Kabul ile açılmaz
+- **Karar:** **A** — ADR-0003 metni değişmez; uygulama **ADR-0015** ile açıldı (2026-11-09 plan onayı = Kabul)
 - **Onaylayacak:** Ürün sahibi (+ güvenlik)
 - **Not:** Agent ADR-0003’ü sessizce değiştiremez
 
@@ -1094,7 +1103,7 @@ Agent bu tabloyu Kabul etmez. Kart ayrıntıları yukarıda.
 | U-016 | ADR-0001 doküman düzeni | Her bilgi tek yerde | **Kabul** (2026-11-09, Emre) |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) |
 | B-06 | KDV | KDV yok / proforma devam | **Kabul** (2026-11-09, Qubit) |
-| ADR-0014 | Karlılık sim | Sim UYGULANDI; quote hedef KS-6 ayrı dilim | **Kabul** (2026-11-09, Qubit) |
+| ADR-0014 | Karlılık sim | Sim + KS-6 quote UYGULANDI | **Kabul** (2026-11-09, Qubit) |
 | U-006 vade netliği | Hak ediş tetik | **QC PASS** | **Kabul** (2026-11-09, Qubit) |
 | U-004 iade netliği | Return v1 | **stok-only**; ödeme iadesi yok | **Kabul** (2026-11-09, Qubit) |
-| F4-070b | Legacy stok kolon drop | RemoveField dilimi onaylı | **Kabul** (2026-11-09, Qubit) |
+| F4-070b | Legacy stok kolon drop | RemoveField UYGULANDI (`0010`/`0016`) | **Kabul** (2026-11-09, Qubit) |

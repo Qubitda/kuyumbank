@@ -51,7 +51,7 @@ Kör havuz ve Decimal kuralları bozulmaz.
 2. **F6-010** QualityInspection + SM + perm seed ← sıradaki  
 3. F6-011 ölçüm + tolerans motoru  
 4. F6-020 Shipment + QC gate (`lojistik` app)  
-5. F6-021…023 → F6-012 → F6-030 (U-004 sonrası)
+5. F6-021…023 → F6-012 → F6-030/031 (U-004) **UYGULANDI**
 
 ## Kabul checklist
 

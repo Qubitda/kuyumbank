@@ -4,6 +4,7 @@ from rest_framework.schemas import get_schema_view
 
 from api.views import (
     BulkOrderCreateView,
+    BuyerCatalogListView,
     BuyerFinanceSummaryView,
     CartDetailView,
     CartMineView,
@@ -15,11 +16,14 @@ from api.views import (
     OpsFinanceCariListView,
     OpsFinanceLedgerListView,
     OpsFinanceSummaryView,
+    OpsOrderSummaryView,
     OrderDetailView,
     OrderListView,
     PaymentWebhookView,
     ShipmentDetailView,
     ShipmentListView,
+    SupplierOfferListView,
+    SupplierStockSummaryView,
 )
 
 schema_view = get_schema_view(
@@ -33,6 +37,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("health/", HealthView.as_view(), name="api-health"),
     path("me/", MeView.as_view(), name="api-me"),
+    path("catalog/", BuyerCatalogListView.as_view(), name="api-buyer-catalog"),
     path("carts/me/", CartMineView.as_view(), name="api-cart-mine"),
     path("carts/<int:pk>/", CartDetailView.as_view(), name="api-cart-detail"),
     path("checkouts/", CheckoutCreateView.as_view(), name="api-checkout-create"),
@@ -44,6 +49,16 @@ urlpatterns = [
         "shipments/<int:pk>/",
         ShipmentDetailView.as_view(),
         name="api-shipment-detail",
+    ),
+    path(
+        "supplier/offers/",
+        SupplierOfferListView.as_view(),
+        name="api-supplier-offers",
+    ),
+    path(
+        "supplier/stock/",
+        SupplierStockSummaryView.as_view(),
+        name="api-supplier-stock",
     ),
     path("credit/me/", CreditMineView.as_view(), name="api-credit-mine"),
     path("credit/check/", CreditCheckView.as_view(), name="api-credit-check"),
@@ -58,6 +73,11 @@ urlpatterns = [
         "ops/finance/ledger/",
         OpsFinanceLedgerListView.as_view(),
         name="api-ops-finance-ledger",
+    ),
+    path(
+        "ops/orders/summary/",
+        OpsOrderSummaryView.as_view(),
+        name="api-ops-orders-summary",
     ),
     path(
         "payments/webhook/",

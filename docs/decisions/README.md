@@ -19,8 +19,9 @@
 | [ADR-0010](ADR-0010-pricelock.md) | PriceLock L-01…L-11 | Tek lock/quote; TTL=quote; L-07 perm; L-11 OrderLine | **Kabul** | 3.7+F4 | PriceLock+Order | L-01…L-11 UYGULANDI | 0010–0012; siparis.0003 |
 | [ADR-0011](ADR-0011-faz4-ticari-cekirdek.md) | Faz 4 ticari çekirdek | Stok üçlüsü + cart/order + Lock→Order | **Kabul** | 4 | Inventory/Order | F4 dilim 1–8 + PRE-001…004 UYGULANDI | [ADR-0011](ADR-0011-faz4-ticari-cekirdek.md) |
 | [ADR-0012](ADR-0012-medusa-p0-p1-paketi.md) | Medusa-türev P0/P1 (audit/FX/hedge/cari) | F5 paket sınırları F5-K1…K10 | **Kabul** (2026-11-09, Emre) | 5 | Audit/Finance | Tasarım Kabul; kod ayrı talimat | [ADR-0012](ADR-0012-medusa-p0-p1-paketi.md) |
-| [ADR-0013](ADR-0013-faz6-qc-lojistik.md) | Faz 6 QC + lojistik | F6-K1…K12 tolerans/inspection/shipment gate | **Kabul** (2026-11-09) | 6 | Quality/Logistics | F6-010…023 + F6-012 UYGULANDI; F6-030 politika | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) |
-| [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam (uygulama ayrı) | **Kabul** (2026-11-09, Qubit) | — | Pricing (yardımcı) | Sim UYGULANDI; quote dilimi PLANLANDI | `karlilik_simulasyonu` |
+| [ADR-0013](ADR-0013-faz6-qc-lojistik.md) | Faz 6 QC + lojistik | F6-K1…K12 tolerans/inspection/shipment gate | **Kabul** (2026-11-09) | 6 | Quality/Logistics | F6-010…031 + F6-012 UYGULANDI | [ADR-0013](ADR-0013-faz6-qc-lojistik.md) |
+| [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam quote | **Kabul** (2026-11-09, Qubit) | — | Pricing | Sim + KS-6 quote UYGULANDI | `karlilik_simulasyonu` + `quote(hedef_toplam=)` |
+| [ADR-0015](ADR-0015-account-hierarchy.md) | Account Hierarchy (U-014 A) | OrgBirimi firma-içi; tenant=Firma; Order.sube nullable | **Kabul** (2026-11-09, Qubit plan) | 10 | Identity/Org | F10-010+ dilimler | [ADR-0015](ADR-0015-account-hierarchy.md) |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |

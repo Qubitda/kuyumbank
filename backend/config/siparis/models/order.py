@@ -16,7 +16,15 @@ class Order(models.Model):
         "firmalar.Firma",
         on_delete=models.PROTECT,
         related_name="orders",
-        help_text="Tenant sınırı. Şube FK yok (U-014 Bekliyor).",
+        help_text="Tenant sınırı (ADR-0003). Org scope ayrı: sube (ADR-0015).",
+    )
+    sube = models.ForeignKey(
+        "firmalar.OrgBirimi",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="orders",
+        help_text="Opsiyonel org/şube (OH-3); tenant değil.",
     )
     checkout_attempt = models.OneToOneField(
         "siparis.CheckoutAttempt",
@@ -67,6 +75,10 @@ class Order(models.Model):
         if firma is not None and not getattr(firma, "alici_mi", False):
             raise ValidationError(
                 {"alici_firma": "Sipariş yalnız alıcı firmaya ait olabilir."}
+            )
+        if self.sube_id and firma is not None and self.sube.firma_id != firma.pk:
+            raise ValidationError(
+                {"sube": "Org birimi sipariş firmasına ait değil (OH-4)."}
             )
 
     def save(self, *args, **kwargs):

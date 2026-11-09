@@ -14,7 +14,15 @@ class Cart(models.Model):
         "firmalar.Firma",
         on_delete=models.PROTECT,
         related_name="cart",
-        help_text="Tenant sınırı (ADR-0003). Şube FK yok (U-014 Bekliyor).",
+        help_text="Tenant sınırı (ADR-0003). Org scope: sube (ADR-0015 OH-3).",
+    )
+    sube = models.ForeignKey(
+        "firmalar.OrgBirimi",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="carts",
+        help_text="Opsiyonel org/şube; tenant değil.",
     )
     olusturan = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -40,6 +48,10 @@ class Cart(models.Model):
         if firma is not None and not getattr(firma, "alici_mi", False):
             raise ValidationError(
                 {"alici_firma": "Sepet yalnız alıcı firmaya ait olabilir."}
+            )
+        if self.sube_id and firma is not None and self.sube.firma_id != firma.pk:
+            raise ValidationError(
+                {"sube": "Org birimi sepet firmasına ait değil (OH-4)."}
             )
 
     def save(self, *args, **kwargs):

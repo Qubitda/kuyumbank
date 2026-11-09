@@ -94,9 +94,20 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": env("DRF_THROTTLE_ANON", default="60/min"),
         "user": env("DRF_THROTTLE_USER", default="600/min"),
+        # F7-013: yüzey bazlı ek scope (view throttle_classes)
+        "buyer": env("DRF_THROTTLE_BUYER", default="300/min"),
+        "supplier": env("DRF_THROTTLE_SUPPLIER", default="300/min"),
+        "ops": env("DRF_THROTTLE_OPS", default="600/min"),
     },
+    "EXCEPTION_HANDLER": "api.exception_handler.problem_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
 }
+
+# F7-015: API major sürüm yolu sabit /api/v1/ (breaking change → yeni major).
+API_VERSION = "v1"
+
+# F7-023 CRM sync opt-in (varsayılan kapalı)
+CRM_SYNC_ENABLED = env.bool("CRM_SYNC_ENABLED", default=False)
 
 AUTH_USER_MODEL = "firmalar.Kullanici"
 
@@ -201,5 +212,7 @@ CARRIER_PROVIDER = env("CARRIER_PROVIDER", default="fake")
 CARRIER_FAKE_FORCE_FAIL = env.bool("CARRIER_FAKE_FORCE_FAIL", default=False)
 # F6-022: True → teslim_et öncesi POD zorunlu (ADR-0013: varsayılan opsiyonel).
 SHIPMENT_POD_REQUIRED = env.bool("SHIPMENT_POD_REQUIRED", default=False)
+# F5-022: QC PASS sonrası hak ediş vade günü (0 = geçişte HAKEDILDI).
+SUPPLIER_ACCRUAL_VADE_GUN = env.int("SUPPLIER_ACCRUAL_VADE_GUN", default=0)
 # F5-021 webhook: boşsa endpoint 401 (fail-closed). Secret koda yazılmaz.
 PAYMENT_WEBHOOK_SECRET = env("PAYMENT_WEBHOOK_SECRET", default="")

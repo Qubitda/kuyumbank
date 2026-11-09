@@ -6,6 +6,7 @@ from finans.models import (
     LedgerEntry,
     PaymentIntent,
     PaymentWebhookEvent,
+    TedarikciHakEdis,
 )
 
 
@@ -91,4 +92,23 @@ class PaymentWebhookEventAdmin(_ImmutableAdmin):
     list_filter = ("provider", "sonuc", "event_type")
     search_fields = ("event_id",)
     readonly_fields = [f.name for f in PaymentWebhookEvent._meta.fields]
+
+
+@admin.register(TedarikciHakEdis)
+class TedarikciHakEdisAdmin(_ImmutableAdmin):
+    """Salt okunur; yazım hak_edis_servisi (F5-022)."""
+
+    list_display = (
+        "id",
+        "order",
+        "tedarikci_firma",
+        "durum",
+        "gram",
+        "vade_tarihi",
+        "olusturma_tarihi",
+    )
+    list_filter = ("durum",)
+    list_select_related = ("order", "tedarikci_firma", "quality_inspection")
+    search_fields = ("idempotency_key",)
+    readonly_fields = [f.name for f in TedarikciHakEdis._meta.fields]
 

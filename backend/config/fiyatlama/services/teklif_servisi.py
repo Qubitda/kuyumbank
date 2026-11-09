@@ -378,7 +378,6 @@ def yeni_versiyon_olustur(
                     else iscilik_override
                 ),
                 temin_tipi=eski.temin_tipi,
-                stok_adet=eski.stok_adet,
                 uretim_suresi_gun=eski.uretim_suresi_gun,
                 oncelik=eski.oncelik,
                 durum=TedarikciTeklif.Durum.ONAY_BEKLIYOR,

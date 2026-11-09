@@ -189,7 +189,6 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         "birim_fiyat",
         "para_birimi",
         "temin_tipi",
-        "stok_adet",
         "durum",
     )
     list_filter = ("fiyat_modeli", "temin_tipi", "durum")
@@ -218,7 +217,6 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         "iscilik_override",
         "gecerlilik_baslangic",
         "gecerlilik_bitis",
-        "stok_adet",
         "oncelik",
         "para_birimi",
         "temin_tipi",
@@ -288,9 +286,6 @@ class TedarikciTeklifAdmin(admin.ModelAdmin):
         for f in self._servis_alanlari:
             if f not in ro:
                 ro.append(f)
-        # F4-070: legacy stok_adet her durumda readonly
-        if "stok_adet" not in ro:
-            ro.append("stok_adet")
         if not can_view_all_tenants(request.user) and "tedarikci" not in ro:
             ro.append("tedarikci")
         # ADR-0009 H2: oncelik yalnız platform (view_all) yazar
@@ -449,7 +444,7 @@ class FiyatSozlesmesiKalemiAdmin(admin.ModelAdmin):
 
 @admin.register(TeklifTasMaliyeti)
 class TeklifTasMaliyetiAdmin(admin.ModelAdmin):
-    """K-011: teklif taş maliyeti (eski FiyatlamaUrunTasiAdmin)."""
+    """K-011: teklif taş maliyeti."""
 
     list_display = ("teklif", "tas_grubu", "adet", "toplam_karat", "bedel", "para_birimi")
     list_filter = ("tas_grubu", "para_birimi")
@@ -478,10 +473,6 @@ class TeklifTasMaliyetiAdmin(admin.ModelAdmin):
             if not can_view_all_tenants(request.user):
                 return False
         return super().has_module_permission(request)
-
-
-# Geriye dönük test import adı
-FiyatlamaUrunTasiAdmin = TeklifTasMaliyetiAdmin
 
 
 class PriceQuoteLineInline(admin.TabularInline):

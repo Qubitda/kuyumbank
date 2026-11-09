@@ -113,6 +113,15 @@ def hesapla_teklif_kalemleri(
             gram=gram,
             **kwargs,
         )
+    elif fiyat_modeli == "HEDEF_TOPLAM":
+        # KS-6: birim_fiyat = hedef_toplam (çağıran doldurur)
+        if bf is None:
+            raise ValueError("HEDEF_TOPLAM için birim_fiyat (hedef_toplam) zorunlu.")
+        sonuc = fiyat_hesaplama.hesapla_hedef_toplam(
+            hedef_toplam=bf,
+            gram=gram if gram is not None else Decimal("0"),
+            para_birimi=hedef_para_birimi,
+        )
     else:
         raise ValueError(f"Geçersiz fiyat_modeli: {fiyat_modeli!r}")
 

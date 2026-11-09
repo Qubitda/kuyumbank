@@ -4,8 +4,10 @@ from . import (
     credit_servisi,
     finans_audit,
     fx_servisi,
+    hak_edis_servisi,
     hedge_servisi,
     ledger_servisi,
+    mahsup_servisi,
     ops_finans_servisi,
     payment_servisi,
     webhook_servisi,
@@ -22,4 +24,6 @@ __all__ = [
     "payment_servisi",
     "finans_audit",
     "webhook_servisi",
+    "hak_edis_servisi",
+    "mahsup_servisi",
 ]

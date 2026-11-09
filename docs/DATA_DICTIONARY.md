@@ -71,6 +71,22 @@ FirmaBankaHesabi(id, firma, banka_adi, iban, para_birimi, aktif)
 | `para_birimi` | CharField | max 10 |  |  |
 | `aktif` | BooleanField |  |  |  |
 
+### HarcamaLimiti
+
+HarcamaLimiti(id, firma, org_birimi, donem, tutar, para_birimi, aktif, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
+| `org_birimi` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null | Null = firma geneli. |
+| `donem` | CharField | max 16, choices |  |  |
+| `tutar` | DecimalField | 18,2 |  |  |
+| `para_birimi` | CharField | max 3 |  |  |
+| `aktif` | BooleanField |  |  |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `harcamalimiti_tutar_pozitif` (CheckConstraint); `harcamalimiti_donem_gecerli` (CheckConstraint)
+
 ### Kullanici
 
 Sistem kullanıcısı: tek firma + tek iş rolü (ADR-0003).
@@ -92,6 +108,54 @@ Sistem kullanıcısı: tek firma + tek iş rolü (ADR-0003).
 | `groups` | ManyToManyField | auth.Group | blank | Bu kullanıcının ait olduğu gruplar. Bir kullanıcı kendi gruplarının her birine verilmiş olan tüm ... |
 | `user_permissions` | ManyToManyField | auth.Permission | blank | Bu kullanıcı için belirli izinler. |
 
+### OnayTalebi
+
+OnayTalebi(id, firma, org_birimi, order, durum, tutar, para_birimi, gerekce, olusturan, karar_veren, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
+| `org_birimi` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null |  |
+| `order` | ForeignKey | siparis.Order (PROTECT) | null |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `tutar` | DecimalField | 18,2 |  |  |
+| `para_birimi` | CharField | max 3 |  |  |
+| `gerekce` | CharField | max 255 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `karar_veren` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `onaytalebi_durum_gecerli` (CheckConstraint); `onaytalebi_tutar_pozitif` (CheckConstraint)
+
+### OrgBirimi
+
+OrgBirimi(id, firma, parent, kod, ad, aktif, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `firma` | ForeignKey | firmalar.Firma (PROTECT) |  | Tenant sınırı; org firma dışına taşamaz (OH-1). |
+| `parent` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null |  |
+| `kod` | CharField | max 32 |  |  |
+| `ad` | CharField | max 128 |  |  |
+| `aktif` | BooleanField |  |  |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `orgbirimi_firma_kod_uniq` (UniqueConstraint)
+
+### OrgUyeligi
+
+OrgUyeligi(id, kullanici, org_birimi, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `kullanici` | ForeignKey | firmalar.Kullanici (CASCADE) |  |  |
+| `org_birimi` | ForeignKey | firmalar.OrgBirimi (CASCADE) |  |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `orguyeligi_kullanici_org_uniq` (UniqueConstraint)
+
 ### OutboxMessage
 
 OutboxMessage(id, event_type, payload, durum, attempts, last_error, created_at, processed_at)
@@ -107,6 +171,24 @@ OutboxMessage(id, event_type, payload, durum, attempts, last_error, created_at, 
 | `processed_at` | DateTimeField |  | null |  |
 
 **Kısıtlar:** `outbox_durum_gecerli` (CheckConstraint)
+
+### WebhookDelivery
+
+WebhookDelivery(id, outbox, endpoint_key, idempotency_key, durum, attempts, last_error, response_code, created_at, delivered_at)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `outbox` | ForeignKey | firmalar.OutboxMessage (CASCADE) |  |  |
+| `endpoint_key` | CharField | max 64 |  | Hedef anahtar (fake/erp/crm); URL/secret yok. |
+| `idempotency_key` | CharField | max 128 |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `attempts` | PositiveIntegerField |  |  |  |
+| `last_error` | CharField | max 255 | blank |  |
+| `response_code` | PositiveSmallIntegerField |  | null |  |
+| `created_at` | DateTimeField |  | blank |  |
+| `delivered_at` | DateTimeField |  | null |  |
+
+**Kısıtlar:** `webhook_delivery_idempotent_uniq` (UniqueConstraint); `webhook_delivery_durum_gecerli` (CheckConstraint)
 
 ## `fiyatlama`
 
@@ -281,7 +363,7 @@ Quote kalem satırı — uygulama + DB immutability.
 
 ### TedarikciTeklif
 
-TedarikciTeklif(id, varyant, tedarikci, tedarikci_kodu, versiyon, onceki_teklif, gecerlilik_baslangic, gecerlilik_bitis, fiyat_modeli, gram, gram_tolerans, birim_fiyat, para_birimi, iscilik_override, temin_tipi, stok_adet, uretim_suresi_gun, oncelik, durum, onaylayan, onay_zamani, eslestirme_durumu, eslestirme_guveni, eslestiren_kullanici, eslestirme_kaniti, esdegerlik_seviyesi, hedef_urun, olusturma_tarihi, guncelleme_tarihi)
+TedarikciTeklif(id, varyant, tedarikci, tedarikci_kodu, versiyon, onceki_teklif, gecerlilik_baslangic, gecerlilik_bitis, fiyat_modeli, gram, gram_tolerans, birim_fiyat, para_birimi, iscilik_override, temin_tipi, uretim_suresi_gun, oncelik, durum, onaylayan, onay_zamani, eslestirme_durumu, eslestirme_guveni, eslestiren_kullanici, eslestirme_kaniti, esdegerlik_seviyesi, hedef_urun, olusturma_tarihi, guncelleme_tarihi)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
@@ -299,7 +381,6 @@ TedarikciTeklif(id, varyant, tedarikci, tedarikci_kodu, versiyon, onceki_teklif,
 | `para_birimi` | CharField | max 3 |  |  |
 | `iscilik_override` | DecimalField | 12,2 | null |  |
 | `temin_tipi` | CharField | max 16, choices |  |  |
-| `stok_adet` | PositiveIntegerField |  |  | LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). F4-070: güncelleme yazımı kapalı; stok... |
 | `uretim_suresi_gun` | PositiveIntegerField |  | null |  |
 | `oncelik` | PositiveIntegerField |  |  |  |
 | `durum` | CharField | max 16, choices |  |  |
@@ -318,7 +399,7 @@ TedarikciTeklif(id, varyant, tedarikci, tedarikci_kodu, versiyon, onceki_teklif,
 
 ### TeklifTasMaliyeti
 
-Teklife bağlı taş maliyet satırı (eski ad: fiyatlama.UrunTasi).
+Teklife bağlı taş maliyet satırı (K-011).
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
@@ -429,6 +510,28 @@ PaymentWebhookEvent(id, provider, event_id, event_type, payload, payment_intent,
 
 **Kısıtlar:** `paymentwebhook_provider_event_uniq` (UniqueConstraint)
 
+### TedarikciHakEdis
+
+Oran/üretim tutarı v1'de sabitlenmez (tutar null olabilir).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `order` | ForeignKey | siparis.Order (PROTECT) |  |  |
+| `quality_inspection` | ForeignKey | kalite.QualityInspection (PROTECT) |  |  |
+| `tedarikci_firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `gram` | DecimalField | 18,4 |  | FX unpaid_supplier HAS payı (F5-K6). |
+| `tutar` | DecimalField | 18,2 | null | Oran politikası sonrası; v1 null (F5-022). |
+| `para_birimi` | CharField | max 3 | blank |  |
+| `vade_tarihi` | DateTimeField |  |  |  |
+| `hak_edis_tarihi` | DateTimeField |  | null |  |
+| `idempotency_key` | CharField | max 64 |  |  |
+| `aciklama` | CharField | max 255 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  |  |  |
+
+**Kısıtlar:** `tedarikcihakedis_idempotency_uniq` (UniqueConstraint); `tedarikcihakedis_insp_tedarikci_uniq` (UniqueConstraint); `tedarikcihakedis_durum_gecerli` (CheckConstraint); `tedarikcihakedis_gram_negatif_degil` (CheckConstraint)
+
 ## `kalite`
 
 ### QualityInspection
@@ -487,6 +590,38 @@ ProofOfDelivery(id, shipment, teslim_alan, notlar, belgeler_ref, olusturan, olus
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 
+### ReturnLine
+
+ReturnLine(id, return_request, order_line, miktar, birim)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `return_request` | ForeignKey | lojistik.ReturnRequest (PROTECT) |  |  |
+| `order_line` | ForeignKey | siparis.OrderLine (PROTECT) |  |  |
+| `miktar` | DecimalField | 18,6 |  |  |
+| `birim` | CharField | max 8, choices |  |  |
+
+**Kısıtlar:** `returnline_request_orderline_uniq` (UniqueConstraint); `returnline_miktar_pozitif` (CheckConstraint); `returnline_birim_gecerli` (CheckConstraint)
+
+### ReturnRequest
+
+ReturnRequest(id, order, shipment, durum, sebep, stok_iade_yapildi, finans_mahsup_yapildi, notlar, olusturan, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `order` | ForeignKey | siparis.Order (PROTECT) |  |  |
+| `shipment` | ForeignKey | lojistik.Shipment (PROTECT) |  | İade için teslim edilmiş sevkiyat (F6-030). |
+| `durum` | CharField | max 16, choices |  |  |
+| `sebep` | CharField | max 255 |  |  |
+| `stok_iade_yapildi` | BooleanField |  |  | F6-031: ONAYLANDI sonrası ledger IADE yazıldı mı. |
+| `finans_mahsup_yapildi` | BooleanField |  |  | F5-023: mahsup ledger yazıldı mı (ödeme iadesi yok). |
+| `notlar` | CharField | max 255 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `returnrequest_durum_gecerli` (CheckConstraint)
+
 ### Shipment
 
 Shipment(id, order, durum, takip_no, notlar, olusturan, olusturma_tarihi, guncelleme_tarihi)
@@ -544,7 +679,8 @@ Firma başına tek sepet. Stok düşürmez; checkout’ta lock+rezervasyon (F4-0
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
-| `alici_firma` | OneToOneField | firmalar.Firma (PROTECT) | benzersiz | Tenant sınırı (ADR-0003). Şube FK yok (U-014 Bekliyor). |
+| `alici_firma` | OneToOneField | firmalar.Firma (PROTECT) | benzersiz | Tenant sınırı (ADR-0003). Org scope: sube (ADR-0015 OH-3). |
+| `sube` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null | Opsiyonel org/şube; tenant değil. |
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
@@ -585,11 +721,12 @@ CheckoutAttempt(id, alici_firma, cart, idempotency_key, durum, sonuc, hata_mesaj
 
 ### Order
 
-Order(id, alici_firma, checkout_attempt, durum, idempotency_key, olusturan, olusturma_tarihi, guncelleme_tarihi)
+Order(id, alici_firma, sube, checkout_attempt, durum, idempotency_key, olusturan, olusturma_tarihi, guncelleme_tarihi)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
-| `alici_firma` | ForeignKey | firmalar.Firma (PROTECT) |  | Tenant sınırı. Şube FK yok (U-014 Bekliyor). |
+| `alici_firma` | ForeignKey | firmalar.Firma (PROTECT) |  | Tenant sınırı (ADR-0003). Org scope ayrı: sube (ADR-0015). |
+| `sube` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null | Opsiyonel org/şube (OH-3); tenant değil. |
 | `checkout_attempt` | OneToOneField | siparis.CheckoutAttempt (PROTECT) | benzersiz |  |
 | `durum` | CharField | max 16, choices |  |  |
 | `idempotency_key` | CharField | max 64 |  |  |
@@ -617,6 +754,48 @@ Kur değişimi satır tutarını etkilemez — snapshot alanları sabit.
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 
 **Kısıtlar:** `orderline_miktar_pozitif` (CheckConstraint); `orderline_birim_gecerli` (CheckConstraint); `orderline_birim_fiyat_negatif_degil` (CheckConstraint); `orderline_satir_tutar_negatif_degil` (CheckConstraint)
+
+### RFQ
+
+RFQ(id, alici_firma, sube, baslik, durum, olusturan, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `alici_firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
+| `sube` | ForeignKey | firmalar.OrgBirimi (PROTECT) | null |  |
+| `baslik` | CharField | max 200 |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `rfq_durum_gecerli` (CheckConstraint)
+
+### RFQLine
+
+RFQLine(id, rfq, aciklama, miktar, birim, varyant)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `rfq` | ForeignKey | siparis.RFQ (CASCADE) |  |  |
+| `aciklama` | CharField | max 255 |  |  |
+| `miktar` | DecimalField | 18,6 |  |  |
+| `birim` | CharField | max 8 |  |  |
+| `varyant` | ForeignKey | urunler.Varyant (SET_NULL) | null |  |
+
+**Kısıtlar:** `rfqline_miktar_pozitif` (CheckConstraint)
+
+### RFQMessage
+
+Platform aracılı mesaj; alıcı↔tedarikçi kimliği yok (kör).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `rfq` | ForeignKey | siparis.RFQ (CASCADE) |  |  |
+| `govde` | TextField |  |  |  |
+| `gonderen_rol` | CharField | max 32 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
 
 ## `stok`
 
@@ -1097,11 +1276,10 @@ Sepete eklenen, stoku ve ağırlığı olan satış birimi (SKU).
 | `gram_bandi_max` | DecimalField | 10,3 | null |  |
 | `sabit_fiyat` | DecimalField | 14,2 | null | Yalnızca fiyat tipi 'Sabit fiyat' olan ürünlerde. |
 | `ek_bedel` | DecimalField | 14,2 |  | Kutu, sertifika, gravür gibi kalemlerin toplamı. |
-| `stok` | PositiveIntegerField |  |  | LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). F4-070: güncelleme yazımı kapalı; stok... |
 | `benzersiz_parca` | BooleanField |  |  | Tek adet, tekrar üretilmeyen parça (ör. sertifikalı tek taş). |
 | `aktif` | BooleanField |  |  |  |
 
-**Kısıtlar:** `benzersiz_varyant_renk_beden` (UniqueConstraint); `benzersiz_varyant_beden_renksiz` (UniqueConstraint); `benzersiz_varyant_renk_bedensiz` (UniqueConstraint); `benzersiz_varyant_eksensiz` (UniqueConstraint); `varyant_gram_pozitif` (CheckConstraint); `varyant_sabit_fiyat_pozitif` (CheckConstraint); `varyant_ek_bedel_negatif_degil` (CheckConstraint); `varyant_benzersiz_parca_stok` (CheckConstraint)
+**Kısıtlar:** `benzersiz_varyant_renk_beden` (UniqueConstraint); `benzersiz_varyant_beden_renksiz` (UniqueConstraint); `benzersiz_varyant_renk_bedensiz` (UniqueConstraint); `benzersiz_varyant_eksensiz` (UniqueConstraint); `varyant_gram_pozitif` (CheckConstraint); `varyant_sabit_fiyat_pozitif` (CheckConstraint); `varyant_ek_bedel_negatif_degil` (CheckConstraint)
 
 ### YasGrubu
 

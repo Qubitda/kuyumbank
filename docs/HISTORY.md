@@ -203,3 +203,30 @@ B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-0
 - Qubit: ADR-0014, B-01 (v1=0), B-06 (KDV yok), U-006 vade=**QC PASS**, U-004 iade=**stok-only**, F4-070b drop onayı.
 - F5-022 / F5-023 / F6-030 **Blocked → Backlog** (kod ayrı talimat).
 - Kod bu commit’te: F6-011…023, F6-012, karlılık sim.
+
+### 2026-11-09 — F6-030/031 + F5-022/023 (kalan politika dilimleri)
+- **F6-030/031:** `ReturnRequest`/`ReturnLine` SM; TESLIM gate; ONAYLANDI → stok IADE; `manage_return`; mig `lojistik.0003`.
+- **F5-022:** `TedarikciHakEdis`; QC PASS hook; `SUPPLIER_ACCRUAL_VADE_GUN`; `unpaid_supplier_has`; mig `finans.0006`.
+- **F5-023:** `mahsup_servisi` MAHSUP ALACAK; `odeme_iadesi_yap` fail-closed (U-004).
+- Odaklı test: return 5 + hak ediş 5 + mahsup 3 + QC/FX regresyon = **24 OK**.
+- **Sıradaki:** F4-070b kolon drop veya ADR-0014 KS-6 (açık talimat).
+
+### 2026-11-09 — F4-070b Legacy stok kolon drop
+- `Varyant.stok` + `TedarikciTeklif.stok_adet` RemoveField; `varyant_benzersiz_parca_stok` drop.
+- `dual_stock_envanter` + F4-070 yazma-kilidi testleri silindi; `teklif_servisi` kopya yolu temiz.
+- Mig `urunler.0010` / `fiyatlama.0016` (`lock_timeout=2s`); **veri kaybı bilinçli** (legacy sayaç).
+- **Sıradaki:** ADR-0014 KS-6 (quote bağ) veya F7/F10.
+
+### 2026-11-09 — KS-6 hedef toplam quote + eski alias temizliği
+- `quote(hedef_toplam=)` → `HEDEF_TOPLAM` kalem; platform `manage_sozlesme`; banka/GV yok (KS-4).
+- Kaldırıldı: `fiyatlama.models.UrunTasi` alias, `FiyatlamaUrunTasiAdmin` alias.
+- Mig: tümü uygulandı (onaylı; pending yok). Test odaklı **28 OK**.
+- **Sıradaki:** U-014/F10 org ADR veya F7.
+
+### 2026-11-09 — F10 Account Hierarchy + F7 API/entegrasyon iskeleti
+- **ADR-0015** Account Hierarchy **Kabul** (plan onayı = ürün sahibi).
+- F10-010…013/020: `OrgBirimi`/`OrgUyeligi`, `HarcamaLimiti`, `OnayTalebi`, RFQ SM; `Order`/`Cart.sube` nullable.
+- F7-010…015: maske, buyer/supplier/ops API, problem+json, throttle scopes, `/api/v1/` sabit.
+- F7-020…024: `WebhookDelivery`, FakeERP/CRM, `ConnectorRegistry`, punchout stub.
+- Mig: `firmalar.0007`, `siparis.0004`, `fiyatlama.0017` (KS-6 kalem); odaklı test **22 OK**.
+- **Sıradaki:** F10-014/021–023 UI veya F8 CI/ops; Celery yok.

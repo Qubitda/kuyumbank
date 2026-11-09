@@ -18,7 +18,7 @@ Perakende Excel (maden + işçilik → gr maliyet → marj veya hedef toplam →
 | KS-3 | Mod B `HEDEF_TOPLAM`: hedef / gram → gr_satis; örtük kar türetilir. |
 | KS-4 | Banka / işletme / GV yalnız simülasyon çıktısı; ledger/cari/PI yazmaz. |
 | KS-5 | B-06 KDV ve B-01 platform pay bu ADR’de yok. |
-| KS-6 | Quote’a “hedef toplam” fiyat modeli **izinli tasarım**; uygulama ayrı dilim + açık talimat. |
+| KS-6 | Quote’a “hedef toplam”: `pricing_service.quote(hedef_toplam=…)` → `fiyat_modeli=HEDEF_TOPLAM`; platform `manage_sozlesme`; banka/GV quote’a girmez. |
 
 ## Kabul checklist
 
@@ -26,7 +26,7 @@ Perakende Excel (maden + işçilik → gr maliyet → marj veya hedef toplam →
 |-------|--------|
 | Ürün sahibi Kabul | **Evet** (2026-11-09, Qubit) |
 | Kod (saf sim) | UYGULANDI |
-| Quote entegrasyonu | PLANLANDI (KS-6; talimat sonrası) |
+| Quote entegrasyonu | **UYGULANDI** (KS-6; 2026-11-09) |
 
 ## İlişkili
 

@@ -18,8 +18,7 @@ class Varyant(models.Model):
       için `save()` sonrası bir `UPDATE` kaçınılmaz, ama `transaction.atomic` ile
       sarıldı ve `select_for_update` yerine idempotent `filter().update()` kullanıldı.
     - `tas_bedeli_toplam()` artık `aggregate` ile tek sorguda hesaplar (N+1 yok).
-    - `benzersiz_parca` + `stok` kuralı `clean()`'de de kontrol edilir; böylece
-      admin'de `IntegrityError` yerine anlaşılır bir form hatası görünür.
+    - Stok truth: `stok.StockMovement` / `StockBalance` (F4-070b; legacy kolon yok).
     """
 
     urun = models.ForeignKey(
@@ -54,16 +53,6 @@ class Varyant(models.Model):
         help_text="Kutu, sertifika, gravür gibi kalemlerin toplamı.",
     )
 
-    stok = models.PositiveIntegerField(
-        "Stok (legacy)",
-        default=1,
-        editable=False,
-        help_text=(
-            "LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). "
-            "F4-070: güncelleme yazımı kapalı; stok için StockMovement/Balance. "
-            "GRAM teklif stokuyla toplanmaz/dönüştürülmez (U-002)."
-        ),
-    )
     benzersiz_parca = models.BooleanField(
         "Benzersiz parça", default=False,
         help_text="Tek adet, tekrar üretilmeyen parça (ör. sertifikalı tek taş).",
@@ -101,10 +90,6 @@ class Varyant(models.Model):
             models.CheckConstraint(
                 condition=models.Q(ek_bedel__gte=0),
                 name="varyant_ek_bedel_negatif_degil",
-            ),
-            models.CheckConstraint(
-                condition=~models.Q(benzersiz_parca=True) | models.Q(stok__lte=1),
-                name="varyant_benzersiz_parca_stok",
             ),
         ]
 
@@ -167,10 +152,6 @@ class Varyant(models.Model):
         elif self.beden_id:
             errors["beden"] = "Bu ürün bedensiz tanımlı; ölçü girilmez."
 
-        # --- Benzersiz parça + stok kuralı (DB kısıtının dostça ön kontrolü) ---
-        if self.benzersiz_parca and self.stok and self.stok > 1:
-            errors["stok"] = "Benzersiz parçada stok 0 veya 1 olmalıdır."
-
         if errors:
             raise ValidationError(errors)
 
@@ -217,9 +198,6 @@ class Varyant(models.Model):
     # Kayıt
     # ------------------------------------------------------------------ #
     def save(self, *args, **kwargs):
-        from stok.services.dual_stock_envanter import assert_legacy_stock_unchanged
-
-        assert_legacy_stock_unchanged(instance=self, field_name="stok")
         yeni = self.pk is None
         super().save(*args, **kwargs)
         if yeni and not self.sku:

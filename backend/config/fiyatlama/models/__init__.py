@@ -7,13 +7,9 @@ from .price_quote import PriceQuote, PriceQuoteLine
 from .price_lock import PriceLock
 from .contract_release import ContractReleaseEvent, ContractReleasePlan
 
-# K-011: eski import adı — geçiş uyumluluğu (yeni kod TeklifTasMaliyeti kullanır)
-UrunTasi = TeklifTasMaliyeti
-
 __all__ = [
     "TedarikciTeklif",
     "TeklifTasMaliyeti",
-    "UrunTasi",  # deprecated alias
     "FiyatSozlesmesi",
     "FiyatSozlesmesiKalemi",
     "PriceCalculationLog",

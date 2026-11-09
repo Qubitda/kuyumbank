@@ -134,7 +134,7 @@ class TeklifAdminH2H3H5Tests(TestCase):
         teklif_servisi.yayina_al(t, self.approver)
         t.refresh_from_db()
         ro = self._ma().get_readonly_fields(self._req(self.staff), t)
-        for f in ("gram", "fiyat_modeli", "stok_adet", "oncelik", "gecerlilik_baslangic"):
+        for f in ("gram", "fiyat_modeli", "oncelik", "gecerlilik_baslangic"):
             self.assertIn(f, ro)
 
     def test_h2_save_model_blocks_yayinda_gram_change(self):

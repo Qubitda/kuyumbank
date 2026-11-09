@@ -39,7 +39,7 @@ K-011 (3.6): katalog `urunler.UrunTasi` (ProductStone) korunur; teklif maliyeti 
 - PB dönüşüm (3.4): `tanimlar.services.currency_conversion` — TRY per FX; taraf kur tipi; stale fail-closed.
 - Offer gate (3a): `teklif_eslestirme_uygun_mu` — `eslestirme_durumu == onaylandi` + `hedef_urun` tutarlı; boş/onaysız teklif fiyata girmez.
 - Rates (3.3): resolve via `kur_servisi` (buyer/supplier `kur_tipi` ayrı; no provider fallback).
-- Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line.
+- Orchestration (3.5): `pricing_service.quote()` — rates, ALICI `cozumle` (zorunlu), offer selection, immutable **PriceQuote**+Line. KS-6: `hedef_toplam=` platform `manage_sozlesme` (banka/GV quote’a girmez).
 - Lock (3.7 / ADR-0010 **Kabul**): `pricing_service.lock_quote()` — geçerli quote; yeniden hesap yok; TTL=quote; L-07 `lock_quote` / `lock_quote_on_behalf` (+ on-behalf gerekçe). L-11: `OrderLine.price_lock` OneToOne + satır snapshot (F4-051). PriceLock’ta `has_adet` yok.
 - Buyer surface (3.6 / B-02): `selectors.buyer_quote` — yalnız `toplam_vergisiz` (+ gram başı); satır/tedarikçi/maliyet yok; IDOR → DoesNotExist.
 - `PriceCalculationLog` is technical audit, **not** commercial truth.
@@ -55,7 +55,7 @@ Separate (DOĞRULANDI):
 3. **StockMovement** — immutable ledger (GIRIS/CIKIS/DUZELTME/…); `ledger_servisi`
 
 Birim (U-002): teklif `fiyat_modeli` → ADET/GRAM; **dönüşüm yok**.  
-Legacy `Varyant.stok` / `TedarikciTeklif.stok_adet` dual borç (F4-070).  
+Stok truth: ledger (`StockMovement`/`StockBalance`); legacy dual kolon F4-070b ile kaldırıldı.  
 `siparis`: Cart/CartLine → CheckoutAttempt (lock+rezerv) → Order/OrderLine (tüket SATIS) → iptal (IADE); Quick Reorder → güncel quote+ATP (`reorder_servisi`).
 
 ## Commerce / ops state

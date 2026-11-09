@@ -74,15 +74,6 @@ class TedarikciTeklif(models.Model):
     temin_tipi = models.CharField(
         max_length=16, choices=TeminTipi.choices, default=TeminTipi.HAZIR
     )
-    stok_adet = models.PositiveIntegerField(
-        default=0,
-        editable=False,
-        help_text=(
-            "LEGACY ADET sayacı — ledger truth değil (ADR-0011 F4-A11). "
-            "F4-070: güncelleme yazımı kapalı; stok için StockMovement/Balance. "
-            "fiyat_modeli GRAM olsa bile bu alan gram değildir; dönüşüm yok (U-002)."
-        ),
-    )
     uretim_suresi_gun = models.PositiveIntegerField(null=True, blank=True)
     oncelik = models.PositiveIntegerField(default=0)
     durum = models.CharField(
@@ -179,12 +170,6 @@ class TedarikciTeklif(models.Model):
 
     def __str__(self) -> str:
         return f"{self.tedarikci} — {self.varyant.sku} ({self.fiyat_modeli})"
-
-    def save(self, *args, **kwargs):
-        from stok.services.dual_stock_envanter import assert_legacy_stock_unchanged
-
-        assert_legacy_stock_unchanged(instance=self, field_name="stok_adet")
-        super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()

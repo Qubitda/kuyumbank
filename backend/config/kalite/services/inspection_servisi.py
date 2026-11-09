@@ -148,6 +148,10 @@ def pass_et(*, actor, inspection: QualityInspection) -> QualityInspection:
                 "Tolerans dışı ölçüm varken PASS yok; override veya yeni inspection."
             )
         _set_durum(locked, QualityInspection.Durum.PASS)
+        # F5-022: QC PASS → tedarikçi hak ediş iskeleti (oran yok; vade ayarı)
+        from finans.services import hak_edis_servisi
+
+        hak_edis_servisi.kaydet_qc_pass(actor=actor, inspection=locked)
         record_audit(
             actor=actor,
             action="kalite.qc.pass",

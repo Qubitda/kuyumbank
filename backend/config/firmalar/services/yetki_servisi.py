@@ -56,3 +56,24 @@ def can_view_all_tenants(user) -> bool:
 
 def can_manage_all_users(user) -> bool:
     return is_platform_firm_user(user) and has_perm(user, P["manage_all_users"])
+
+
+def require_org_scope(user, org_birimi, *, message: str | None = None):
+    """F10-011: org ⊆ firma; üyelik veya manage_org veya view_all.
+
+    Rol string switch yok — has_perm + firma/üyelik.
+    """
+    if org_birimi is None:
+        return
+    if can_view_all_tenants(user):
+        return
+    firma_id = getattr(user, "firma_id", None)
+    if firma_id != org_birimi.firma_id:
+        raise PermissionDenied(message or "Org birimi tenant dışı.")
+    if has_perm(user, P["manage_org"]):
+        return
+    from firmalar.selectors.org import actor_org_ids
+
+    if org_birimi.pk in actor_org_ids(user):
+        return
+    raise PermissionDenied(message or "Bu org birimine erişim yok.")

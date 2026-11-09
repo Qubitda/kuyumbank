@@ -243,10 +243,11 @@ class Faz36KorHavuzK011Tests(TestCase):
             self.tas_maliyet.bedel,
         )
 
-    def test_k011_alias_uruntasi_points_to_teklif_model(self):
-        from fiyatlama.models import UrunTasi as Alias
+    def test_k011_no_deprecated_uruntasi_alias(self):
+        import fiyatlama.models as fm
 
-        self.assertIs(Alias, TeklifTasMaliyeti)
+        self.assertFalse(hasattr(fm, "UrunTasi"))
+        self.assertTrue(hasattr(fm, "TeklifTasMaliyeti"))
 
     # --- Kör havuz / B-02 ---
 

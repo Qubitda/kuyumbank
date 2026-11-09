@@ -14,16 +14,16 @@ from firmalar.services.rol_servisi import sync_user_role_groups
 from fiyatlama.admin.admin import (
     FiyatSozlesmesiAdmin,
     FiyatSozlesmesiKalemiAdmin,
-    FiyatlamaUrunTasiAdmin,
     PriceCalculationLogAdmin,
     TedarikciTeklifAdmin,
+    TeklifTasMaliyetiAdmin,
 )
 from fiyatlama.models import (
     FiyatSozlesmesi,
     FiyatSozlesmesiKalemi,
     PriceCalculationLog,
     TedarikciTeklif,
-    UrunTasi,
+    TeklifTasMaliyeti,
 )
 from fiyatlama.selectors.tenant import user_may_see_fiyat_maliyet
 from tanimlar.models import AyarMilyem, FiyatGrubu, KiymetliMetal
@@ -106,9 +106,9 @@ class FiyatlamaAdminTenantTests(TestCase):
         cls.alici_user.save()
         sync_user_role_groups(cls.alici_user)
 
-        cls.tasi_a = UrunTasi.objects.create(
+        cls.tasi_a = TeklifTasMaliyeti.objects.create(
             teklif=cls.teklif_a,
-            tas_grubu=UrunTasi.TasGrubu.PIRLANTA,
+            tas_grubu=TeklifTasMaliyeti.TasGrubu.PIRLANTA,
             adet=1,
             toplam_karat=Decimal("0.5"),
             bedel=Decimal("50"),
@@ -179,8 +179,8 @@ class FiyatlamaAdminTenantTests(TestCase):
         self.assertFalse(qs.filter(pk=self.soz_b.pk).exists())
 
     # Senaryo 4
-    def test_s4_uruntasi_related_scoped(self):
-        ma = FiyatlamaUrunTasiAdmin(UrunTasi, site)
+    def test_s4_teklif_tas_maliyeti_scoped(self):
+        ma = TeklifTasMaliyetiAdmin(TeklifTasMaliyeti, site)
         qs = ma.get_queryset(self._req(self.staff_a))
         self.assertEqual(list(qs), [self.tasi_a])
 

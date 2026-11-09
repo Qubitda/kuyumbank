@@ -41,4 +41,4 @@ class AdminH4O1SurfaceTests(KatalogTestTaban):
         req = self._req(self.tedarikci_user)
         cl = ma.get_changelist_instance(req)
         self.assertEqual(cl.list_editable, ())
-        self.assertEqual(ma.list_editable, ("gram", "sabit_fiyat", "ek_bedel", "stok", "aktif"))
+        self.assertEqual(ma.list_editable, ("gram", "sabit_fiyat", "ek_bedel", "aktif"))

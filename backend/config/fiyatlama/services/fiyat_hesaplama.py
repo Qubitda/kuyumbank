@@ -21,7 +21,7 @@ from typing import Any
 ISTENED_HASSASIYET = Decimal("0.01")
 ROUNDING = ROUND_HALF_UP
 
-FIYAT_MODELLERI = frozenset({"METAL_BAZLI", "GRAM_BIRIM", "SABIT_PARCA"})
+FIYAT_MODELLERI = frozenset({"METAL_BAZLI", "GRAM_BIRIM", "SABIT_PARCA", "HEDEF_TOPLAM"})
 MARJ_TIPLERI = frozenset({"YUZDE", "TL_GR", "TL_PARCA"})
 
 
@@ -301,12 +301,41 @@ def hesapla_sabit_parca(
     )
 
 
+def hesapla_hedef_toplam(
+    *,
+    hedef_toplam: Decimal,
+    gram: Decimal,
+    para_birimi: str = "TRY",
+    hassasiyet: Decimal | None = None,
+) -> dict[str, Any]:
+    """ADR-0014 KS-6 — quote toplamı = hedef; banka/GV/işletme yok (KS-4).
+
+    Tek kalem `hedef_toplam`. Marj/metal yeniden hesaplanmaz; örtük gr satış
+    yalnız denetim için `hesap_girdisi`'ne yazılır (çağıran).
+    """
+    hassasiyet = hassasiyet or ISTENED_HASSASIYET
+    hedef = _d(hedef_toplam)
+    gram = _d(gram)
+    _assert_pozitif("hedef_toplam", hedef)
+    _assert_pozitif("gram", gram)
+    kalemler = {"hedef_toplam": hedef}
+    return _sonuc_paketle(
+        fiyat_modeli="HEDEF_TOPLAM",
+        para_birimi=para_birimi,
+        kalemler=kalemler,
+        taban=hedef,
+        hassasiyet=hassasiyet,
+    )
+
+
 def hesapla_modele_gore(fiyat_modeli: str, **kwargs) -> dict[str, Any]:
-    """Üç modeli tek girişten seçer (`pricing_service.quote` tüketir)."""
+    """Modelleri tek girişten seçer (`pricing_service.quote` tüketir)."""
     if fiyat_modeli not in FIYAT_MODELLERI:
         raise ValueError(f"Geçersiz fiyat_modeli: {fiyat_modeli!r}")
     if fiyat_modeli == "METAL_BAZLI":
         return hesapla_metal_bazli(**kwargs)
     if fiyat_modeli == "GRAM_BIRIM":
         return hesapla_gram_birim(**kwargs)
+    if fiyat_modeli == "HEDEF_TOPLAM":
+        return hesapla_hedef_toplam(**kwargs)
     return hesapla_sabit_parca(**kwargs)

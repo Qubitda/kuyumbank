@@ -35,7 +35,7 @@ from fiyatlama.models.sozlesme_cozumleme import (
     cozumle,
 )
 from fiyatlama.selectors.tenant import teklif_eslestirme_uygun_mu
-from fiyatlama.services import fiyat_motoru
+from fiyatlama.services import fiyat_hesaplama, fiyat_motoru
 from tanimlar.models import KurTaraf
 from tanimlar.services import currency_conversion, kur_servisi
 
@@ -263,12 +263,15 @@ def quote(
     kullanici=None,
     teklif_id: int | None = None,
     para_birimi: str = "TRY",
+    hedef_toplam: Decimal | None = None,
     now=None,
 ) -> PriceQuote:
     """
     Proforma PriceQuote + Line üretir (immutable).
 
     Giriş: alıcı firma, satış kanalı, varyant; isteğe bağlı teklif_id.
+    ADR-0014 KS-6: `hedef_toplam` verilirse toplam = hedef (platform
+    `manage_sozlesme`); banka/GV quote'a girmez.
     """
     now = now or timezone.now()
     bugun = timezone.localdate(now) if timezone.is_aware(now) else now.date()
@@ -392,33 +395,79 @@ def quote(
         # Döviz/metal gerekmeyen uç — yine de sağlayıcı beklenir (kur politikası)
         raise ValidationError("Aktif kur sağlayıcı yok; quote üretilemez.")
 
-    sonuc = fiyat_motoru.hesapla_teklif_kalemleri(
-        fiyat_modeli=teklif.fiyat_modeli,
-        hedef_para_birimi=hedef_pb,
-        gram=gram,
-        milyem=milyem,
-        saf_birim_fiyat=saf_birim_hedef,
-        iscilik=iscilik_hedef,
-        islcilik_dahil_mi=bool(alici_kalem.islcilik_dahil_mi),
-        birim_fiyat=teklif.birim_fiyat,
-        birim_fiyat_pb=teklif.para_birimi,
-        marj_tipi=alici_kalem.marj_tipi,
-        marj_degeri=alici_kalem.marj_degeri,
-        tas_bedeli=tas_hedef,
-        ek_bedel=ek_hedef,
-        taraf=KurTaraf.ALICI,
-        now=now,
-    )
-    if sonuc.get("pb_donusum"):
-        doviz_ids.extend(sonuc["pb_donusum"].get("birim_fiyat_gozlem_idler") or [])
-        doviz_ids = list(dict.fromkeys(doviz_ids))
+    maliyet_referans: dict[str, Any] | None = None
+    quote_fiyat_modeli = teklif.fiyat_modeli
+
+    if hedef_toplam is not None:
+        # ADR-0014 KS-6 — platform hedef toplam → quote
+        if kullanici is None or not (
+            is_platform_firm_user(kullanici)
+            and has_perm(kullanici, P["manage_sozlesme"])
+        ):
+            raise PermissionDenied(
+                "HEDEF_TOPLAM quote için platform manage_sozlesme gerekir."
+            )
+        hedef_n = _d(hedef_toplam)
+        if hedef_n <= 0:
+            raise ValidationError({"hedef_toplam": "Pozitif olmalı."})
+        if gram is None or _d(gram) <= 0:
+            raise ValidationError("HEDEF_TOPLAM için gram zorunlu.")
+        # Denetim: klasik model maliyeti (quote toplamına girmez)
+        try:
+            maliyet_referans = fiyat_motoru.hesapla_teklif_kalemleri(
+                fiyat_modeli=teklif.fiyat_modeli,
+                hedef_para_birimi=hedef_pb,
+                gram=gram,
+                milyem=milyem,
+                saf_birim_fiyat=saf_birim_hedef,
+                iscilik=iscilik_hedef,
+                islcilik_dahil_mi=bool(alici_kalem.islcilik_dahil_mi),
+                birim_fiyat=teklif.birim_fiyat,
+                birim_fiyat_pb=teklif.para_birimi,
+                marj_tipi=alici_kalem.marj_tipi,
+                marj_degeri=alici_kalem.marj_degeri,
+                tas_bedeli=tas_hedef,
+                ek_bedel=ek_hedef,
+                taraf=KurTaraf.ALICI,
+                now=now,
+            )
+        except (ValidationError, ValueError):
+            maliyet_referans = None
+        sonuc = fiyat_hesaplama.hesapla_hedef_toplam(
+            hedef_toplam=hedef_n,
+            gram=_d(gram),
+            para_birimi=hedef_pb,
+        )
+        quote_fiyat_modeli = "HEDEF_TOPLAM"
+    else:
+        sonuc = fiyat_motoru.hesapla_teklif_kalemleri(
+            fiyat_modeli=teklif.fiyat_modeli,
+            hedef_para_birimi=hedef_pb,
+            gram=gram,
+            milyem=milyem,
+            saf_birim_fiyat=saf_birim_hedef,
+            iscilik=iscilik_hedef,
+            islcilik_dahil_mi=bool(alici_kalem.islcilik_dahil_mi),
+            birim_fiyat=teklif.birim_fiyat,
+            birim_fiyat_pb=teklif.para_birimi,
+            marj_tipi=alici_kalem.marj_tipi,
+            marj_degeri=alici_kalem.marj_degeri,
+            tas_bedeli=tas_hedef,
+            ek_bedel=ek_hedef,
+            taraf=KurTaraf.ALICI,
+            now=now,
+        )
+        if sonuc.get("pb_donusum"):
+            doviz_ids.extend(sonuc["pb_donusum"].get("birim_fiyat_gozlem_idler") or [])
+            doviz_ids = list(dict.fromkeys(doviz_ids))
 
     gecerlilik_sonu = now + timedelta(seconds=ttl)
     alici_kur_tipi = kur_servisi.tarafa_kur_tipi(KurTaraf.ALICI)
     tedarikci_kur_tipi = kur_servisi.tarafa_kur_tipi(KurTaraf.TEDARIKCI)
 
     hesap_girdisi: dict[str, Any] = {
-        "fiyat_modeli": teklif.fiyat_modeli,
+        "fiyat_modeli": quote_fiyat_modeli,
+        "teklif_fiyat_modeli": teklif.fiyat_modeli,
         "gram": str(gram) if gram is not None else None,
         "milyem": str(milyem) if milyem is not None else None,
         "marj_tipi": alici_kalem.marj_tipi,
@@ -433,7 +482,17 @@ def quote(
         "belge_turu": "PROFORMA",
         "platform_servis": None,  # B-01 kodlanmadı
         "vergi": None,  # B-06 yok
+        "banka_gv_isletme": None,  # KS-4: simülasyon dışı
     }
+    if hedef_toplam is not None and gram is not None:
+        hesap_girdisi["hedef_toplam"] = str(_d(hedef_toplam))
+        hesap_girdisi["gr_satis_ortuk"] = str(
+            (_d(hedef_toplam) / _d(gram)).quantize(Decimal("0.01"))
+        )
+        if maliyet_referans is not None:
+            hesap_girdisi["maliyet_referans_toplam"] = str(
+                maliyet_referans["toplam_vergisiz"]
+            )
 
     with domain_atomic():
         pq = PriceQuote(
@@ -442,7 +501,7 @@ def quote(
             varyant=varyant,
             teklif=teklif,
             teklif_versiyon=teklif.versiyon,
-            fiyat_modeli=teklif.fiyat_modeli,
+            fiyat_modeli=quote_fiyat_modeli,
             alici_sozlesme=alici_sozlesme,
             alici_sozlesme_versiyon=alici_sozlesme.versiyon,
             alici_kalem=alici_kalem,

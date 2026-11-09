@@ -54,11 +54,11 @@
 | 4 | Teklif/RFQ | KISMİ | RFQ+müzakere | RFQ SM | Buyer/sup UI | Kör | P1 | Teklif | Audit SM |
 | 5 | Sepet/checkout | UYGULANDI (servis; HTTP yazma yok) | Cart+checkout | Cart svc | Buyer sepet | IDOR | P0 | Lock, rezerv | Lock olmadan sipariş yok |
 | 6 | Sipariş | Order+snapshot+iptal UYGULANDI | SM genişleme / API | Order | Ops/buyer | Kör+audit | P0 | Cart | Fiyat değişmez |
-| 7 | Çok depo/stok | UYGULANDI (WH+ledger; dual yazma F4-070 kapalı) | Ledger+WH | F4-070b kolon drop opsiyonel | Ops | Tedarikçi scope | P0 | F4 ADR | Count edit yok |
+| 7 | Çok depo/stok | UYGULANDI (WH+ledger; F4-070b kolon drop) | Ledger+WH | — | Ops | Tedarikçi scope | P0 | F4 ADR | Count edit yok |
 | 8 | Rezervasyon/ATP | KISMİ (F4-020/021) | TTL+ATP + expire | F4-022 | Ops | Oversell yok | P0 | Ledger | PG concurrent |
-| 9 | Ödeme/cari/kredi | Yok | Payment+cari+credit UI | F5-* | Buyer/finans | Audit | P0 | Order, U-005 | State tutarlı |
-| 10 | Sevkiyat | Yok | Shipment+carrier | lojistik | Takip | Adres tenant | P1 | QC | QC fail blok |
-| 11 | İade/SH | Yok | RMA | after-sales | Buyer | U-004 | P1 | Ship | SM+ledger |
+| 9 | Ödeme/cari/kredi | KISMİ (F5 iskelet+hak ediş+mahsup) | Payment+cari+credit UI | Oran/provider | Buyer/finans | Audit | P0 | Order, U-005 | State tutarlı |
+| 10 | Sevkiyat | UYGULANDI (F6-020…023) | Shipment+carrier | Canlı carrier | Takip | Adres tenant | P1 | QC | QC fail blok |
+| 11 | İade/SH | UYGULANDI (F6-030/031 stok-only) | RMA + ödeme iadesi | Ödeme iadesi | Buyer | U-004 | P1 | Ship | SM+ledger |
 | 12 | Portallar | Yok (admin) | Buyer/sup portal | API | Next/PWA | Aynı RBAC | P1 | API | Admin’siz akış |
 | 13 | Onay workflow | KISMİ | Limit+zincir | F10-013 | Kuyruk | Escalation | P1 (org sonrası) | Order, org | Limit blok |
 | 14 | Raporlama/analitik | Yok | Raporlar + davranış | F11 | Dashboard | Rol kesit | P2 | Order data | Sızıntı yok |
@@ -86,11 +86,11 @@
 | RFQ & Quotation | RFQ müzakere | — | PLANLANDI | Tümü | Pricing |
 | Cart & Checkout | Sepet, checkout | Cart + CheckoutAttempt | UYGULANDI | — | Lock, Inventory |
 | Order Mgmt | SM, snapshot | Order + OrderLine + iptal + reorder | UYGULANDI (SM dar) | F4-081 bulk | Cart |
-| Inventory & WH | WH + ledger + rezervasyon | `stok` (+ dual kolon, yazma kapalı) | UYGULANDI (F4.1–4.3 + F4-070) | F4-070b drop opsiyonel | Supplier |
+| Inventory & WH | WH + ledger + rezervasyon | `stok` (legacy kolon yok) | UYGULANDI (F4.1–4.3 + F4-070b) | — | Supplier |
 | Payments & Finance | Ödeme, cari | — | PLANLANDI | U-* | Order |
 | Quality | QC, gram | ADR-0013 **Kabul**; F6-010+011 UYGULANDI | UYGULANDI | Tümü | Order |
 | Shipping | Sevkiyat, carrier | ADR-0013 **Kabul**; F6-020…023 UYGULANDI | UYGULANDI | Tümü | QC |
-| Returns | İade, uyuşmazlık | — | PLANLANDI | U-004 | Ship, Finance |
+| Returns | İade, uyuşmazlık | ReturnRequest SM + stok IADE | UYGULANDI (stok-only) | Ödeme iadesi; F6-032 UI | Ship, Finance |
 | Customer & Org | Şube, limit | — | PLANLANDI | Faz 10 + **U-014** (ADR-0003) | Identity |
 | Notification | Outbox | `OutboxMessage` + process command | UYGULANDI (iskelet) | F7-020 webhook | Events |
 | Documents | Sertifika, POD | F6-012 metadata UYGULANDI | KISMİ | S3/K-014 | |
@@ -150,11 +150,11 @@ Durum: PLANLANDI.
 ### Faz 5 — Finans
 Amaç: Ledger, cari, payment intent, credit visibility, contract release (F5-040/041).  
 Gate: U-003…U-007, U-005.  
-Durum: **KISMİ UYGULANDI** (F5-010…032, 040, 041); F5-022/023 politika **Kabul** → backlog (kod talimatı).
+Durum: **KISMİ UYGULANDI** (F5-010…032, 040, 041, **022, 023**); oran/üretim tutarı F5-022’de null.
 
 ### Faz 6 — QC & lojistik
 QC gram, shipment, POD, return. QC fail → ship blok.  
-Gate: **ADR-0013 Kabul**. F6-010…023 + F6-012 UYGULANDI → F6-030 stok-only (politika Kabul; kod talimatı).
+Gate: **ADR-0013 Kabul**. F6-010…031 + F6-012 UYGULANDI; F6-032 ops UI backlog.
 
 ### Faz 7 — API & entegrasyon
 Buyer/Supplier/Admin API olgunluk, rate limit, webhook outbox, ERP, **EDI/Punchout (F7-024)**. PRE’yi büyütür.

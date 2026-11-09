@@ -165,6 +165,7 @@ class PriceQuoteLine(models.Model):
         EK_BEDEL = "ek_bedel", "Ek bedel"
         GRAM_BIRIM = "gram_birim", "Gram × birim"
         SABIT_PARCA = "sabit_parca", "Sabit parça"
+        HEDEF_TOPLAM = "hedef_toplam", "Hedef toplam (KS-6)"
         # platform_servis (B-01) ve vergi (B-06) yok
 
     quote = models.ForeignKey(

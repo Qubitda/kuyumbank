@@ -143,8 +143,16 @@ def olustur_from_checkout(
             if existing is not None:
                 return existing
 
+            cart_sube = None
+            cart = getattr(alici_firma, "cart", None)
+            if cart is not None:
+                cart_sube = cart.sube
+            if cart_sube is not None and cart_sube.firma_id != alici_firma.pk:
+                raise ValidationError("Sepet org birimi firma ile uyumsuz.")
+
             order = Order(
                 alici_firma=alici_firma,
+                sube=cart_sube,
                 checkout_attempt=locked_attempt,
                 durum=Order.Durum.OLUSTURULDU,
                 idempotency_key=locked_attempt.idempotency_key,
@@ -196,6 +204,12 @@ def olustur_from_checkout(
                     para_birimi=lock.para_birimi,
                 )
                 line.save()
+
+            # F10-012: satır snapshot toplamı ≤ harcama limiti (onaysız aşım yok)
+            from firmalar.services.limiti_servisi import assert_order_limit
+
+            assert_order_limit(order)
+
             # Sepet satırlarını temizle (sipariş sonrası)
             if locked_attempt.cart_id:
                 CartLine.objects.filter(cart_id=locked_attempt.cart_id).delete()

@@ -42,8 +42,10 @@ def locked_customer_has() -> Decimal:
 
 
 def unpaid_supplier_has() -> Decimal:
-    """Cari/hak ediş yokken 0 (F5-K6)."""
-    return Decimal("0.0000")
+    """F5-K6 / F5-022: HAKEDILDI+BEKLEMEDE hak ediş gram toplamı."""
+    from finans.services.hak_edis_servisi import unpaid_supplier_has_total
+
+    return unpaid_supplier_has_total()
 
 
 def open_has_position(*, limit: Decimal | None = None) -> HasPosition:

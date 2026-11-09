@@ -12,7 +12,7 @@ from firmalar.services.rol_servisi import sync_user_role_groups
 from fiyatlama.models import TedarikciTeklif
 from stok.models import Warehouse
 from stok.selectors.tenant import scope_warehouse_queryset
-from stok.services import birim, dual_stock_envanter, warehouse_servisi
+from stok.services import birim, warehouse_servisi
 
 User = get_user_model()
 
@@ -176,9 +176,11 @@ class WarehouseSliceTests(TestCase):
                 context="aynı depo",
             )
 
-    def test_dual_stock_inventory_lists_legacy_adet_fields(self):
-        inv = dual_stock_envanter.legacy_stock_inventory()
-        fields = {(r["model"], r["field"]) for r in inv}
-        self.assertIn(("urunler.Varyant", "stok"), fields)
-        self.assertIn(("fiyatlama.TedarikciTeklif", "stok_adet"), fields)
-        self.assertTrue(dual_stock_envanter.legacy_fields_are_adet_only())
+    def test_legacy_stock_columns_removed(self):
+        from fiyatlama.models import TedarikciTeklif
+        from urunler.models import Varyant
+
+        varyant_fields = {f.name for f in Varyant._meta.get_fields()}
+        teklif_fields = {f.name for f in TedarikciTeklif._meta.get_fields()}
+        self.assertNotIn("stok", varyant_fields)
+        self.assertNotIn("stok_adet", teklif_fields)

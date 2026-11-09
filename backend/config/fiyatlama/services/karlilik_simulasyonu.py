@@ -1,7 +1,8 @@
-"""Perakende / iç P&L simülatörü — PriceQuote ticari gerçeği DEĞİLDİR.
+"""Perakende / iç P&L simülatörü (ADR-0014).
 
-Excel A/B senaryosu: gr maliyet + marj veya hedef toplam → net kar.
-B-06 KDV / B-01 servis payı / sipariş snapshot'a bağlanmaz (ADR-0014 Taslak).
+Excel A/B: gr maliyet + marj veya hedef toplam → net kar (banka/GV dahil).
+KS-6: ticari quote için `pricing_service.quote(hedef_toplam=...)` — banka/GV
+quote'a girmez (KS-4). B-01/B-06 bu modülde yok.
 """
 
 from __future__ import annotations

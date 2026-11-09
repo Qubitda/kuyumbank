@@ -4,7 +4,6 @@ from importlib import import_module
 
 __all__ = [
     "birim",
-    "dual_stock_envanter",
     "ledger_servisi",
     "reservation_servisi",
     "warehouse_servisi",
