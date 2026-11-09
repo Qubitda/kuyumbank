@@ -312,3 +312,12 @@
 - Kova B F9 HTML WIP commit dışı (silinmedi).
 - Devir: [SESSION_HANDOFF](SESSION_HANDOFF.md). ADR-0017 **Taslak**. Tam suite bu oturumda **yok**.
 
+### 2026-11-09 — API-B4 kurumsal HTTP
+- Org / onay / RFQ REST: mevcut `org_servisi` / `onay_servisi` / `rfq_servisi` HTTP sarmalı; WIP entegre.
+- Uçlar: `org-units`, `approvals` (+submit/approve/reject), `rfqs` (+send/messages/revisions).
+- Düzeltmeler: RFQ `varyant_id` B2 catalog görünürlük kuralı; 401/403/404 tek kural; presenter private `_TRANSITIONS` yok.
+- Kapsam dışı (servis yok / rapor): org update/deactivate, üye silme, RFQ kapat/iptal, limit CRUD, firma CRUD, rol atama HTTP, supplier RFQ/match.
+- Test `api.tests.test_api_b4_enterprise` odaklı **11 OK** (idempotency + PG concurrency dahil).
+- OpenAPI güncellendi (çift önek yok). ADR-0017 **Taslak**; B4 **Kabul değil** — ürün sahibi incelemesi bekliyor.
+- Kova B F9 HTML’e dokunulmadı. Sıradaki: B5 yalnız ayrı talimat.
+

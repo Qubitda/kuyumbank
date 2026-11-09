@@ -74,7 +74,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis | requirements’ta yok (bilinçli) | PLANLANDI |
 | Next.js `frontend/` | henüz yok; API-B7 sonrası | ADR-0017 **Taslak** |
-| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B3 Kabul**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok; B4 henüz yok) |
+| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B3 Kabul**; **B4 uygulandı, inceleme bekliyor**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
@@ -150,7 +150,7 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **569** — `api` 45 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 55 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+Statik test sayısı (`def test_`): **597** — `api` 73 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 55 · `stok` 31 · `tanimlar` 20 · `urunler` 95
 _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 <!-- /AUTO:tests -->
 
@@ -204,16 +204,40 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | `/api/v1/orders/<int:pk>/reorder/` | `api-order-reorder` |
 | `/api/v1/shipments/` | `api-shipment-list` |
 | `/api/v1/shipments/<int:pk>/` | `api-shipment-detail` |
+| `/api/v1/returns/` | `api-return-list` |
+| `/api/v1/returns/<int:pk>/` | `api-return-detail` |
+| `/api/v1/returns/<int:pk>/submit/` | `api-return-submit` |
+| `/api/v1/returns/<int:pk>/approve/` | `api-return-approve` |
+| `/api/v1/returns/<int:pk>/reject/` | `api-return-reject` |
+| `/api/v1/returns/<int:pk>/cancel/` | `api-return-cancel` |
 | `/api/v1/supplier/offers/` | `api-supplier-offers` |
 | `/api/v1/supplier/stock/` | `api-supplier-stock` |
 | `/api/v1/credit/me/` | `api-credit-mine` |
 | `/api/v1/credit/check/` | `api-credit-check` |
 | `/api/v1/finance/me/` | `api-finance-mine` |
+| `/api/v1/finance/cari/` | `api-finance-cari` |
+| `/api/v1/finance/cari/<int:pk>/` | `api-finance-cari-detail` |
+| `/api/v1/finance/ledger/` | `api-finance-ledger` |
+| `/api/v1/payments/intents/` | `api-payment-intent-create` |
 | `/api/v1/ops/finance/` | `api-ops-finance` |
 | `/api/v1/ops/finance/cari/` | `api-ops-finance-cari` |
 | `/api/v1/ops/finance/ledger/` | `api-ops-finance-ledger` |
+| `/api/v1/ops/finance/payments/` | `api-ops-finance-payments` |
 | `/api/v1/ops/orders/summary/` | `api-ops-orders-summary` |
 | `/api/v1/payments/webhook/` | `api-payment-webhook` |
+| `/api/v1/org-units/` | `api-org-list` |
+| `/api/v1/org-units/<int:pk>/` | `api-org-detail` |
+| `/api/v1/org-units/<int:pk>/members/` | `api-org-members` |
+| `/api/v1/approvals/` | `api-approval-list` |
+| `/api/v1/approvals/<int:pk>/` | `api-approval-detail` |
+| `/api/v1/approvals/<int:pk>/submit/` | `api-approval-submit` |
+| `/api/v1/approvals/<int:pk>/approve/` | `api-approval-approve` |
+| `/api/v1/approvals/<int:pk>/reject/` | `api-approval-reject` |
+| `/api/v1/rfqs/` | `api-rfq-list` |
+| `/api/v1/rfqs/<int:pk>/` | `api-rfq-detail` |
+| `/api/v1/rfqs/<int:pk>/send/` | `api-rfq-send` |
+| `/api/v1/rfqs/<int:pk>/messages/` | `api-rfq-message` |
+| `/api/v1/rfqs/<int:pk>/revisions/` | `api-rfq-revision` |
 | `/api/v1/schema/` | `api-schema` |
 <!-- /AUTO:api_urls -->
 
@@ -248,7 +272,7 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | B-01 / B-06 | **Kabul** (Qubit 2026-11-09); kod bilinçli yok |
 | ADR-0014 | **Kabul** — sim UYGULANDI; quote hedef ayrı dilim |
 | F8-003 Sentry SDK / F8-006 perf | Plan var; SDK + baseline **yok** |
-| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1/NX-2 Kabul) · **API-B1…B3 Kabul** · **API-B4 sırada (başlatılmadı)** |
+| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1/NX-2 Kabul) · **API-B1…B3 Kabul** · **API-B4 uygulandı (ürün sahibi incelemesi bekliyor)** |
 | F10-021 eşleştirme | Match motoru **yok** (create UI KISMİ) |
 | F10-022 özel üretim | **UYGULANDI** (`siparis.0005`) |
 | F10-023 supplier UI | **yok** (buyer UI var) |
@@ -325,7 +349,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B3 Kabul** · API-B4 sırada · F10 **UYGULANDI** |
+| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B3 Kabul** · **API-B4 uygulandı (inceleme bekliyor)** · F10 **UYGULANDI** |
 | ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** (NX-1/2 madde Kabul) |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`siparis.0005` F10-022) |
 
@@ -397,14 +421,15 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | API-B2 | Buyer commerce HTTP | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
 | API-B2 concurrency | Idempotency PG | **Doğrulandı** — TransactionTestCase **7 OK** |
 | API-B3 | Finans/sevkiyat/iade HTTP | **Kabul** (Qubit 2026-11-09); odaklı **10 OK** |
+| API-B4 | Kurumsal HTTP (org/onay/RFQ) | **Uygulandı** — ürün sahibi incelemesi bekliyor; odaklı **11 OK** (+ concurrency dahil); **Kabul değil** |
 | TECH-OPENAPI-01 | OpenAPI çift önek | **UYGULANDI** (B3 sonrası bakım; NX-4 Kabul değil) |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| **1** | API-B4 | Kurumsal HTTP (org/onay/RFQ) | **Henüz başlatılmadı**; ayrı talimat |
-| — | API-B5…B7 | Ops / tedarikçi / dondurma | sırayla; her faz DUR |
+| **1** | API-B5 | Ops yüzey genişletme | B4 inceleme/Kabul sonrası; ayrı talimat |
+| — | API-B6…B7 | Tedarikçi / dondurma | sırayla; her faz DUR |
 | — | Kova B F9 HTML | buyer home/catalog WIP | commit dışı; silinmedi |
 | — | F9-012…015 | Django HTML portal büyütme | **iptal / ertelendi** (ADR-0016 supersede) |
 | — | F8-003/006 | Sentry SDK · perf smoke | plan var; baseline yok |
@@ -421,8 +446,8 @@ Next.js `frontend/` iskeleti: API B7 frontend-ready sonrası (ayrı dilim). Mevc
 ### 12.5 Yeni session handoff
 
 1. Oku: [SESSION_HANDOFF](SESSION_HANDOFF.md) → `AGENTS.md` → §2 + §12 → ADR-0017 **Taslak**.  
-2. Sıradaki: **API-B4** yalnız ayrı talimat; **tam suite onaysız yok**.  
-3. Son kayıtlı tam suite: **555 OK** (2026-11-09, oturum öncesi). Bu oturum: B1 **28** / B2 **11** / concurrency **7** / B3 **10** odaklı — tam suite **çalıştırılmadı**.  
-4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; ADR-0017 **Taslak**; NX-3…12 açık.
+2. Sıradaki: **API-B5** yalnız B4 inceleme sonrası ayrı talimat; **tam suite onaysız yok**.  
+3. Odaklı: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11**. Tam suite sonucu: bu oturumda koşulduysa handoff’a yazılır.  
+4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; ADR-0017 **Taslak**; NX-3…12 açık; B4 **Kabul değil**.
 
-*Son güncelleme: 2026-11-09 — oturum kapanışı; B0–B3 kesin; B4 sırada.*
+*Son güncelleme: 2026-11-09 — API-B4 uygulandı (inceleme bekliyor); B5 sırada.*

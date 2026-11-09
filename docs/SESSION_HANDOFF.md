@@ -3,7 +3,7 @@
 **Tarih:** 2026-11-09  
 **Amaç:** Yeni sohbet oturumu için tek başlangıç referansı. Geçmiş chat gerekmez.  
 **Dal:** `adim-1-ilerleme`  
-**Bu belge:** oturum kapanışı senkronu. **API-B4 burada başlatılmaz.**
+**Bu belge:** API-B4 uygulama sonrası senkron. **API-B5 burada başlatılmaz.**
 
 ---
 
@@ -47,16 +47,14 @@ Normatif: `AGENTS.md` → `docs/MASTER.md` §2 + §12 → ilgili ADR.
 | **B2** | Kullanıcı tarafından **Kabul** |
 | **B2 concurrency** | PG TransactionTestCase **7 OK** — doğrulandı / Kabul |
 | **B3** | Kullanıcı tarafından **Kabul** |
-| **B4** | Sıradaki faz — **henüz başlatılmadı** |
+| **B4** | **Uygulandı** — ürün sahibi incelemesi bekliyor (**Kabul değil**) |
 | **B5** | Bekliyor |
 | **B6** | Bekliyor |
 | **B7** | Bekliyor |
 
-> **Uyarı:** Önceki ajan turunda B4 HTTP WIP dosyaları yazılmış olabilir. Resmi faz **başlatılmadı**; WIP commit dışı bırakıldı. B4’e yalnızca ürün sahibi talimatıyla başla.
-
 ---
 
-## 4. B1 / B2 / B3 teslimat özeti
+## 4. B1 / B2 / B3 / B4 teslimat özeti
 
 ### B1 — Kabul
 Session login/csrf/logout · problem+json (`code`/`errors`/`request_id`) · 401 ayrımı · 429 Retry-After · `/me`+capabilities · no-store · Idempotency TTL · OpenAPI export+CI drift · CORS kaldırıldı.  
@@ -74,6 +72,11 @@ Catalog · Quote · PriceLock · Cart · Checkout · Order from-checkout · Canc
 Buyer finance/cari/ledger · credit · payment intent · ops finance (+payments) · shipments+`allowed_actions` · returns list/detail + ops SM (submit/approve/reject/cancel) · tenant/RBAC · maske · idempotency.  
 **Test:** `api.tests.test_api_b3_finance_ops` **10 OK** odaklı (+ sevkiyat/finans regresyonları önceki turda yeşil).
 
+### B4 — Uygulandı (inceleme bekliyor; Kabul değil)
+Org birimi / üyelik · OnayTalebi liste/detay + submit/approve/reject · RFQ liste/detay + create/send/message/revision · `allowed_actions` · Decimal string · maske · NX-2 · Idempotency-Key · tenant 404 / rol 403.  
+**Kapsam dışı (servis yok):** org update/deactivate, üye silme, RFQ kapat/iptal, limit CRUD, firma CRUD, rol atama HTTP, supplier RFQ/match.  
+**Test:** `api.tests.test_api_b4_enterprise` **11 OK** (akış + idempotency + PG concurrency).
+
 ### TECH-OPENAPI-01 — UYGULANDI (bakım)
 Çift `/api/v1/api/v1` önek düzeltildi: `api_urlpatterns` + `SchemaGenerator(url="/api/v1/")`. Canlı URL değişmedi. NX-4 hâlâ **Kabul değil**.
 
@@ -87,12 +90,13 @@ Buyer finance/cari/ledger · credit · payment intent · ops finance (+payments)
 | B2 odaklı | **11 OK** | |
 | B2 concurrency | **7 OK** | PostgreSQL zorunlu |
 | B3 odaklı | **10 OK** | |
-| Tam suite | **Çalıştırılmadı** (bu oturum) | Son kayıtlı: **555 OK** (2026-11-09, oturum öncesi) |
+| B4 odaklı | **11 OK** | PG; concurrency dahil |
+| Tam suite | **597 OK** (2026-11-09, PG `--keepdb`) | Kova B testleri de yeşil (ayrı kaynak; B4 dışı WIP) |
 | SQLite concurrency | Kanıt sayılmaz | |
 
 ---
 
-## 6. API endpoint envanteri (B1–B3, `/api/v1/`)
+## 6. API endpoint envanteri (B1–B4, `/api/v1/`)
 
 **Auth / keşif:** `auth/csrf|login|logout`, `me`, `health`, `schema`  
 **Catalog:** `catalog/`, `catalog/<pk>/`  
@@ -101,11 +105,10 @@ Buyer finance/cari/ledger · credit · payment intent · ops finance (+payments)
 **Lojistik:** `shipments/`, `shipments/<pk>/`, `returns/` (+ submit/approve/reject/cancel)  
 **Finans:** `credit/me|check`, `finance/me|cari|ledger`, `payments/intents/`, `payments/webhook/`  
 **Ops:** `ops/finance/`, `…/cari|ledger|payments`, `ops/orders/summary/`  
-**Supplier (mevcut):** `supplier/offers/`, `supplier/stock/`
+**Supplier (mevcut):** `supplier/offers/`, `supplier/stock/`  
+**Kurumsal (B4):** `org-units/`, `org-units/<pk>/`, `org-units/<pk>/members/`, `approvals/`, `approvals/<pk>/`, `…/submit|approve|reject/`, `rfqs/`, `rfqs/<pk>/`, `…/send|messages|revisions/`
 
 OpenAPI: `docs/api/openapi-v1.json` · üret: `python scripts/export_openapi.py` · CI `--check`.
-
-**B4 uçları (org/approvals/rfq) resmi envanterde yok.**
 
 ---
 
@@ -120,9 +123,9 @@ OpenAPI: `docs/api/openapi-v1.json` · üret: `python scripts/export_openapi.py`
 | Ops finans | `ops_finans_servisi` | B3 |
 | Shipment | `buyer_shipment_servisi` | B3 |
 | Return | `return_servisi` (`manage_return`) | B3 HTTP |
-| Org / Onay / RFQ | `org_servisi`, `onay_servisi`, `rfq_servisi` | **HTML var; REST = B4** |
+| Org / Onay / RFQ | `org_servisi`, `onay_servisi`, `rfq_servisi` | **B4 HTTP (sarmal)** |
 
-Servisleri B4’te yeniden yazma; HTTP sarmala.
+Servisleri yeniden yazma; HTTP sarmala.
 
 ---
 
@@ -134,12 +137,10 @@ Servisleri B4’te yeniden yazma; HTTP sarmala.
 | NX-3…12 | ADR maddeleri açık | ADR-0017 | P1 | ürün sahibi | ADR |
 | ADR-0017 | Bütün **Taslak** | `docs/decisions/ADR-0017-*.md` | P1 | — | — |
 | CORS | Erteli | — | — | ihtiyaç | ayrı karar |
-| NX-7 | Rol serializer sınıfları eksik; presenter fn var | `api/presenters/` | P2 | NX-7 | B4+ |
-| Idempotency kapsam | Tüm yazmaların matrisi ayrıca doğrulanmalı | `api/mixins.py` | P1 | NX-6 | B4–B6 |
+| NX-7 | Rol serializer sınıfları eksik; presenter fn var | `api/presenters/` | P2 | NX-7 | B5+ |
+| Idempotency kapsam | B4 yazmalar matriste; NX-6 Kabul değil | `api/mixins.py` | P1 | NX-6 | B5–B6 |
 | Buyer return create | Bilinçli yok | `return_servisi` | — | iş kuralı | genişletme yasak |
 | Kova B F9 HTML | WIP uncommitted; silme/karıştırma yok | `templates/buyer/*`, `buyer_catalog_ui` | P2 | — | ayrı |
-| Tam suite | Onaysız çalıştırılmadı | — | P1 | onay | handoff sonrası |
-| B4 premature WIP | View/test dosyaları ağaçta kalabilir | `api/views/org|approvals|rfq.py` vb. | P1 | B4 talimatı | B4 |
 | Match / supplier RFQ | Kod yok | F10-021/023 | P2 | — | B6+ |
 
 ---
@@ -152,54 +153,46 @@ Servisleri B4’te yeniden yazma; HTTP sarmala.
 
 ---
 
-## 10–11. Git / commit (DOĞRULANDI 2026-11-09)
+## 10–11. Git / commit
 
 | Alan | Değer |
 |------|--------|
-| Branch | `adim-1-ilerleme` (origin ile senkron) |
-| Teslimat commit | `b529e5ecc030590e169707e2757a67e5c8a93633` — B1–B3 + OpenAPI + docs |
-| HEAD | `a234008` — handoff push durumu (önceki: `6193454` hash senkronu) |
-| Push | **Başarılı** → `origin/adim-1-ilerleme` |
+| Branch | `adim-1-ilerleme` |
+| Teslimat commit (B1–B3) | `b529e5e` — B1–B3 + OpenAPI + docs |
+| HEAD | Sabit hash yazılmaz — güncel tip için: `git log --oneline -n 5` |
+| Push | B4 commit sonrası ürün sahibi incelemesi; agent push etmez |
 
-**Commit kapsamı:** B1–B3 API + testler + OpenAPI + ADR-0017 + docs + SESSION_HANDOFF.  
-**Commit dışı (working tree’de kalır):** Kova B F9 HTML; B4 premature WIP (`org.py`/`approvals.py`/`rfq.py`/`enterprise.py`/`test_api_b4_enterprise.py`).
-
----
-
-## 12. Sıradaki faz: API-B4
-
-**Amaç:** Kurumsal HTTP — org birimi, onay akışı, RFQ (+revizyon/mesaj); `allowed_actions`; maske; idempotency.  
-**Kaynak:** mevcut `org_servisi` / `onay_servisi` / `rfq_servisi` + selectors.  
-**İcat etme:** org update/deactivate, üye silme, RFQ kapat/iptal fonksiyonu yoksa HTTP uydurma; firma CRUD / rol atama / limit HTTP / supplier RFQ yoksa raporla.
+**Commit kapsamı (B4):** org/approvals/rfq views + enterprise presenter + B4 testler + urls + OpenAPI + docs.  
+**Commit dışı (working tree’de kalabilir):** Kova B F9 HTML — `git add -A` **yasak**; yalnız açık path’ler.
 
 ---
 
-## 13. B4 kuralları (bağlayıcı)
+## 12. Sıradaki faz: API-B5
+
+**Amaç:** Ops yüzey / sonraki kurumsal dilim — yalnız ürün sahibi talimatı.  
+**B4 incelemesi bitmeden B5 kodu yok.**
+
+---
+
+## 13. B4 kuralları (bağlayıcı — tarihsel)
 
 - Yeni Django HTML yok; `/buyer/` `/ops/` dokunma (Kova B’ye karışma).
 - `frontend/` yok; CORS yok; ADR-0017 Taslak; NX-3…12 Kabul etme.
 - Servis yeniden yazma yok; yeni app yok (gerekçe+onay yoksa).
 - Session+CSRF; Decimal string; tenant izolasyonu; kör havuz.
-- Odaklı test; PG concurrency; tam suite / prod migrate / force push yok.
+- Odaklı test; PG concurrency; tam suite / prod migrate / force push yok (onaysız).
 - B4 sonunda DUR — B5’e geçme.
 
 ---
 
-## 14. Yeni oturum — B4 başlangıç promptu
-
-Aşağıyı yeni sohbete yapıştır:
+## 14. Yeni oturum — B5 başlangıç (yalnız talimat sonrası)
 
 ```text
 Kuyumbank — docs/SESSION_HANDOFF.md oku. Branch adim-1-ilerleme.
-Durum: B0 tamam; B1–B3 Kabul; B2 concurrency 7 OK; B4 henüz başlatılmadı.
+Durum: B0–B3 Kabul; B4 uygulandı (inceleme/Kabul ürün sahibi); B5 bekliyor.
 ADR-0017 Taslak; NX-1/2 Kabul; NX-3…12 açık; CORS erteli.
 Kurallar: yeni Django HTML yok; /buyer/ /ops/ koru; Kova B F9 HTML’e dokunma;
 servis yeniden yazma yok; CORS yok; tam suite/prod migrate/commit yalnız açık onayla.
-
-Görev: API-B4 Enterprise API (org / onay / RFQ).
-Önce mevcut org_servisi, onay_servisi, rfq_servisi, selectors ve buyer HTML’i incele.
-Eksik iş kuralını icat etme — raporla. Premature WIP dosyaları varsa incele; talimata göre entegre veya temizle.
-Hedefli test + PG concurrency; OpenAPI güncelle; B4 sonunda DUR.
 ```
 
 ---

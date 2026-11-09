@@ -6,6 +6,219 @@
   },
   "openapi": "3.0.2",
   "paths": {
+    "/api/v1/approvals/": {
+      "get": {
+        "description": "GET liste; POST oluştur — {tutar, para_birimi?, org_birimi_id?, order_id?, gerekce?}.",
+        "operationId": "listApprovalListCreates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST oluştur — {tutar, para_birimi?, org_birimi_id?, order_id?, gerekce?}.",
+        "operationId": "createApprovalList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveApprovalDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/approve/": {
+      "post": {
+        "description": "",
+        "operationId": "approveApproval",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/reject/": {
+      "post": {
+        "description": "",
+        "operationId": "rejectApproval",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/api/v1/approvals/{id}/submit/": {
+      "post": {
+        "description": "",
+        "operationId": "submitApproval",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
     "/api/v1/auth/csrf/": {
       "get": {
         "description": "GET /api/v1/auth/csrf/ — CSRF çerezi + token.",
@@ -854,6 +1067,164 @@
         ]
       }
     },
+    "/api/v1/org-units/": {
+      "get": {
+        "description": "GET liste; POST oluştur — {kod, ad, parent_id?}.",
+        "operationId": "listOrgUnitListCreates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "org-units"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST oluştur — {kod, ad, parent_id?}.",
+        "operationId": "createOrgUnitList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "org-units"
+        ]
+      }
+    },
+    "/api/v1/org-units/{id}/": {
+      "get": {
+        "description": "GET /api/v1/org-units/<pk>/ — scope dışı → 404.",
+        "operationId": "retrieveOrgUnitDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "org-units"
+        ]
+      }
+    },
+    "/api/v1/org-units/{id}/members/": {
+      "get": {
+        "description": "GET üyeler; POST üye ekle — {kullanici_id}.",
+        "operationId": "listOrgMemberListCreates",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "org-units"
+        ]
+      },
+      "post": {
+        "description": "GET üyeler; POST üye ekle — {kullanici_id}.",
+        "operationId": "createOrgMemberList",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "org-units"
+        ]
+      }
+    },
     "/api/v1/payments/intents/": {
       "post": {
         "description": "POST /api/v1/payments/intents/ — {order_id}; Idempotency-Key zorunlu.",
@@ -1299,6 +1670,219 @@
         },
         "tags": [
           "returns"
+        ]
+      }
+    },
+    "/api/v1/rfqs/": {
+      "get": {
+        "description": "GET liste; POST oluştur.",
+        "operationId": "listRfqListCreates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST oluştur.",
+        "operationId": "createRfqList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
+        ]
+      }
+    },
+    "/api/v1/rfqs/{id}/": {
+      "get": {
+        "description": "",
+        "operationId": "retrieveRfqDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
+        ]
+      }
+    },
+    "/api/v1/rfqs/{id}/messages/": {
+      "post": {
+        "description": "",
+        "operationId": "createRfqMessage",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
+        ]
+      }
+    },
+    "/api/v1/rfqs/{id}/revisions/": {
+      "post": {
+        "description": "",
+        "operationId": "createRfqRevision",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
+        ]
+      }
+    },
+    "/api/v1/rfqs/{id}/send/": {
+      "post": {
+        "description": "",
+        "operationId": "createRfqSend",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {}
+            },
+            "multipart/form-data": {
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "rfqs"
         ]
       }
     },

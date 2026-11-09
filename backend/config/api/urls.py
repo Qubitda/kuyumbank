@@ -3,6 +3,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.schemas import get_schema_view
 
 from api.views import (
+    ApprovalApproveView,
+    ApprovalDetailView,
+    ApprovalListCreateView,
+    ApprovalRejectView,
+    ApprovalSubmitView,
     AuthCsrfView,
     AuthLoginView,
     AuthLogoutView,
@@ -32,6 +37,9 @@ from api.views import (
     OrderFromCheckoutView,
     OrderListView,
     OrderReorderView,
+    OrgMemberListCreateView,
+    OrgUnitDetailView,
+    OrgUnitListCreateView,
     PaymentIntentCreateView,
     PaymentWebhookView,
     PriceLockCreateView,
@@ -44,6 +52,11 @@ from api.views import (
     ReturnListCreateView,
     ReturnRejectView,
     ReturnSubmitView,
+    RfqDetailView,
+    RfqListCreateView,
+    RfqMessageView,
+    RfqRevisionView,
+    RfqSendView,
     ShipmentDetailView,
     ShipmentListView,
     SupplierOfferListView,
@@ -181,11 +194,65 @@ api_urlpatterns = [
         PaymentWebhookView.as_view(),
         name="api-payment-webhook",
     ),
+    # API-B4 — kurumsal (org / onay / RFQ)
+    path("org-units/", OrgUnitListCreateView.as_view(), name="api-org-list"),
+    path(
+        "org-units/<int:pk>/",
+        OrgUnitDetailView.as_view(),
+        name="api-org-detail",
+    ),
+    path(
+        "org-units/<int:pk>/members/",
+        OrgMemberListCreateView.as_view(),
+        name="api-org-members",
+    ),
+    path(
+        "approvals/",
+        ApprovalListCreateView.as_view(),
+        name="api-approval-list",
+    ),
+    path(
+        "approvals/<int:pk>/",
+        ApprovalDetailView.as_view(),
+        name="api-approval-detail",
+    ),
+    path(
+        "approvals/<int:pk>/submit/",
+        ApprovalSubmitView.as_view(),
+        name="api-approval-submit",
+    ),
+    path(
+        "approvals/<int:pk>/approve/",
+        ApprovalApproveView.as_view(),
+        name="api-approval-approve",
+    ),
+    path(
+        "approvals/<int:pk>/reject/",
+        ApprovalRejectView.as_view(),
+        name="api-approval-reject",
+    ),
+    path("rfqs/", RfqListCreateView.as_view(), name="api-rfq-list"),
+    path("rfqs/<int:pk>/", RfqDetailView.as_view(), name="api-rfq-detail"),
+    path(
+        "rfqs/<int:pk>/send/",
+        RfqSendView.as_view(),
+        name="api-rfq-send",
+    ),
+    path(
+        "rfqs/<int:pk>/messages/",
+        RfqMessageView.as_view(),
+        name="api-rfq-message",
+    ),
+    path(
+        "rfqs/<int:pk>/revisions/",
+        RfqRevisionView.as_view(),
+        name="api-rfq-revision",
+    ),
 ]
 
 schema_view = get_schema_view(
     title="Kuyumbank API",
-    description="API v1 — ADR-0017 (B1–B3 Kabul; B4 sırada).",
+    description="API v1 — ADR-0017 (B1–B3 Kabul; B4 uygulandı, ürün sahibi incelemesi bekliyor).",
     version="1.0.0",
     public=True,
     permission_classes=[AllowAny],

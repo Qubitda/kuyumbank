@@ -73,7 +73,7 @@
 | 20 | Quick/Bulk | **UYGULANDI** | — | — |
 | 21 | Dynamic pricing | Yok (kilitli) | U-015 açılmadan yok | — |
 
-**Güncel gap sırası (MASTER §12.3 ile hizalı):** API-B4 kurumsal (**henüz başlatılmadı**) → B5…B7 → F8-003/006 → F10-021 → CAP-PIYASA. (B0–B3 kesin; F9 HTML büyütme yok; ADR-0017 Taslak.)
+**Güncel gap sırası (MASTER §12.3 ile hizalı):** API-B4 kurumsal (**uygulandı, ürün sahibi incelemesi bekliyor**) → B5…B7 → F8-003/006 → F10-021 → CAP-PIYASA. (B0–B3 kesin; B4 Kabul değil; F9 HTML büyütme yok; ADR-0017 Taslak.)
 
 ---
 

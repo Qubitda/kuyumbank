@@ -2,7 +2,7 @@
 
 **Durum:** **Taslak** (ADR bütünü henüz Kabul değil — agent Kabul etmez)
 **Bağımlılık:** ADR-0002/0003/0004 **Kabul**; PRE/F7; [ADR-0016](ADR-0016-faz9-frontend.md) **Supersede**
-**Kod:** API-B1…B3 **Kabul** (ürün sahibi 2026-11-09); API-B4 henüz başlatılmadı
+**Kod:** API-B1…B3 **Kabul** (ürün sahibi 2026-11-09); API-B4 **uygulandı** (ürün sahibi incelemesi bekliyor; agent Kabul etmez)
 
 ## Sabit ürün yönü
 
@@ -36,5 +36,5 @@
 | B1 | **Kabul** (ürün sahibi) |
 | B2 | Buyer commerce — **Kabul** (+ concurrency 7 OK) |
 | B3 | Finans/sevkiyat/iade — **Kabul** |
-| B4 | Kurumsal (org/onay/RFQ) — **henüz başlatılmadı** |
+| B4 | Kurumsal (org/onay/RFQ) — **uygulandı; inceleme bekliyor** (Kabul değil) |
 | B5…B7 | Bekliyor |
