@@ -152,12 +152,17 @@ Servisleri B4’te yeniden yazma; HTTP sarmala.
 
 ---
 
-## 10–11. Git / commit (oturum kapanışında doldurulur)
+## 10–11. Git / commit (DOĞRULANDI 2026-11-09)
 
-Kapanış anında güncellenir — bkz. commit sonrası bölüm veya `git log -1` / `git status`.
+| Alan | Değer |
+|------|--------|
+| Branch | `adim-1-ilerleme` |
+| Commit | `b529e5ecc030590e169707e2757a67e5c8a93633` |
+| Mesaj | `feat(api): B1–B3 kabul teslimatı, OpenAPI düzeltmesi ve oturum handoff` |
+| Push | kapanış raporuna bak (origin) |
 
-**Beklenen commit kapsamı:** B1–B3 API + testler + OpenAPI + ADR-0017 + docs sync + SESSION_HANDOFF.  
-**Commit dışı:** Kova B F9 HTML; B4 premature WIP dosyaları.
+**Commit kapsamı:** B1–B3 API + testler + OpenAPI + ADR-0017 + docs + SESSION_HANDOFF.  
+**Commit dışı (working tree’de kalır):** Kova B F9 HTML; B4 premature WIP (`org.py`/`approvals.py`/`rfq.py`/`enterprise.py`/`test_api_b4_enterprise.py`).
 
 ---
 
