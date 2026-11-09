@@ -310,6 +310,24 @@ def iptal_siparis(*, actor, order: Order, now=None) -> Order:
                     f"İptal edilemez; durum={locked.durum}"
                 )
 
+            # K1: aktif sevkiyat veya stok iadesi yapılmış iade → çift IADE engeli
+            from lojistik.models import ReturnRequest, Shipment
+
+            if (
+                Shipment.objects.filter(order_id=locked.pk)
+                .exclude(durum=Shipment.Durum.IPTAL)
+                .exists()
+            ):
+                raise ValidationError(
+                    "İptal edilemez: aktif sevkiyat var (IADE çakışması)."
+                )
+            if ReturnRequest.objects.filter(
+                order_id=locked.pk, stok_iade_yapildi=True
+            ).exists():
+                raise ValidationError(
+                    "İptal edilemez: stok iadesi yapılmış iade kaydı var."
+                )
+
             iade_ids: list[int] = []
             for line in locked.lines.all():
                 res = line.stock_reservation

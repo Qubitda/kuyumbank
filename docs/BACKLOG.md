@@ -907,15 +907,16 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 ### [API-B5] Ops API yüzeyi
 
-- **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
-- **Bağımlılıklar:** API-B4 inceleme/Kabul ([MASTER](MASTER.md) §12.1b)
-- **Kapsam:** B3’te olmayan ops genişletme (QC/ops kuyruk, ek `view_all` yüzeyleri) — finans/sevkiyat/iade HTTP **B3’te var**
-- **Not:** Canlı durum [MASTER](MASTER.md) §12.3
+- **Faz:** API readiness · **Durum:** **UYGULANDI** (inceleme; Kabul değil) · **Öncelik:** P1 · **Tip:** API
+- **Bağımlılıklar:** API-B4 **Kabul**
+- **Kapsam:** `/api/v1/ops/inspections/*` (QC SM + ölçüm) + `/api/v1/ops/shipments/*` (oluştur/geçiş/POD); `manage_qc` / `manage_shipment`; Idempotency-Key; NX-2
+- **Kanıt:** `api.tests.test_api_b5_ops` **7 OK**
+- **Not:** Finans/iade buyer+ops B3’te; buyer `GET /shipments/` B3’te kaldı
 
 ### [API-B6] Tedarikçi API yüzeyi
 
 - **Faz:** API readiness · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** API
-- **Bağımlılıklar:** API-B5
+- **Bağımlılıklar:** API-B5 inceleme/Kabul ([MASTER](MASTER.md) §12.1b)
 - **Kapsam:** teklif/stok; ters kör havuz; supplier RFQ
 
 ### [API-B7] API dondurma / frontend-ready

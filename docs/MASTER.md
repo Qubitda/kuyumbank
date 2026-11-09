@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-09 — API-B4 uygulandı (inceleme bekliyor); docs bayat metin temizliği; `scripts/docs_sync.py`
+**Güncelleme:** 2026-11-09 — API-B4 **Kabul**; API-B5 uygulandı (inceleme bekliyor)
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -76,7 +76,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis | requirements’ta yok (bilinçli) | PLANLANDI |
 | Next.js `frontend/` | henüz yok; API-B7 sonrası | ADR-0017 **Taslak** |
-| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B3 Kabul**; **B4 uygulandı, inceleme bekliyor**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
+| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B4 Kabul**; **B5 uygulandı, inceleme bekliyor**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
@@ -226,6 +226,20 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `/api/v1/ops/finance/ledger/` | `api-ops-finance-ledger` |
 | `/api/v1/ops/finance/payments/` | `api-ops-finance-payments` |
 | `/api/v1/ops/orders/summary/` | `api-ops-orders-summary` |
+| `/api/v1/ops/inspections/` | `api-ops-inspection-list` |
+| `/api/v1/ops/inspections/<int:pk>/` | `api-ops-inspection-detail` |
+| `/api/v1/ops/inspections/<int:pk>/start/` | `api-ops-inspection-start` |
+| `/api/v1/ops/inspections/<int:pk>/pass/` | `api-ops-inspection-pass` |
+| `/api/v1/ops/inspections/<int:pk>/fail/` | `api-ops-inspection-fail` |
+| `/api/v1/ops/inspections/<int:pk>/cancel/` | `api-ops-inspection-cancel` |
+| `/api/v1/ops/inspections/<int:pk>/measurements/` | `api-ops-inspection-measurement` |
+| `/api/v1/ops/shipments/` | `api-ops-shipment-list` |
+| `/api/v1/ops/shipments/<int:pk>/` | `api-ops-shipment-detail` |
+| `/api/v1/ops/shipments/<int:pk>/prepare/` | `api-ops-shipment-prepare` |
+| `/api/v1/ops/shipments/<int:pk>/dispatch/` | `api-ops-shipment-dispatch` |
+| `/api/v1/ops/shipments/<int:pk>/deliver/` | `api-ops-shipment-deliver` |
+| `/api/v1/ops/shipments/<int:pk>/cancel/` | `api-ops-shipment-cancel` |
+| `/api/v1/ops/shipments/<int:pk>/pod/` | `api-ops-shipment-pod` |
 | `/api/v1/payments/webhook/` | `api-payment-webhook` |
 | `/api/v1/org-units/` | `api-org-list` |
 | `/api/v1/org-units/<int:pk>/` | `api-org-detail` |
@@ -274,7 +288,7 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | B-01 / B-06 | **Kabul** (Qubit 2026-11-09); kod bilinçli yok |
 | ADR-0014 | **Kabul** — sim UYGULANDI; quote hedef ayrı dilim |
 | F8-003 Sentry SDK / F8-006 perf | Plan var; SDK + baseline **yok** |
-| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1/NX-2 Kabul) · **API-B1…B3 Kabul** · **API-B4 uygulandı (ürün sahibi incelemesi bekliyor)** |
+| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1/NX-2 Kabul) · **API-B1…B4 Kabul** · **API-B5 uygulandı (inceleme bekliyor)** |
 | F10-021 eşleştirme | Match motoru **yok** (create UI KISMİ) |
 | F10-022 özel üretim | **UYGULANDI** (`siparis.0005`) |
 | F10-023 supplier UI | **yok** (buyer UI var) |
@@ -304,7 +318,7 @@ Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 | Yazım | `domain_atomic`; fail audit durable dışı | audit_servisi |
 | Concurrency | `select_for_update` + DB kısıt | standart |
 | Migration | Üretim migrate onaysız yok; satır silerek NOT NULL yok | AGENTS |
-| API | `/api/v1/` PRE + B1–B4 HTTP; tam Prosperer yok | PRE + B1–B3 Kabul; B4 inceleme — §12.1b |
+| API | `/api/v1/` PRE + B1–B5 HTTP; tam Prosperer yok | PRE + B1–B4 Kabul; B5 inceleme — §12.1b |
 | Test | Risk bazlı; PG constraint SQLite ile “geçti” sayılmaz | AGENTS Ek C |
 
 ### 3.2 Doküman ve agent kuralı
@@ -351,7 +365,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B3 Kabul** · **API-B4 uygulandı (inceleme bekliyor)** · F10 **UYGULANDI** |
+| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B4 Kabul** · **API-B5 uygulandı (inceleme bekliyor)** · F10 **UYGULANDI** |
 | ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** (NX-1/2 madde Kabul) |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`siparis.0005` F10-022) |
 
@@ -364,8 +378,8 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | **B2** | Kullanıcı tarafından **Kabul** |
 | **B2 concurrency** | PG TransactionTestCase **7 OK** — doğrulandı / Kabul |
 | **B3** | Kullanıcı tarafından **Kabul** |
-| **B4** | **Uygulandı** — ürün sahibi incelemesi bekliyor (**Kabul değil**) |
-| **B5** | Bekliyor |
+| **B4** | Kullanıcı tarafından **Kabul** |
+| **B5** | **Uygulandı** — ürün sahibi **Kabul kararına hazır** (**Kabul değil**) |
 | **B6** | Bekliyor |
 | **B7** | Bekliyor |
 
@@ -439,15 +453,16 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | API-B2 | Buyer commerce HTTP | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
 | API-B2 concurrency | Idempotency PG | **Doğrulandı** — TransactionTestCase **7 OK** |
 | API-B3 | Finans/sevkiyat/iade HTTP | **Kabul** (Qubit 2026-11-09); odaklı **10 OK** |
-| API-B4 | Kurumsal HTTP (org/onay/RFQ) | **Uygulandı** — ürün sahibi incelemesi bekliyor; odaklı **11 OK** (+ concurrency dahil); **Kabul değil** |
+| API-B4 | Kurumsal HTTP (org/onay/RFQ) | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
+| API-B5 | Ops QC / sevkiyat yazma | **Uygulandı** — Kabul kararına hazır; odaklı **7 OK**; **Kabul değil** |
 | TECH-OPENAPI-01 | OpenAPI çift önek | **UYGULANDI** (B3 sonrası bakım; NX-4 Kabul değil) |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| **1** | API-B5 | Ops yüzey genişletme | B4 inceleme/Kabul sonrası; ayrı talimat |
-| — | API-B6…B7 | Tedarikçi / dondurma | sırayla; her faz DUR |
+| **1** | API-B6 | Tedarikçi API yüzeyi | B5 inceleme/Kabul sonrası; ayrı talimat |
+| — | API-B7 | API dondurma / frontend-ready | B6 sonrası |
 | — | Kova B F9 HTML | buyer home/catalog WIP | commit dışı; silinmedi |
 | — | F9-012…015 | Django HTML portal büyütme | **iptal / ertelendi** (ADR-0016 supersede) |
 | — | F8-003/006 | Sentry SDK · perf smoke | plan var; baseline yok |
@@ -467,8 +482,8 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 **Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
 1. Oku: `AGENTS.md` → **§2** (gerçek durum) + **§12** (B0–B7, sıradaki, oturum) → ADR-0017 **Taslak** (gerekirse).  
-2. Sıradaki kod: **API-B5** yalnız B4 inceleme/Kabul + açık talimat; **tam suite onaysız yok**.  
-3. Odaklı iddia: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11**. Tam suite: **§2.7**. B0–B7: **§12.1b**.  
-4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; NX-3…12 açık; B4 **Kabul değil**.
+2. Sıradaki kod: **API-B6** yalnız B5 inceleme/Kabul + açık talimat; **tam suite onaysız yok**.  
+3. Odaklı iddia: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11** / B5 **7**. Tam suite: **§2.7**. B0–B7: **§12.1b**.  
+4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; NX-3…12 açık; B5 **Kabul değil**.
 
-*Son güncelleme: 2026-11-09 — SESSION_HANDOFF kaldırıldı; tek başlangıç AGENTS→MASTER §12.*
+*Son güncelleme: 2026-11-09 — API-B4 Kabul; API-B5 uygulandı (inceleme).*

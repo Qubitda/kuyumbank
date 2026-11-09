@@ -49,9 +49,14 @@ class CheckoutIdempotencyApiTests(CheckoutFixtureMixin, TestCase):
             ).count(),
             1,
         )
+        from api.services import idempotency_servisi as idem
+
+        sk = idem.storage_key(
+            actor_id=self.buyer.pk, client_key="pre005-co-1"
+        )
         self.assertEqual(
             IdempotencyRecord.objects.filter(
-                firma=self.buyer.firma, key="pre005-co-1"
+                firma=self.buyer.firma, key=sk
             ).count(),
             1,
         )

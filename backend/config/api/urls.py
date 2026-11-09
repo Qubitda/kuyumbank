@@ -31,7 +31,21 @@ from api.views import (
     OpsFinanceLedgerListView,
     OpsFinancePaymentListView,
     OpsFinanceSummaryView,
+    OpsInspectionCancelView,
+    OpsInspectionDetailView,
+    OpsInspectionFailView,
+    OpsInspectionListCreateView,
+    OpsInspectionMeasurementCreateView,
+    OpsInspectionPassView,
+    OpsInspectionStartView,
     OpsOrderSummaryView,
+    OpsShipmentCancelView,
+    OpsShipmentDeliverView,
+    OpsShipmentDetailView,
+    OpsShipmentDispatchView,
+    OpsShipmentListCreateView,
+    OpsShipmentPodCreateView,
+    OpsShipmentPrepareView,
     OrderCancelView,
     OrderDetailView,
     OrderFromCheckoutView,
@@ -189,6 +203,77 @@ api_urlpatterns = [
         OpsOrderSummaryView.as_view(),
         name="api-ops-orders-summary",
     ),
+    # API-B5 — ops QC / sevkiyat yazma
+    path(
+        "ops/inspections/",
+        OpsInspectionListCreateView.as_view(),
+        name="api-ops-inspection-list",
+    ),
+    path(
+        "ops/inspections/<int:pk>/",
+        OpsInspectionDetailView.as_view(),
+        name="api-ops-inspection-detail",
+    ),
+    path(
+        "ops/inspections/<int:pk>/start/",
+        OpsInspectionStartView.as_view(),
+        name="api-ops-inspection-start",
+    ),
+    path(
+        "ops/inspections/<int:pk>/pass/",
+        OpsInspectionPassView.as_view(),
+        name="api-ops-inspection-pass",
+    ),
+    path(
+        "ops/inspections/<int:pk>/fail/",
+        OpsInspectionFailView.as_view(),
+        name="api-ops-inspection-fail",
+    ),
+    path(
+        "ops/inspections/<int:pk>/cancel/",
+        OpsInspectionCancelView.as_view(),
+        name="api-ops-inspection-cancel",
+    ),
+    path(
+        "ops/inspections/<int:pk>/measurements/",
+        OpsInspectionMeasurementCreateView.as_view(),
+        name="api-ops-inspection-measurement",
+    ),
+    path(
+        "ops/shipments/",
+        OpsShipmentListCreateView.as_view(),
+        name="api-ops-shipment-list",
+    ),
+    path(
+        "ops/shipments/<int:pk>/",
+        OpsShipmentDetailView.as_view(),
+        name="api-ops-shipment-detail",
+    ),
+    path(
+        "ops/shipments/<int:pk>/prepare/",
+        OpsShipmentPrepareView.as_view(),
+        name="api-ops-shipment-prepare",
+    ),
+    path(
+        "ops/shipments/<int:pk>/dispatch/",
+        OpsShipmentDispatchView.as_view(),
+        name="api-ops-shipment-dispatch",
+    ),
+    path(
+        "ops/shipments/<int:pk>/deliver/",
+        OpsShipmentDeliverView.as_view(),
+        name="api-ops-shipment-deliver",
+    ),
+    path(
+        "ops/shipments/<int:pk>/cancel/",
+        OpsShipmentCancelView.as_view(),
+        name="api-ops-shipment-cancel",
+    ),
+    path(
+        "ops/shipments/<int:pk>/pod/",
+        OpsShipmentPodCreateView.as_view(),
+        name="api-ops-shipment-pod",
+    ),
     path(
         "payments/webhook/",
         PaymentWebhookView.as_view(),
@@ -252,7 +337,7 @@ api_urlpatterns = [
 
 schema_view = get_schema_view(
     title="Kuyumbank API",
-    description="API v1 — ADR-0017 (B1–B3 Kabul; B4 uygulandı, ürün sahibi incelemesi bekliyor).",
+    description="API v1 — ADR-0017 (B1–B4 Kabul; B5 uygulandı, ürün sahibi incelemesi bekliyor).",
     version="1.0.0",
     public=True,
     permission_classes=[AllowAny],

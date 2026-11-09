@@ -17,13 +17,15 @@ class IdempotencyConflict(APIException):
     default_code = "idempotency_conflict"
 
 
-def _advisory_lock_id(firma_id: int, key: str) -> int:
-    digest = hashlib.sha256(f"{firma_id}\0{key}".encode("utf-8")).digest()
+def _advisory_lock_id(firma_id: int, actor_id: int, storage_key: str) -> int:
+    digest = hashlib.sha256(
+        f"{firma_id}\0{actor_id}\0{storage_key}".encode("utf-8")
+    ).digest()
     return int.from_bytes(digest[:8], "big") & 0x7FFFFFFFFFFFFFFF
 
 
 class IdempotencyMixin:
-    """Firma-scoped Idempotency-Key; eşzamanlı aynı key → tek işlem (PG advisory)."""
+    """Firma+aktör scoped Idempotency-Key; eşzamanlı aynı key → tek işlem (PG advisory)."""
 
     _IDEMP_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -46,13 +48,16 @@ class IdempotencyMixin:
     def _idempotency_acquire(self, request) -> None:
         if request.method.upper() not in self._IDEMP_METHODS:
             return
-        key = getattr(request, "idempotency_key", None) or (
+        client_key = getattr(request, "idempotency_key", None) or (
             (request.headers.get("Idempotency-Key") or "").strip() or None
         )
-        firma_id = getattr(getattr(request, "user", None), "firma_id", None)
-        if not key or not firma_id:
+        user = getattr(request, "user", None)
+        firma_id = getattr(user, "firma_id", None)
+        actor_id = getattr(user, "pk", None)
+        if not client_key or not firma_id or not actor_id:
             return
-        lock_id = _advisory_lock_id(int(firma_id), key)
+        skey = idem.storage_key(actor_id=int(actor_id), client_key=client_key)
+        lock_id = _advisory_lock_id(int(firma_id), int(actor_id), skey)
         cursor = connection.cursor()
         cursor.execute("SELECT pg_advisory_lock(%s)", [lock_id])
         request._idempotency_advisory = {"cursor": cursor, "lock_id": lock_id}
@@ -72,18 +77,22 @@ class IdempotencyMixin:
 
     def idempotency_begin(self, request) -> Response | None:
         """Önbellek hit → Response; aksi halde None (işleme devam)."""
-        key = idem.require_key(request)
+        client_key = idem.require_key(request)
         firma_id = request.user.firma_id
+        actor_id = request.user.pk
+        skey = idem.storage_key(actor_id=int(actor_id), client_key=client_key)
         body = getattr(request, "body", b"") or b""
         path = request.path
         rh = idem.request_hash(method=request.method, path=path, body=body)
-        existing = idem.lookup(firma_id=firma_id, key=key)
+        existing = idem.lookup(firma_id=firma_id, key=skey)
         if existing is not None:
             if existing.request_hash != rh:
                 raise IdempotencyConflict()
             return idem.cached_response(existing)
         request._idempotency = {
-            "key": key,
+            # Domain servisleri client key kullanır (max 64/128 alanlar).
+            "key": client_key,
+            "storage_key": skey,
             "firma_id": firma_id,
             "path": path,
             "request_hash": rh,
@@ -97,7 +106,7 @@ class IdempotencyMixin:
             return response
         idem.store(
             firma_id=meta["firma_id"],
-            key=meta["key"],
+            key=meta["storage_key"],
             method=meta["method"],
             path=meta["path"],
             request_hash_value=meta["request_hash"],

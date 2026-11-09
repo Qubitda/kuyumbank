@@ -1,10 +1,11 @@
-"""Cart/Order tenant scope — alıcı kendi; view_all ops; başkası DoesNotExist."""
+"""Cart/Order tenant scope — alıcı kendi; view_all / QC / lojistik ops; başkası DoesNotExist."""
 
 from __future__ import annotations
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from firmalar.services.yetki_servisi import can_view_all_tenants
+from firmalar.role_permissions import P
+from firmalar.services.yetki_servisi import can_view_all_tenants, has_perm
 from siparis.models import Cart, Order
 
 
@@ -14,6 +15,19 @@ class CartNotFound(ObjectDoesNotExist):
 
 class OrderNotFound(ObjectDoesNotExist):
     """404 semantiği — varlık / çapraz tenant sızdırılmaz."""
+
+
+def can_ops_read_orders(user) -> bool:
+    """Y1: view_all veya QC/lojistik manage/view — genel view_all genişletmesi değil."""
+    if user is None or not getattr(user, "is_authenticated", False):
+        return False
+    if can_view_all_tenants(user):
+        return True
+    return (
+        has_perm(user, P["manage_qc"])
+        or has_perm(user, P["view_qc"])
+        or has_perm(user, P["manage_shipment"])
+    )
 
 
 def scope_cart_queryset(qs, user):
@@ -48,8 +62,8 @@ def get_cart_for_actor(user, cart_id: int | None = None) -> Cart:
 
 
 def scope_order_queryset(qs, user):
-    """Alıcı: kendi siparişleri. view_all: tümü. Tedarikçi/diğer: boş."""
-    if can_view_all_tenants(user):
+    """Alıcı: kendi. view_all / QC / lojistik: tümü (rol-kapılı). Tedarikçi: boş."""
+    if can_ops_read_orders(user):
         return qs
     firma = getattr(user, "firma", None)
     firma_id = getattr(user, "firma_id", None)

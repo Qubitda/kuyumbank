@@ -30,6 +30,24 @@ from .ops_finance import (
     OpsFinancePaymentListView,
     OpsFinanceSummaryView,
 )
+from .ops_qc import (
+    OpsInspectionCancelView,
+    OpsInspectionDetailView,
+    OpsInspectionFailView,
+    OpsInspectionListCreateView,
+    OpsInspectionMeasurementCreateView,
+    OpsInspectionPassView,
+    OpsInspectionStartView,
+)
+from .ops_shipment import (
+    OpsShipmentCancelView,
+    OpsShipmentDeliverView,
+    OpsShipmentDetailView,
+    OpsShipmentDispatchView,
+    OpsShipmentListCreateView,
+    OpsShipmentPodCreateView,
+    OpsShipmentPrepareView,
+)
 from .order import OrderDetailView, OrderListView
 from .org import OrgMemberListCreateView, OrgUnitDetailView, OrgUnitListCreateView
 from .payment import PaymentIntentCreateView
@@ -81,7 +99,21 @@ __all__ = [
     "OpsFinanceLedgerListView",
     "OpsFinancePaymentListView",
     "OpsFinanceSummaryView",
+    "OpsInspectionCancelView",
+    "OpsInspectionDetailView",
+    "OpsInspectionFailView",
+    "OpsInspectionListCreateView",
+    "OpsInspectionMeasurementCreateView",
+    "OpsInspectionPassView",
+    "OpsInspectionStartView",
     "OpsOrderSummaryView",
+    "OpsShipmentCancelView",
+    "OpsShipmentDeliverView",
+    "OpsShipmentDetailView",
+    "OpsShipmentDispatchView",
+    "OpsShipmentListCreateView",
+    "OpsShipmentPodCreateView",
+    "OpsShipmentPrepareView",
     "OrderCancelView",
     "OrderDetailView",
     "OrderFromCheckoutView",

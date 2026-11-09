@@ -2,20 +2,47 @@
 
 from decimal import Decimal
 
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.test import TestCase, TransactionTestCase
 
+from firmalar import roles
 from firmalar.models import AuditOlay
+from firmalar.role_permissions import seed_role_permissions
+from firmalar.services.rol_servisi import sync_user_role_groups
+from kalite.services import inspection_servisi, olcum_servisi
+from lojistik.services import shipment_servisi
 from siparis.models import Order
 from siparis.services import checkout_servisi, order_servisi
 from siparis.tests.test_checkout_f4_040 import CheckoutFixtureMixin
 from stok.models import StockBalance, StockMovement
+
+User = get_user_model()
 
 
 class OrderCancelTests(CheckoutFixtureMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         cls._build_checkout_world()
+        seed_role_permissions()
+        cls.qc = User(
+            username="cancel_qc",
+            firma=cls.platform,
+            rol=roles.PLATFORM_QUALITY,
+            is_staff=True,
+        )
+        cls.qc.set_password("x")
+        cls.qc.save()
+        sync_user_role_groups(cls.qc)
+        cls.log = User(
+            username="cancel_log",
+            firma=cls.platform,
+            rol=roles.PLATFORM_LOGISTICS,
+            is_staff=True,
+        )
+        cls.log.set_password("x")
+        cls.log.save()
+        sync_user_role_groups(cls.log)
 
     def _order(self, key="cancel-1", miktar=Decimal("2")):
         self._quote_and_cart(miktar=miktar)
@@ -70,6 +97,31 @@ class OrderCancelTests(CheckoutFixtureMixin, TestCase):
             order_servisi.iptal_siparis(actor=self.ted_user, order=order)
         order.refresh_from_db()
         self.assertEqual(order.durum, Order.Durum.OLUSTURULDU)
+
+    def test_cancel_blocked_after_active_shipment(self):
+        """K1: aktif sevkiyat varken iptal → ValidationError; ekstra IADE yok."""
+        order = self._order(key="cancel-ship", miktar=Decimal("1"))
+        insp = inspection_servisi.olustur(actor=self.qc, order=order)
+        insp = inspection_servisi.olcume_al(actor=self.qc, inspection=insp)
+        line = order.lines.get()
+        olcum_servisi.kaydet_olcum(
+            actor=self.qc,
+            inspection=insp,
+            order_line=line,
+            olculen=line.miktar,
+        )
+        inspection_servisi.pass_et(actor=self.qc, inspection=insp)
+        shipment_servisi.olustur(actor=self.log, order=order)
+
+        before = StockMovement.objects.filter(tip=StockMovement.Tip.IADE).count()
+        with self.assertRaises(ValidationError):
+            order_servisi.iptal_siparis(actor=self.buyer, order=order)
+        order.refresh_from_db()
+        self.assertEqual(order.durum, Order.Durum.OLUSTURULDU)
+        self.assertEqual(
+            StockMovement.objects.filter(tip=StockMovement.Tip.IADE).count(),
+            before,
+        )
 
 
 class OrderCancelFailAuditTests(CheckoutFixtureMixin, TransactionTestCase):

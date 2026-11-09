@@ -6,23 +6,25 @@ from rest_framework.views import APIView
 
 from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import IsAuthenticatedWithFirma
-from firmalar.services.yetki_servisi import can_view_all_tenants
+from api.presenters.buyer import BuyerOrderPresenter
 from siparis.models import Order
 from siparis.selectors.tenant import (
     OrderNotFound,
+    can_ops_read_orders,
     get_order_for_actor,
     scope_order_queryset,
 )
-from api.presenters.buyer import BuyerOrderPresenter
 
 
 def _assert_buyer_or_ops(user) -> None:
-    if can_view_all_tenants(user):
+    if can_ops_read_orders(user):
         return
     firma = getattr(user, "firma", None)
     if firma is not None and getattr(firma, "alici_mi", False):
         return
-    raise PermissionDenied(detail="Sipariş yalnız alıcı veya platform ops içindir.")
+    raise PermissionDenied(
+        detail="Sipariş yalnız alıcı veya QC/lojistik/platform ops içindir."
+    )
 
 
 class OrderDetailView(APIView):
@@ -38,12 +40,13 @@ class OrderDetailView(APIView):
 
 
 class OrderListView(APIView):
-    """GET /api/v1/orders/ — alıcı kendi; ops view_all. Client firma_id yok sayılır."""
+    """GET /api/v1/orders/ — alıcı kendi; view_all / QC / lojistik tümü. Client firma_id yok."""
 
     permission_classes = [IsAuthenticatedWithFirma]
 
     def get(self, request):
         _assert_buyer_or_ops(request.user)
+        request.query_params.get("firma_id")  # ignore
         qs = scope_order_queryset(
             Order.objects.select_related("alici_firma"),
             request.user,
@@ -58,5 +61,5 @@ class OrderListView(APIView):
             request,
             qs,
             present=lambda o: BuyerOrderPresenter(o, include_lines=False),
-            extra={"ops": can_view_all_tenants(request.user)},
+            extra={"ops": can_ops_read_orders(request.user)},
         )

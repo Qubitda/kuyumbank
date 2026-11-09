@@ -333,3 +333,9 @@
 - ROADMAP / BACKLOG / decisions/README / docs_sync faz lint’i MASTER’a yönlendirildi.
 - Yasak: ikinci handoff / durum raporu / paralel özet dosyası.
 
+### 2026-11-09 — API-B4 Kabul + API-B5 ops QC/sevkiyat
+- Ürün sahibi B4 **Kabul**.
+- B5: `/api/v1/ops/inspections/*` + `/api/v1/ops/shipments/*` (prepare/dispatch/deliver/cancel/pod); mevcut servis sarmalı; yeni HTML yok.
+- Test `api.tests.test_api_b5_ops` **7 OK** (idempotency + PG concurrency). OpenAPI güncellendi.
+- B5 **Kabul değil** — inceleme bekliyor. Sıradaki: B6 yalnız ayrı talimat.
+

@@ -38,6 +38,18 @@ def require_key(request) -> str:
     return key
 
 
+def storage_key(*, actor_id: int, client_key: str) -> str:
+    """Y2: DB anahtarı firma+actor scoped (client key 128 sınırını aşmaz).
+
+    Aynı kullanıcı + aynı client key → aynı storage key (retry).
+    Farklı kullanıcı → farklı storage key (platform firma çakışması yok).
+    """
+    digest = hashlib.sha256(
+        f"{int(actor_id)}\0{client_key}".encode("utf-8")
+    ).hexdigest()
+    return digest  # 64 hex ≤ 128
+
+
 def request_hash(*, method: str, path: str, body: bytes) -> str:
     h = hashlib.sha256()
     h.update(method.upper().encode("utf-8"))
@@ -56,6 +68,7 @@ def _is_fresh(record: IdempotencyRecord) -> bool:
 
 
 def lookup(*, firma_id: int, key: str) -> IdempotencyRecord | None:
+    """`key` burada storage_key (actor-scoped) olmalı."""
     record = IdempotencyRecord.objects.filter(firma_id=firma_id, key=key).first()
     if record is None:
         return None
@@ -81,7 +94,10 @@ def store(
     response_body: Any,
     actor=None,
 ) -> IdempotencyRecord:
-    """Tamamlanmış yanıtı saklar; çakışmada mevcut (taze) kaydı döner."""
+    """Tamamlanmış yanıtı saklar; çakışmada mevcut (taze) kaydı döner.
+
+    `key` storage_key (actor-scoped) olmalıdır.
+    """
     body = response_body if isinstance(response_body, (dict, list)) else {"detail": response_body}
     payload = body if isinstance(body, dict) else {"data": body}
 
