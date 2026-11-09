@@ -88,12 +88,12 @@
 | Order Mgmt | SM, snapshot | Order + OrderLine + iptal + reorder | UYGULANDI (SM dar) | F4-081 bulk | Cart |
 | Inventory & WH | WH + ledger + rezervasyon | `stok` (+ dual kolon, yazma kapalı) | UYGULANDI (F4.1–4.3 + F4-070) | F4-070b drop opsiyonel | Supplier |
 | Payments & Finance | Ödeme, cari | — | PLANLANDI | U-* | Order |
-| Quality | QC, gram | ADR-0013 **Kabul**; F6-010 UYGULANDI | KISMİ | Tümü | Order |
-| Shipping | Sevkiyat, carrier | ADR-0013 **Kabul** | PLANLANDI | Tümü | QC |
+| Quality | QC, gram | ADR-0013 **Kabul**; F6-010+011 UYGULANDI | UYGULANDI | Tümü | Order |
+| Shipping | Sevkiyat, carrier | ADR-0013 **Kabul**; F6-020…023 UYGULANDI | UYGULANDI | Tümü | QC |
 | Returns | İade, uyuşmazlık | — | PLANLANDI | U-004 | Ship, Finance |
 | Customer & Org | Şube, limit | — | PLANLANDI | Faz 10 + **U-014** (ADR-0003) | Identity |
 | Notification | Outbox | `OutboxMessage` + process command | UYGULANDI (iskelet) | F7-020 webhook | Events |
-| Documents | Sertifika, POD | — | PLANLANDI | S3 | |
+| Documents | Sertifika, POD | F6-012 metadata UYGULANDI | KISMİ | S3/K-014 | |
 | Workflow | Onay zinciri | kısmi (ürün/teklif SM) | KISMİ | Genel motor → F10-013 | Order, Org |
 | Audit | AuditOlay | var | KISMİ | API yüzeyi; AUD-001 | Tümü |
 | Reporting | Rapor | — | PLANLANDI | | Order+ |
@@ -150,11 +150,11 @@ Durum: PLANLANDI.
 ### Faz 5 — Finans
 Amaç: Ledger, cari, payment intent, credit visibility, contract release (F5-040/041).  
 Gate: U-003…U-007, U-005.  
-Durum: **KISMİ UYGULANDI** (F5-010…032, 040, 041); F5-022 Blocked (U-006 vade); F5-023 Blocked (U-004).
+Durum: **KISMİ UYGULANDI** (F5-010…032, 040, 041); F5-022/023 politika **Kabul** → backlog (kod talimatı).
 
 ### Faz 6 — QC & lojistik
 QC gram, shipment, POD, return. QC fail → ship blok.  
-Gate: **ADR-0013 Kabul** (2026-11-09). F6-010 UYGULANDI → sırada F6-011 / F6-020.
+Gate: **ADR-0013 Kabul**. F6-010…023 + F6-012 UYGULANDI → F6-030 stok-only (politika Kabul; kod talimatı).
 
 ### Faz 7 — API & entegrasyon
 Buyer/Supplier/Admin API olgunluk, rate limit, webhook outbox, ERP, **EDI/Punchout (F7-024)**. PRE’yi büyütür.

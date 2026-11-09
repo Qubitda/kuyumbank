@@ -31,6 +31,8 @@ P = {
     "manage_qc": "kalite.manage_qc",
     "view_qc": "kalite.view_qc",
     "manage_qc_override": "kalite.manage_qc_override",
+    "manage_shipment": "lojistik.manage_shipment",
+    "manage_document": "belgeler.manage_document",
 }
 
 _KUR_ADMIN = (
@@ -151,6 +153,9 @@ ROLE_PERMISSION_MATRIX = {
         P["publish_urun"],
         P["approve_teklif"],
         P["approve_eslestirme"],
+        P["manage_document"],
+        "belgeler.view_document",
+        "belgeler.view_tassertifikabelgesi",
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
     ),
@@ -159,10 +164,14 @@ ROLE_PERMISSION_MATRIX = {
         P["view_qc"],
         P["manage_qc_override"],
         "kalite.view_qualityinspection",
+        "kalite.view_qualitymeasurement",
     ),
     roles.PLATFORM_LOGISTICS: (
         P["view_qc"],
+        P["manage_shipment"],
         "kalite.view_qualityinspection",
+        "kalite.view_qualitymeasurement",
+        "lojistik.view_shipment",  # Django builtin
     ),
     roles.PLATFORM_SUPPORT: (),
     roles.ALICI_YONETICI: (
@@ -182,6 +191,9 @@ ROLE_PERMISSION_MATRIX = {
         P["submit_urun"],
         P["manage_own_teklif"],
         P["manage_own_warehouse"],
+        P["manage_document"],
+        "belgeler.view_document",
+        "belgeler.view_tassertifikabelgesi",
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
         "firmalar.view_firma",
@@ -193,6 +205,9 @@ ROLE_PERMISSION_MATRIX = {
         P["submit_urun"],
         P["manage_own_teklif"],
         P["manage_own_warehouse"],
+        P["manage_document"],
+        "belgeler.view_document",
+        "belgeler.view_tassertifikabelgesi",
         *_URUN_ADMIN,
         *_FIYATLAMA_TEKLIF_ADMIN,
     ),

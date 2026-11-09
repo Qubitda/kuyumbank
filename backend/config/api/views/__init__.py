@@ -12,6 +12,7 @@ from .ops_finance import (
 )
 from .order import OrderDetailView, OrderListView
 from .payment_webhook import PaymentWebhookView
+from .shipment import ShipmentDetailView, ShipmentListView
 
 __all__ = [
     "BulkOrderCreateView",
@@ -29,4 +30,6 @@ __all__ = [
     "OrderDetailView",
     "OrderListView",
     "PaymentWebhookView",
+    "ShipmentDetailView",
+    "ShipmentListView",
 ]

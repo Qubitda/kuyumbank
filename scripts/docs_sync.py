@@ -23,6 +23,8 @@ APPS = (
     "fiyatlama",
     "finans",
     "kalite",
+    "lojistik",
+    "belgeler",
     "siparis",
     "stok",
     "tanimlar",

@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     'siparis.apps.SiparisConfig',
     'finans.apps.FinansConfig',
     'kalite.apps.KaliteConfig',
+    'lojistik.apps.LojistikConfig',
+    'belgeler.apps.BelgelerConfig',
     'api.apps.ApiConfig',
 
 ]
@@ -183,9 +185,21 @@ VARYANT_GRAM_BANDI_ORAN = Decimal(env("VARYANT_GRAM_BANDI_ORAN", default="0.05")
 # 0 → limit kapalı (over_limit False). Decimal string env.
 HAS_POSITION_LIMIT = Decimal(env("HAS_POSITION_LIMIT", default="0"))
 
+# --- QC gram tolerans (ADR-0013 F6-K3 / F6-011) -----------------------------
+# Bağıl ±% + isteğe bağlı mutlak taban (gram). Float yasak; Decimal string env.
+QC_GRAM_TOLERANCE_PCT = Decimal(env("QC_GRAM_TOLERANCE_PCT", default="0.50"))
+QC_GRAM_TOLERANCE_ABS = Decimal(env("QC_GRAM_TOLERANCE_ABS", default="0"))
+
 # --- Ödeme sağlayıcı (F5-020) -----------------------------------------------
 # "fake" = geliştirme/test. Canlı banka yok. Secret asla koda yazılmaz.
 PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="fake")
 PAYMENT_FAKE_FORCE_FAIL = env.bool("PAYMENT_FAKE_FORCE_FAIL", default=False)
+
+# --- Kargo carrier (F6-021) -------------------------------------------------
+# "fake" = geliştirme/test. Canlı carrier yok. Secret koda yazılmaz.
+CARRIER_PROVIDER = env("CARRIER_PROVIDER", default="fake")
+CARRIER_FAKE_FORCE_FAIL = env.bool("CARRIER_FAKE_FORCE_FAIL", default=False)
+# F6-022: True → teslim_et öncesi POD zorunlu (ADR-0013: varsayılan opsiyonel).
+SHIPMENT_POD_REQUIRED = env.bool("SHIPMENT_POD_REQUIRED", default=False)
 # F5-021 webhook: boşsa endpoint 401 (fail-closed). Secret koda yazılmaz.
 PAYMENT_WEBHOOK_SECRET = env("PAYMENT_WEBHOOK_SECRET", default="")

@@ -165,3 +165,41 @@ B-01/B-06; dual stock (F4-070); DRF yok; TRY dışı yuvarlama; U-003…011, U-0
 - **CI:** test listesine `finans.tests` + `kalite.tests` eklendi.
 - **Kabul işaretleri:** ADR-0013 Kabul; F4-070b ürün sahibi onayı (kod yok); F5-022 genel onay ama U-006 vade hâlâ net değil.
 - **Sıradaki:** F6-011 → F6-020.
+
+### 2026-11-09 — F6-011 Gram ölçüm + tolerans
+- `QualityMeasurement` append-only; `tolerans_motoru` (bağıl ±% + abs taban; ADET tam eşitlik).
+- `olcum_servisi.kaydet_olcum`: sapma → otomatik FAIL; override `manage_qc_override` + gerekçe≥10.
+- Settings: `QC_GRAM_TOLERANCE_PCT` / `QC_GRAM_TOLERANCE_ABS`; mig `kalite.0002`.
+- PASS için uygun/override ölçüm zorunlu (F6-010 happy path güncellendi).
+- Test: `kalite.tests` **16 OK** (`test_olcum_f6_011` 11 + `test_inspection_f6_010` 5).
+- **Sıradaki:** F6-020 (`lojistik` Shipment + QC gate).
+
+### 2026-11-09 — F6-020 Shipment + QC gate
+- App `lojistik`: `Shipment` SM (`TASLAK→HAZIR→YOLDA→TESLIM|IPTAL`); create `order_shipment_blocked` (F6-K6).
+- `manage_shipment` + PLATFORM_LOGISTICS seed; mig `lojistik.0001`; CI’ye `lojistik.tests`.
+- Test: `test_shipment_f6_020` **6 OK** (+ kalite 16 = 22 OK).
+- **Sıradaki:** F6-021 carrier fake → F6-022 POD → F6-023 buyer track.
+
+### 2026-11-09 — F6-021 Carrier fake port
+- `lojistik.carriers` (port/fake/factory); bilinmeyen provider fail-closed; secret yok.
+- `sevk_et` takip boşsa fake label (`FAKE-ship-{id}`); force_fail audit + ValidationError.
+- Test: `test_carrier_f6_021` **5 OK** (lojistik toplam 11 OK).
+- **Sıradaki:** F6-022 POD → F6-023 buyer track.
+
+### 2026-11-09 — F6-022/023 + karlılık sim
+- POD: `ProofOfDelivery`; `SHIPMENT_POD_REQUIRED` (default off); mig `lojistik.0002`.
+- Buyer API: `GET /api/v1/shipments/` (+ detail); maskeli; tedarikçi 403 / çapraz 404.
+- `karlilik_simulasyonu` Excel A/B (saf Decimal); ADR-0014 **Taslak** — quote’a bağlanmadı.
+- Test: lojistik+api shipment+karlilik odaklı **20 OK**.
+- **Sıradaki:** F6-012 / F6-030(U-004) / ADR-0014 Kabul kararı.
+
+### 2026-11-09 — F6-012 Document + taş sertifika
+- App `belgeler`: `Document` (tenant + storage_key) + `TasSertifikaBelgesi` (UrunTasi XOR TeklifTas).
+- RBAC `manage_document`; tenant selector; binary/S3 yok (K-014).
+- Mig `belgeler.0001`; test **6 OK**.
+- **Sıradaki:** politika (F6-030 / F5-022) veya ADR-0014 Kabul.
+
+### 2026-11-09 — Ürün sahibi: bekleyen kararlar Kabul + F6 sync commit
+- Qubit: ADR-0014, B-01 (v1=0), B-06 (KDV yok), U-006 vade=**QC PASS**, U-004 iade=**stok-only**, F4-070b drop onayı.
+- F5-022 / F5-023 / F6-030 **Blocked → Backlog** (kod ayrı talimat).
+- Kod bu commit’te: F6-011…023, F6-012, karlılık sim.

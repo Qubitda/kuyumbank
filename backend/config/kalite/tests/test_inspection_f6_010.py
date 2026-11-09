@@ -11,7 +11,7 @@ from firmalar.models import AuditOlay
 from firmalar.role_permissions import seed_role_permissions
 from firmalar.services.rol_servisi import sync_user_role_groups
 from kalite.models import QualityInspection
-from kalite.services import inspection_servisi
+from kalite.services import inspection_servisi, olcum_servisi
 from siparis.services import checkout_servisi, order_servisi
 from siparis.tests.test_checkout_f4_040 import CheckoutFixtureMixin
 
@@ -52,6 +52,13 @@ class InspectionF6010Tests(CheckoutFixtureMixin, TestCase):
         insp = inspection_servisi.olcume_al(actor=self.qc, inspection=insp)
         self.assertEqual(insp.durum, QualityInspection.Durum.OLCUMDE)
 
+        line = order.lines.get()
+        olcum_servisi.kaydet_olcum(
+            actor=self.qc,
+            inspection=insp,
+            order_line=line,
+            olculen=line.miktar,
+        )
         insp = inspection_servisi.pass_et(actor=self.qc, inspection=insp)
         self.assertEqual(insp.durum, QualityInspection.Durum.PASS)
         self.assertFalse(insp.shipment_blok)

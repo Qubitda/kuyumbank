@@ -79,11 +79,11 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 
 `INSTALLED_APPS` (DOĞRULANDI `config/settings.py` + AUTO §2.7): domain `tanimlar`…`kalite` + `api` (+ DRF).  
 Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `tests/`.  
-**Yok:** Celery. **Var:** `finans` (F5), `kalite` (F6-010).  
+**Yok:** Celery. **Var:** `finans` (F5), `kalite`, `lojistik`, `belgeler` (F6-012).  
 **HTTP:** `admin/` + `/api/v1/` + `/buyer/` + `/ops/finance/` (DOĞRULANDI).
 
 <!-- AUTO:apps -->
-`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `api`
+`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `lojistik`, `belgeler`, `api`
 <!-- /AUTO:apps -->
 
 ### 2.3 Modül uygulama durumu (kod gerçeği)
@@ -101,7 +101,8 @@ Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `
 | Checkout (aday) | **Tamamlanmış** | F4-040/041 |
 | Order / OrderLine | **Tamamlanmış** | F4-050…053 (iptal = stok IADE) |
 | FX / hedge / cari / PI / credit / webhook | **Tamamlanmış (iskelet)** | ADR-0012; F5-010…032; F5-041; unpaid hak ediş=0 |
-| QC QualityInspection SM | **KISMİ** | F6-010; ölçüm F6-011; shipment F6-020 |
+| QC QualityInspection SM | **UYGULANDI** | F6-010+011 |
+| Shipment / lojistik | **UYGULANDI** | F6-020…023 (POD + buyer API); return F6-030 blocked |
 | İnce PRE API | **Tamamlanmış** | PRE-001…005 (+ credit/finance/ops/webhook) |
 | Ödeme provider / kargo / tam Prosperer API | **Uygulanmamış** | Fake payment adapter var; gerçek provider yok |
 
@@ -123,7 +124,10 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 | `stok`: warehouse / ledger / reservation / birim | F4 stok | UYGULANDI |
 | `siparis`: cart / checkout / order / reorder / bulk / buyer_ui | F4 sipariş + UI | UYGULANDI |
 | `finans`: ledger / cari / payment / credit / webhook / buyer+ops | F5 finans | UYGULANDI |
-| `kalite`: `inspection_servisi` | F6-010 QC SM | UYGULANDI |
+| `kalite`: `inspection_servisi` / `olcum_servisi` / `tolerans_motoru` | F6-010 SM + F6-011 ölçüm | UYGULANDI |
+| `lojistik`: `shipment`/`pod`/`buyer_shipment` + `carriers` | F6-020…023 | UYGULANDI |
+| `fiyatlama.karlilik_simulasyonu` | Excel A/B P&L (ADR-0014 **Kabul**; quote ayrı dilim) | UYGULANDI (yardımcı) |
+| `belgeler`: `document_servisi` + tenant selector | F6-012 Document + taş sertifika | UYGULANDI |
 | `api`: health / me / cart / order / credit / finance / ops / webhook | ince PRE HTTP | UYGULANDI |
 | tenant selectors (`firmalar`/`urunler`/`stok`/`siparis`/…) | firma scope | UYGULANDI |
 
@@ -142,12 +146,12 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **453** — `api` 17 · `firmalar` 53 · `fiyatlama` 141 · `finans` 53 · `kalite` 5 · `siparis` 38 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+Statik test sayısı (`def test_`): **490** — `api` 20 · `firmalar` 53 · `fiyatlama` 143 · `finans` 53 · `kalite` 16 · `lojistik` 15 · `belgeler` 6 · `siparis` 38 · `stok` 31 · `tanimlar` 20 · `urunler` 95
 _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 <!-- /AUTO:tests -->
 
 **Son suite koşusu (elle):** birleşik **354 OK** (tarihsel 2026-11-09) — **bayat**; bu sync turunda full suite koşulmadı. Odaklı: F5 finans / F5-041 / AUD-001b / F5-032 / F6-010 yeşil.
-`makemigrations --check`: temiz. **Yerel/dev migrate uygulandı** (2026-11-09: `firmalar.0006`, `urunler.0009`, `fiyatlama.0014–0015`, `kalite.0001`).
+`makemigrations --check`: temiz. **Yerel/dev migrate uygulandı** (2026-11-09: `firmalar.0006`, `urunler.0009`, `fiyatlama.0014–0015`, `kalite.0001–0002`, `lojistik.0001–0002`).
 
 <!-- AUTO:migrations -->
 | App | Migration sayısı | Son migration |
@@ -156,7 +160,9 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | `firmalar` | 6 | `0006_aud_001b_ip_changes` |
 | `fiyatlama` | 15 | `0015_f5_041_contract_release` |
 | `finans` | 5 | `0005_f5_021_webhook_payload_blank` |
-| `kalite` | 1 | `0001_f6_010_quality_inspection` |
+| `kalite` | 2 | `0002_f6_011_quality_measurement` |
+| `lojistik` | 2 | `0002_f6_022_proof_of_delivery` |
+| `belgeler` | 1 | `0001_f6_012_document_tas_sertifika` |
 | `siparis` | 3 | `0003_order_orderline` |
 | `stok` | 3 | `0003_faz4_3_stock_reservation` |
 | `tanimlar` | 3 | `0003_faz3_3_kur_index_rename` |
@@ -178,6 +184,8 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | `/api/v1/bulk-orders/` | `api-bulk-order-create` |
 | `/api/v1/orders/` | `api-order-list` |
 | `/api/v1/orders/<int:pk>/` | `api-order-detail` |
+| `/api/v1/shipments/` | `api-shipment-list` |
+| `/api/v1/shipments/<int:pk>/` | `api-shipment-detail` |
 | `/api/v1/credit/me/` | `api-credit-mine` |
 | `/api/v1/credit/check/` | `api-credit-check` |
 | `/api/v1/finance/me/` | `api-finance-mine` |
@@ -207,8 +215,8 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 
 | Konu | Durum |
 |------|-------|
-| B-01 platform servis payı | KARAR BEKLİYOR (hukuk; kodlanmadı) |
-| B-06 KDV | Ertelendi (proforma) |
+| B-01 platform servis payı | **Kabul** (2026-11-09) — v1 kapalı/0; kod yok |
+| B-06 KDV | **Kabul** (2026-11-09) — KDV yok / proforma devam |
 | ADR-0012 (audit/FX/hedge/cari) | **Kabul** |
 | PRE-005 Idempotency-Key + checkout POST | UYGULANDI · TEST EDİLDİ |
 | Ödeme / tam Prosperer API | PLANLANDI |
@@ -216,7 +224,8 @@ _Bu sayı koşu sonucu değildir; son suite koşusu aşağıda elle tutulur._
 | U-003…007, 009…011, U-013…015 | **Kabul** (2026-11-09, Emre; dış onaylılarda ürün sahibi override) — [BACKLOG](BACKLOG.md) |
 | U-014 / U-015 / U-016 | **Kabul** (2026-11-09) |
 | ADR-0001 doküman düzeni (U-016) | **Kabul** |
-| B-01 / B-06 | Dokunulmadı (hukuk / ertelendi) |
+| B-01 / B-06 | **Kabul** (Qubit 2026-11-09); kod bilinçli yok |
+| ADR-0014 | **Kabul** — sim UYGULANDI; quote hedef ayrı dilim |
 
 Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 
@@ -271,15 +280,15 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Gram / adet / sabit parça modelleri | UYGULANDI |
 | İşçilik + kanal marj | UYGULANDI |
 | Taş maliyeti (teklif vs katalog ayrımı K-011) | UYGULANDI |
-| Sertifika kurum/no/dosya | PLANLANDI |
+| Sertifika kurum/no/dosya | KISMİ — metadata+tenant belge F6-012; object storage K-014 yok |
 | Kur/metal zaman damgası + stale fail-closed | UYGULANDI |
 | PriceQuote + PriceLock | UYGULANDI (sipariş bağ L-11 UYGULANDI) |
 | Fiyat girdi izi (`hesap_girdisi`) | KISMİ (JSON var; UI yok) |
 | Kör çoklu teklif pazaryeri | UYGULANDI |
 | Seri/lot/batch, emanet/konsinye, depo transfer | PLANLANDI · U-008 |
 | Üretim / özel sipariş / RFQ | PLANLANDI |
-| Gram tolerans + QC | KISMİ — ADR-0013 Kabul; F6-010 SM; ölçüm F6-011 |
-| Teslimat / uyuşmazlık | PLANLANDI |
+| Gram tolerans + QC | UYGULANDI — F6-010 SM + F6-011 ölçüm |
+| Teslimat / uyuşmazlık | KISMİ — F6-020…023 UYGULANDI; return F6-030 (U-004) |
 
 ---
 
@@ -290,7 +299,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4 ticaret **UYGULANDI** · F5 finans **KISMİ/UYGULANDI** · F6 QC **F6-010** |
+| Faz | F4 ticaret **UYGULANDI** · F5 finans **KISMİ/UYGULANDI** · F6 **F6-010…023 + F6-012** |
 | ADR | 0010–0013 **Kabul** — [indeks](decisions/README.md) |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate uygulandı (2026-11-09) |
 
@@ -327,29 +336,36 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F5-032 | Finans UI (RBAC) | `/buyer/finance/` + `/ops/finance/`; `test_finance_ui_f5_032` **4 OK** |
 | F6-001 | QC ADR | [ADR-0013](decisions/ADR-0013-faz6-qc-lojistik.md) **Kabul** (2026-11-09) |
 | F6-010 | QualityInspection + SM | `kalite` app + `inspection_servisi`; mig `0001`; `test_inspection_f6_010` **5 OK** |
+| F6-011 | Gram/ağırlık ölçüm + tolerans | `QualityMeasurement` + `olcum_servisi` / `tolerans_motoru`; mig `0002`; `test_olcum_f6_011` **11 OK** |
+| F6-020 | Shipment + QC gate | `lojistik.Shipment` + `shipment_servisi`; mig `0001`; `test_shipment_f6_020` **6 OK** |
+| F6-021 | Carrier adapter + fake | `lojistik.carriers` + `sevk_et` label; `test_carrier_f6_021` **5 OK** |
+| F6-022 | POD kaydı | `ProofOfDelivery` + `pod_servisi`; mig `0002`; `test_pod_f6_022` **4 OK** |
+| F6-023 | Buyer sevkiyat API | `/api/v1/shipments/`; `test_shipment_api_f6_023` **3 OK** |
+| KS | Karlılık sim (Excel A/B) | `karlilik_simulasyonu` + ADR-0014 **Kabul** |
+| F6-012 | Taş sertifika belge | `belgeler` Document + TasSertifikaBelgesi; mig `0001`; **6 OK** |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| **1** | F6-011 | Gram/ağırlık ölçüm + tolerans | F6-010; ADR-0013 F6-K3/K4 |
-| **2** | F6-020 | Shipment + QC gate | F6-010; `lojistik` app |
-| — | F5-022 | Tedarikçi hak ediş | U-006 (vade seçeneği hâlâ net değil) |
-| — | F4-070b | Legacy stok kolon drop | Onaylandıysa ayrı dilim (RemoveField) |
-| — | B-01 / B-06 | Platform pay / KDV | hukuk |
+| **1** | F6-030 | Return/Dispute SM (stok-only) | Politika Kabul; açık talimat |
+| **2** | F5-022 | Tedarikçi hak ediş (QC PASS tetik) | Politika Kabul; açık talimat |
+| **3** | F5-023 | İade/mahsup (ödeme iadesi yok) | F6-030 sonrası |
+| — | F4-070b | Legacy stok kolon drop | **Kabul**; RemoveField dilimi |
+| — | ADR-0014 KS-6 | Hedef toplam → quote | Kabul; uygulama ayrı talimat |
 | — | U-014 / F10 | Account Hierarchy | **Kabul A**; uygulama ayrı ADR + talimat |
-| — | CAP-PIYASA | Canlı altın/döviz beslemesi | kod yok; ADR-0008 B-04/B-05 |
+| — | CAP-PIYASA | Canlı altın/döviz beslemesi | kod yok |
 
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
 Celery/Redis · gerçek ödeme provider · kargo carrier · tam Prosperer API · RFQ · EDI · org şube FK doldurma.  
-(QC SM F6-010 var; ölçüm/shipment/kargo yok.)
+(QC + Shipment + POD + buyer track F6-010…023 var; return/dispute yok.)
 
 ### 12.5 Yeni session handoff
 
 1. Oku: `AGENTS.md` → bu dosya **§2 + §12** → ADR-0013 (Kabul).  
-2. Sıradaki kod: **F6-011** (gram ölçüm + tolerans motoru).  
-3. Yerel migrate güncel; full suite bayat (istersen `--keepdb` suite).  
-4. Açık ama kodlanmayan: F5-022 (vade kararı), F4-070b (RemoveField dilimi), B-01/B-06.
+2. Sıradaki kod (politika **Kabul**): **F6-030** veya **F5-022** — açık talimatla.  
+3. Yerel migrate güncel (`belgeler.0001`, `lojistik.0002`, `kalite.0002`); full suite bayat.  
+4. B-01/B-06 Kabul ama kod yok; K-014 storage yok; F10 ayrı ADR.
 
-*Son güncelleme: 2026-11-09 — **handoff sync**: migrate uygulandı; docs_sync+DATA_DICTIONARY; CI suite’e finans/kalite; sıradaki **F6-011**.*
+*Son güncelleme: 2026-11-09 — ürün sahibi **tüm bekleyen kararları Kabul**; F6-011…023+012 kod + docs sync.*

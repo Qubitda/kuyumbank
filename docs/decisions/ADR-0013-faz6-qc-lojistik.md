@@ -14,7 +14,7 @@ Kör havuz ve Decimal kuralları bozulmaz.
 ## Kapsam dışı (bu ADR)
 
 - Konsinye/emanet mülkiyet (U-008) — v1 yalnız sahipli depo/stok yolu
-- İade/uyuşmazlık finansı (F6-030 / U-004 Blocked) — ayrı karar
+- İade/uyuşmazlık finansı (F6-030) — U-004 Kabul: v1 stok-only; ödeme iadesi yok (2026-11-09)
 - Gerçek kargo provider / Celery (F6-021 fake port; F8)
 - B-01 / B-06
 - Account Hierarchy (F10)

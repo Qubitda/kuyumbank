@@ -131,6 +131,22 @@ def pass_et(*, actor, inspection: QualityInspection) -> QualityInspection:
         locked = QualityInspection.objects.select_for_update().get(
             pk=inspection.pk
         )
+        # F6-011: PASS için en az bir uygun (veya override'lı) ölçüm gerekir.
+        from kalite.models import QualityMeasurement
+
+        olcumler = QualityMeasurement.objects.filter(inspection=locked)
+        if not olcumler.exists():
+            raise ValidationError(
+                "PASS için en az bir QC ölçümü gerekir (F6-011)."
+            )
+        unresolved = olcumler.filter(
+            sonuc=QualityMeasurement.Sonuc.SAPMA,
+            override_uygulandi=False,
+        )
+        if unresolved.exists():
+            raise ValidationError(
+                "Tolerans dışı ölçüm varken PASS yok; override veya yeni inspection."
+            )
         _set_durum(locked, QualityInspection.Durum.PASS)
         record_audit(
             actor=actor,

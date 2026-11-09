@@ -448,6 +448,94 @@ QualityInspection(id, order, order_line, durum, shipment_blok, notlar, olusturan
 
 **Kısıtlar:** `qualityinspection_durum_gecerli` (CheckConstraint)
 
+### QualityMeasurement
+
+QualityMeasurement(id, inspection, order_line, birim, beklenen, olculen, sapma_abs, tolerans_pct, tolerans_abs, izin_verilen_sapma, sonuc, override_uygulandi, override_gerekce, quote_gram, olusturan, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `inspection` | ForeignKey | kalite.QualityInspection (PROTECT) |  |  |
+| `order_line` | ForeignKey | siparis.OrderLine (PROTECT) |  |  |
+| `birim` | CharField | max 8, choices |  |  |
+| `beklenen` | DecimalField | 18,6 |  |  |
+| `olculen` | DecimalField | 18,6 |  |  |
+| `sapma_abs` | DecimalField | 18,6 |  |  |
+| `tolerans_pct` | DecimalField | 8,4 |  |  |
+| `tolerans_abs` | DecimalField | 18,6 |  |  |
+| `izin_verilen_sapma` | DecimalField | 18,6 |  |  |
+| `sonuc` | CharField | max 8, choices |  |  |
+| `override_uygulandi` | BooleanField |  |  |  |
+| `override_gerekce` | CharField | max 255 | blank |  |
+| `quote_gram` | DecimalField | 12,4 | null | F6-K2 zincir kanıtı: PriceLock.quote.gram (GRAM satırında). |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `qualitymeasurement_beklenen_pozitif` (CheckConstraint); `qualitymeasurement_olculen_negatif_degil` (CheckConstraint); `qualitymeasurement_sapma_negatif_degil` (CheckConstraint); `qualitymeasurement_izin_negatif_degil` (CheckConstraint); `qualitymeasurement_pct_negatif_degil` (CheckConstraint); `qualitymeasurement_abs_negatif_degil` (CheckConstraint); `qualitymeasurement_birim_gecerli` (CheckConstraint); `qualitymeasurement_sonuc_gecerli` (CheckConstraint)
+
+## `lojistik`
+
+### ProofOfDelivery
+
+ProofOfDelivery(id, shipment, teslim_alan, notlar, belgeler_ref, olusturan, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `shipment` | OneToOneField | lojistik.Shipment (PROTECT) | benzersiz |  |
+| `teslim_alan` | CharField | max 120 |  |  |
+| `notlar` | CharField | max 255 | blank |  |
+| `belgeler_ref` | CharField | max 255 | blank | Harici belge/storage anahtarı; dosya binary yok (F6-022). |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+### Shipment
+
+Shipment(id, order, durum, takip_no, notlar, olusturan, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `order` | ForeignKey | siparis.Order (PROTECT) |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `takip_no` | CharField | max 64 | blank | F6-021 carrier port doldurur; v1 elle/boş. |
+| `notlar` | CharField | max 255 | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `shipment_durum_gecerli` (CheckConstraint)
+
+## `belgeler`
+
+### Document
+
+Document(id, firma, tip, baslik, storage_key, content_type, byte_size, metadata, olusturan, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `firma` | ForeignKey | firmalar.Firma (PROTECT) |  | Tenant sahibi; client firma_id güvenilmez. |
+| `tip` | CharField | max 32, choices |  |  |
+| `baslik` | CharField | max 120 |  |  |
+| `storage_key` | CharField | max 255 |  | Harici object key / URI; dosya binary bu tabloda yok (K-014). |
+| `content_type` | CharField | max 64 | blank |  |
+| `byte_size` | PositiveIntegerField |  | null |  |
+| `metadata` | JSONField |  | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `document_tip_gecerli` (CheckConstraint); `document_storage_key_dolu` (CheckConstraint)
+
+### TasSertifikaBelgesi
+
+Tam olarak bir taş satırına (katalog veya teklif) bağlanır.
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `document` | OneToOneField | belgeler.Document (PROTECT) | benzersiz |  |
+| `urun_tasi` | ForeignKey | urunler.UrunTasi (PROTECT) | null |  |
+| `teklif_tas` | ForeignKey | fiyatlama.TeklifTasMaliyeti (PROTECT) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `tassertifikabelgesi_tek_hedef` (CheckConstraint)
+
 ## `siparis`
 
 ### Cart

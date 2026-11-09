@@ -18,6 +18,8 @@ from api.views import (
     OrderDetailView,
     OrderListView,
     PaymentWebhookView,
+    ShipmentDetailView,
+    ShipmentListView,
 )
 
 schema_view = get_schema_view(
@@ -37,6 +39,12 @@ urlpatterns = [
     path("bulk-orders/", BulkOrderCreateView.as_view(), name="api-bulk-order-create"),
     path("orders/", OrderListView.as_view(), name="api-order-list"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="api-order-detail"),
+    path("shipments/", ShipmentListView.as_view(), name="api-shipment-list"),
+    path(
+        "shipments/<int:pk>/",
+        ShipmentDetailView.as_view(),
+        name="api-shipment-detail",
+    ),
     path("credit/me/", CreditMineView.as_view(), name="api-credit-mine"),
     path("credit/check/", CreditCheckView.as_view(), name="api-credit-check"),
     path("finance/me/", BuyerFinanceSummaryView.as_view(), name="api-finance-mine"),

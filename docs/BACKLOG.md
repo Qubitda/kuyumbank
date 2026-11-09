@@ -497,17 +497,19 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F5-022] Tedarikçi hak ediş iskeleti (politika sonrası)
 
 - **Faz:** Faz 5
-- **Durum:** Blocked · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** U-006, F5-010
+- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** U-006 **Kabul**, F5-010
 - **Kapsam:** Placeholder model; oran sabitleme yok
-- **Kabul kriterleri:** U-006 olmadan production hesap yok
-- **Not (2026-11-09):** Ürün sahibi genel onay verdi; **U-006 vade seçeneği hâlâ sabitlenmedi** (Teslim+N / QC pass / peşin) — iskelet kodu için hâlâ açık vade kararı veya “placeholder-only” talimatı gerekir
+- **Politika (2026-11-09, Qubit Kabul):** hak ediş tetik = **QC PASS** (F6); vade günü konfig (varsayılan 0 = geçişte hak ediş kaydı)
+- **Kabul kriterleri:** iskelet + audit; production oran ayrı talimat
+- **Not:** Blocked kaldırıldı — kod dilimi açık talimatla başlar
 
 ### [F5-023] İade / mahsup hareketleri
 
 - **Faz:** Faz 5
-- **Durum:** Blocked · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** U-004, F6-E03
+- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** U-004 **Kabul**, F6-030
+- **Politika (2026-11-09, Qubit Kabul):** v1 **ödeme iadesi yok**; mahsup/ledger yalnız açık talimat + F6-030 sonrası
 - **Kabul kriterleri:** Politika metni + test
 
 ### [F5-030] Buyer finans özeti API (maskeli)
@@ -575,52 +577,67 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F6-011] Gram/ağırlık ölçüm kaydı
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** F6-010, Decimal
-- **Kabul kriterleri:** Tolerans dışı otomatik fail (konfig)
+- **Kanıt:** `QualityMeasurement` append-only; `tolerans_motoru` (bağıl ±% + abs taban); `olcum_servisi.kaydet_olcum` → sapma otomatik FAIL; override `manage_qc_override` + gerekçe≥10; settings `QC_GRAM_TOLERANCE_PCT/ABS`; mig `kalite.0002`
+- **Test:** `kalite.tests.test_olcum_f6_011` **11 OK** (+ F6-010 güncel PASS ölçüm zorunlu)
+- **Kabul kriterleri:** Tolerans dışı otomatik fail (konfig) — karşılandı
 
 ### [F6-012] Taş sertifika belge bağı (metadata)
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
-- **Bağımlılıklar:** Document domain iskelet
-- **Kabul kriterleri:** Tenant’lı belge erişimi
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
+- **Bağımlılıklar:** Document domain iskelet (bu dilimde kuruldu)
+- **Kanıt:** app `belgeler` — `Document` + `TasSertifikaBelgesi` (UrunTasi XOR TeklifTas); `document_servisi`; tenant selector; binary yok (`storage_key`); mig `belgeler.0001`
+- **RBAC:** `manage_document` → PLATFORM_CATALOG + TEDARIKCI_SAHIP/YONETICI
+- **Test:** `belgeler.tests.test_document_f6_012` **6 OK**
+- **Kabul kriterleri:** Tenant’lı belge erişimi — karşılandı
 
 ### [F6-020] Shipment modeli + SM
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** F6-010 (QC pass)
-- **Kabul kriterleri:** QC fail iken create ValidationError
-- **Kör havuz:** alıcı/tedarikçi kimlik maskesi
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
+- **Bağımlılıklar:** F6-010/011 (QC pass)
+- **Kanıt:** app `lojistik` + `Shipment` SM (`TASLAK→HAZIR→YOLDA→TESLIM|IPTAL`); create gate `order_shipment_blocked`; `manage_shipment` + PLATFORM_LOGISTICS seed; mig `lojistik.0001`
+- **Test:** `lojistik.tests.test_shipment_f6_020` **6 OK**
+- **Kabul kriterleri:** QC fail/blok iken create ValidationError — karşılandı
+- **Kör havuz:** alıcı/tedarikçi kimlik alanı yok (platform sevkiyat)
 
 ### [F6-021] Carrier adapter arayüzü + fake
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Integration
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Integration
 - **Bağımlılıklar:** F6-020
-- **Kabul kriterleri:** Fail-closed; secret yok kodda
+- **Kanıt:** `lojistik.carriers` port/fake/factory; `sevk_et` boş takip → fake label; settings `CARRIER_PROVIDER` / `CARRIER_FAKE_FORCE_FAIL`; bilinmeyen provider ValidationError
+- **Test:** `lojistik.tests.test_carrier_f6_021` **5 OK**
+- **Kabul kriterleri:** Fail-closed; secret yok kodda — karşılandı
 
 ### [F6-022] Teslimat kanıtı (POD) kaydı
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** F6-020
-- **Kabul kriterleri:** POD olmadan “teslim” geçişi opsiyonel politika
+- **Kanıt:** `ProofOfDelivery` append-only; `pod_servisi.kaydet_pod`; `SHIPMENT_POD_REQUIRED` (default False); `teslim_et` gate; mig `lojistik.0002`
+- **Test:** `lojistik.tests.test_pod_f6_022` **4 OK**
+- **Kabul kriterleri:** POD olmadan teslim opsiyonel politika — karşılandı
 
 ### [F6-023] Buyer sevkiyat takip API (maskeli)
 
 - **Faz:** Faz 6
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** F6-020, PRE
-- **Kabul kriterleri:** Tedarikçi kimliği yok
+- **Kanıt:** `GET /api/v1/shipments/` + detail; `buyer_shipment_servisi.present_shipment` (tedarikçi yok); tenant 404
+- **Test:** `api.tests.test_shipment_api_f6_023` **3 OK**
+- **Kabul kriterleri:** Tedarikçi kimliği yok — karşılandı
 
 ### [F6-030] Return/Dispute SM
 
 - **Faz:** Faz 6
-- **Durum:** Blocked · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** U-004, F6-020
-- **Kabul kriterleri:** Finans hareketi politika sonrası
+- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** U-004 **Kabul**, F6-020
+- **Politika (2026-11-09, Qubit Kabul):** v1 **stok-only iade SM**; ödeme iadesi / finans mahsup yok (F5-023 ayrı)
+- **Kabul kriterleri:** SM + audit; finans hareketi yok
+- **Not:** Blocked kaldırıldı — kod dilimi açık talimatla başlar
 
 ### [F6-031] İade stok hareketi
 
@@ -1075,5 +1092,9 @@ Agent bu tabloyu Kabul etmez. Kart ayrıntıları yukarıda.
 | U-015 | Dynamic Pricing | Koşul yalnız yeni quote | **Kabul** (2026-11-09, Emre override) |
 | ADR-0012 | Medusa P0/P1 paket | Tasarım Kabul; kod ayrı talimat | **Kabul** (2026-11-09, Emre) |
 | U-016 | ADR-0001 doküman düzeni | Her bilgi tek yerde | **Kabul** (2026-11-09, Emre) |
-| B-01 | Servis payı | Hukuk | **Açık** (dokunulmadı) |
-| B-06 | KDV | Proforma | **Ertelendi** (dokunulmadı) |
+| B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) |
+| B-06 | KDV | KDV yok / proforma devam | **Kabul** (2026-11-09, Qubit) |
+| ADR-0014 | Karlılık sim | Sim UYGULANDI; quote hedef KS-6 ayrı dilim | **Kabul** (2026-11-09, Qubit) |
+| U-006 vade netliği | Hak ediş tetik | **QC PASS** | **Kabul** (2026-11-09, Qubit) |
+| U-004 iade netliği | Return v1 | **stok-only**; ödeme iadesi yok | **Kabul** (2026-11-09, Qubit) |
+| F4-070b | Legacy stok kolon drop | RemoveField dilimi onaylı | **Kabul** (2026-11-09, Qubit) |
