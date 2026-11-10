@@ -11,8 +11,15 @@ from rest_framework.exceptions import (
     NotAuthenticated,
     Throttled,
 )
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
+
+
+class ProblemJSONRenderer(JSONRenderer):
+    """NX-3 — RFC 7807 media type (JSON gövde)."""
+
+    media_type = "application/problem+json"
 
 _STATUS_CODE = {
     400: "bad_request",
@@ -131,6 +138,13 @@ def problem_exception_handler(exc, context):
         body["errors"] = errors
 
     response.data = body
+    # NX-3 — APIView.finalize_response request.accepted_renderer'ı response'a kopyalar
+    renderer = ProblemJSONRenderer()
+    if request is not None:
+        request.accepted_renderer = renderer
+        request.accepted_media_type = ProblemJSONRenderer.media_type
+    response.accepted_renderer = renderer
+    response.accepted_media_type = ProblemJSONRenderer.media_type
 
     if isinstance(exc, Throttled) or response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
         wait = getattr(exc, "wait", None)

@@ -252,6 +252,18 @@ def onayla(
                     fields=["finans_mahsup_yapildi", "guncelleme_tarihi"]
                 )
 
+            # F11-013: bildirim outbox (aynı atomic)
+            from firmalar.services import outbox_servisi
+
+            outbox_servisi.enqueue(
+                event_type="return.approved",
+                payload={
+                    "return_id": locked.pk,
+                    "order_id": locked.order_id,
+                    "stok_iade_yapildi": locked.stok_iade_yapildi,
+                    "mahsup": mahsup,
+                },
+            )
             record_audit(
                 actor=actor,
                 action="lojistik.return.onaylandi",

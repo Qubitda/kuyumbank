@@ -285,15 +285,21 @@ def quote(
     metal = ayar.metal if ayar is not None else None
     milyem = ayar.milyem if ayar is not None else None
 
-    # Kurlar (B-05: alıcı + tedarikçi ayrı)
+    # Kurlar (B-05 + ADR-0018: etkin kaynak + LKG/banner)
+    from tanimlar.services.kaynak_resolve import etkin_kaynak as _etkin_kaynak
+
+    kaynak = _etkin_kaynak(urun=urun)
     metal_alici = None
     metal_tedarikci = None
+    feed_meta = None
     if metal is not None and getattr(metal, "gram_bazli", False):
-        metal_alici = kur_servisi.resolve_metal_kuru(
-            metal, taraf=KurTaraf.ALICI, now=now
+        detay = kur_servisi.resolve_metal_kuru_detay(
+            metal, taraf=KurTaraf.ALICI, now=now, etkin_kaynak=kaynak
         )
+        metal_alici = detay.gozlem
+        feed_meta = detay
         metal_tedarikci = kur_servisi.resolve_metal_kuru(
-            metal, taraf=KurTaraf.TEDARIKCI, now=now
+            metal, taraf=KurTaraf.TEDARIKCI, now=now, etkin_kaynak=kaynak
         )
 
     teklif = sec_teklif(
@@ -483,7 +489,12 @@ def quote(
         "platform_servis": None,  # B-01 kodlanmadı
         "vergi": None,  # B-06 yok
         "banka_gv_isletme": None,  # KS-4: simülasyon dışı
+        "etkin_fiyat_kaynagi": kaynak,
     }
+    if feed_meta is not None:
+        hesap_girdisi["feed_health"] = feed_meta.feed_health
+        hesap_girdisi["feed_banner"] = feed_meta.banner
+        hesap_girdisi["feed_is_lkg"] = feed_meta.is_lkg
     if hedef_toplam is not None and gram is not None:
         hesap_girdisi["hedef_toplam"] = str(_d(hedef_toplam))
         hesap_girdisi["gr_satis_ortuk"] = str(
@@ -493,6 +504,35 @@ def quote(
             hesap_girdisi["maliyet_referans_toplam"] = str(
                 maliyet_referans["toplam_vergisiz"]
             )
+
+    # ADR-0018 CP-10 guardrail
+    from fiyatlama.services.guardrail_servisi import assert_marj_guardrail
+
+    maliyet_ref_val = None
+    if maliyet_referans is not None:
+        maliyet_ref_val = _d(maliyet_referans["toplam_vergisiz"])
+    else:
+        # İç maliyet skoru (alıcıya gösterilmez)
+        try:
+            maliyet_ref_val = ic_maliyet_skoru(
+                teklif,
+                milyem=milyem,
+                metal_saf_try=(
+                    _d(metal_tedarikci.saf_birim_fiyat) if metal_tedarikci else None
+                ),
+                now=now,
+            )
+        except (ValidationError, TypeError, ValueError):
+            maliyet_ref_val = None
+    gr = assert_marj_guardrail(
+        toplam_vergisiz=_d(sonuc["toplam_vergisiz"]),
+        maliyet_referans=maliyet_ref_val,
+    )
+    if not gr.ok:
+        raise ValidationError(gr.neden or "Guardrail: quote bloke.")
+    hesap_girdisi["guardrail_marj_pct"] = (
+        str(gr.marj_pct) if gr.marj_pct is not None else None
+    )
 
     with domain_atomic():
         pq = PriceQuote(

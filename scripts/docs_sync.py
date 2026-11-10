@@ -60,6 +60,7 @@ _HASH_ALLOW = frozenset(
 
 _BANNED_PHRASES = (
     "B4 henüz başlatılmadı",
+    "Backlog — henüz başlatılmadı",
     "Sırada: B2",
     "Sırada:** B2",
     "**555 OK**",
@@ -389,14 +390,17 @@ def _lint_phase_consistency() -> list[str]:
                             f"(MASTER {bn}=Kabul)"
                         )
 
-    # BACKLOG kart Durum ↔ MASTER
+    # BACKLOG kart Durum ↔ MASTER (B1…B7)
     for bn, card in (
+        ("B1", "API-B1"),
+        ("B2", "API-B2"),
+        ("B3", "API-B3"),
+        ("B4", "API-B4"),
         ("B5", "API-B5"),
         ("B6", "API-B6"),
         ("B7", "API-B7"),
     ):
         cell = statuses.get(bn, "")
-        # kart bloğu: ### [API-Bn] ... sonraki ### ye kadar
         m = re.search(
             rf"### \[{re.escape(card)}\](.*?)(?=\n### |\Z)",
             backlog,
@@ -411,13 +415,17 @@ def _lint_phase_consistency() -> list[str]:
             out.append(f"eksik referans: BACKLOG {card} Durum satırı yok")
             continue
         durum = dm.group(1)
+        if "henüz başlatılmadı" in durum.lower() and _status_is_kabul(cell):
+            out.append(
+                f"yanlış statü: BACKLOG {card} hâlâ «henüz başlatılmadı» "
+                f"(MASTER {bn} Kabul)"
+            )
         if _status_is_kabul(cell) and "Kabul" not in durum:
             out.append(
                 f"yanlış statü: BACKLOG {card} Durum≠Kabul "
                 f"(MASTER {bn}={cell[:40]})"
             )
         if bn == "B7" and not _status_is_kabul(cell):
-            # İnceleme / Kabul değil beklenir (Kabul öncesi)
             if "Kabul" in durum and "Kabul değil" not in durum and "UYGULANDI" not in durum:
                 out.append(
                     f"yanlış statü: BACKLOG API-B7 «{durum[:48]}» "

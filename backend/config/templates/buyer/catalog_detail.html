@@ -1,0 +1,33 @@
+{% extends "buyer/base.html" %}
+{% block title %}{{ product.ad }} — Katalog{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0;">{{ product.ad }}</h1>
+  <p class="muted">{{ product.platform_kodu }} · {{ product.kategori }} · {{ product.ayar }} · {{ product.fiyat_tipi }}</p>
+  {% if product.aciklama %}
+  <p>{{ product.aciklama }}</p>
+  {% endif %}
+
+  <h2>Varyantlar</h2>
+  {% if product.varyantlar %}
+  <table>
+    <thead>
+      <tr><th>SKU</th><th>Gram</th><th>Renk</th><th>Beden</th></tr>
+    </thead>
+    <tbody>
+      {% for v in product.varyantlar %}
+      <tr>
+        <td>{{ v.sku }}</td>
+        <td>{{ v.gram|default:"—" }}</td>
+        <td>{{ v.renk|default:"—" }}</td>
+        <td>{{ v.beden|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Aktif varyant yok.</p>
+  {% endif %}
+  <p style="margin-top:1rem"><a href="{% url 'buyer-catalog' %}">Katalog listesi</a></p>
+</section>
+{% endblock %}

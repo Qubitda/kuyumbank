@@ -159,3 +159,86 @@ class ContractReleaseEvent(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("ContractReleaseEvent silinemez (F5-041).")
+
+
+class ContractReleaseConsumption(models.Model):
+    """Append-only release tüketimi (F5-041b) — sipariş satırına bağlanır.
+
+    TUKETIM: order create; IADE: order iptal. Quote/Lock’a yazılmaz.
+    """
+
+    class Yon(models.TextChoices):
+        TUKETIM = "TUKETIM", "Tüketim"
+        IADE = "IADE", "İade"
+
+    plan = models.ForeignKey(
+        ContractReleasePlan,
+        on_delete=models.PROTECT,
+        related_name="consumptions",
+    )
+    order_line = models.ForeignKey(
+        "siparis.OrderLine",
+        on_delete=models.PROTECT,
+        related_name="contract_release_consumptions",
+    )
+    yon = models.CharField(max_length=16, choices=Yon.choices)
+    miktar = models.DecimalField(max_digits=18, decimal_places=6)
+    olusturan = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="olusturdugu_release_consumptions",
+    )
+    olusturma_tarihi = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "Sözleşme release tüketimi"
+        verbose_name_plural = "Sözleşme release tüketimleri"
+        ordering = ["-olusturma_tarihi", "-pk"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(miktar__gt=0),
+                name="contractreleaseconsumption_miktar_pozitif",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(yon__in=["TUKETIM", "IADE"]),
+                name="contractreleaseconsumption_yon_gecerli",
+            ),
+            models.UniqueConstraint(
+                fields=["order_line", "plan"],
+                condition=models.Q(yon="TUKETIM"),
+                name="contractreleaseconsumption_tek_tuketim_per_plan_line",
+            ),
+            models.UniqueConstraint(
+                fields=["order_line", "plan"],
+                condition=models.Q(yon="IADE"),
+                name="contractreleaseconsumption_tek_iade_per_plan_line",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["plan", "yon"]),
+            models.Index(fields=["order_line"]),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"CRC#{self.pk or '?'} {self.yon} plan={self.plan_id} "
+            f"{self.miktar}"
+        )
+
+    def clean(self):
+        super().clean()
+        if self.miktar is not None and self.miktar <= 0:
+            raise ValidationError({"miktar": "Miktar sıfırdan büyük olmalı."})
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValidationError(
+                "ContractReleaseConsumption değişmez; UPDATE yasak (F5-041b)."
+            )
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("ContractReleaseConsumption silinemez (F5-041b).")

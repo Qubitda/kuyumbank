@@ -1,0 +1,56 @@
+---
+description: Shared component visual and behavioral standards.
+globs:
+  - "src/components/**/*.{ts,tsx}"
+  - "components/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# UI Component Standards
+
+Read `docs/03-COMPONENT_GUIDELINES.md`.
+
+## General
+- Inspect existing components before creating new ones.
+- Use shadcn/ui and Radix primitives where appropriate.
+- Keep component APIs small and typed.
+- Avoid premature abstraction and nested wrappers.
+- Ensure keyboard accessibility and visible focus.
+
+## Buttons
+- Restrained variants: default, secondary, outline, ghost, destructive, link.
+- One dominant primary action per context where possible.
+- Icon-only buttons need accessible names.
+- Include loading and disabled states.
+
+## Inputs
+- Consistent height, label, help text, focus and error states.
+- Placeholder never replaces a label.
+- Associate labels and controls semantically.
+
+## Tables
+- Follow the installed TanStack Table version.
+- Numeric columns right-aligned and tabular.
+- Text columns left-aligned.
+- Compact but readable rows.
+- Subtle separators; avoid vertical grid clutter.
+- Real sorting/filtering/pagination state only.
+- Include loading, empty, error and permission states.
+- Do not badge every cell.
+
+## Forms
+- React Hook Form + Zod when appropriate.
+- Keep validation close to fields.
+- Preserve user input after recoverable errors.
+- Prevent accidental duplicate submissions.
+
+## Dialogs
+- Use accessible primitives.
+- Clear title and action hierarchy.
+- Confirm destructive actions.
+- Do not cram long workflows into small dialogs.
+
+## Icons
+- Lucide React.
+- Usually 16px; consistent stroke.
+- Icons should improve recognition, not decorate.

@@ -12,7 +12,12 @@ from .kur_tipi import KurTipi
 
 
 class MetalKuru(models.Model):
-    KAYNAK = [("manuel", "Manuel"), ("api", "API"), ("websocket", "WebSocket")]
+    KAYNAK = [
+        ("manuel", "Manuel"),
+        ("api", "API"),
+        ("websocket", "WebSocket"),
+        ("tcmb", "TCMB EOD"),
+    ]
 
     metal = models.ForeignKey(KiymetliMetal, verbose_name="Metal", on_delete=models.PROTECT)
     saglayici = models.ForeignKey(

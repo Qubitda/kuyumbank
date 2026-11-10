@@ -357,3 +357,98 @@
 ### 2026-11-09 — API-B7 Kabul + B6/B7 commit
 - Ürün sahibi B7 **Kabul** (Qubit). B6 tedarikçi API + B7 dondurma (OpenAPI/API_CONTRACT/docs_sync) working-tree’den commit; F9 HTML WIP dışı.
 
+### 2026-11-09 — DOC-CONSISTENCY-02 tam proje kod↔docs denetimi
+- BACKLOG `[API-B4]` bayat «henüz başlatılmadı» → **Kabul** (MASTER/commit ile hizalı).
+- MASTER §2 `api` / güvenlik / Next.js / ADR-0014 KS-6 ifadeleri kodla hizalandı.
+- `docs_sync` faz lint: API-B4 kartı MASTER §12.1b’ye bağlandı.
+
+### 2026-11-09 — TECH-NX-CONTRACT-01 (NX-3…12 kod kanıt)
+- `exception_handler`: hata yanıtları `application/problem+json` (`ProblemJSONRenderer` + `request.accepted_renderer`).
+- ADR-0017 NX-3…12 satır satır **Kod: UYGULANDI/KISMİ**; madde durumu o sırada **Açık** (agent Kabul etmedi).
+- `api.tests.test_api_nx_contract` **4 OK**; API_CONTRACT / MASTER §12 / BACKLOG kartı güncellendi.
+
+### 2026-11-09 — NX-3…12 madde Kabul (Qubit)
+- Ürün sahibi: ADR-0017 **NX-3…NX-12** maddeleri **Kabul**; NX-1…12 tamamı madde Kabul.
+- ADR-0017 **bütünü Taslak** kalır (yalnız madde onayı; agent ADR Kabul etmez).
+- Sıradaki: **NX-FE** (`frontend/`) yalnız açık talimat.
+
+### 2026-11-09 — NX-FE Next.js `frontend/` iskelet
+- `frontend/`: App Router + TS + Tailwind v4; aynı-origin `/api/v1` rewrite; session/CSRF client; `/` + `/login`.
+- Tasarım kiti dokümanları `frontend/docs` + `.cursor/rules`; Django HTML dokunulmadı.
+- `npm run lint` + `npm run build` OK. Sıradaki: **NX-SHELL** (shadcn + shell) veya F8-003/006.
+
+### 2026-11-09 — NX-ARCH feature/domain FE iskeleti
+- `features/{firmalar,…,belgeler,auth}` katmanları + `app/(portal)/*` page/loading/error.
+- Rehber: `frontend/docs/FRONTEND_ARCHITECTURE.md`. Zod eklendi; shadcn hâlâ NX-SHELL.
+- Lint/build OK (15 route).
+
+### 2026-11-09 — F5-041b Contract Release sipariş tüketimi
+- `ContractReleaseConsumption` (TUKETIM/IADE append-only); `kullanilabilir = serbest − net tüketim`.
+- `order_servisi.olustur_from_checkout` / `iptal_siparis` bağ; Quote/Lock’a yazmaz; mig `fiyatlama.0018`.
+- Test: `test_contract_release_consume_f5_041b` **4 OK** + F5-041 **6 OK**.
+
+### 2026-11-09 — ADR-0018 CAP-PIYASA Taslak (docs)
+- [ADR-0018](decisions/ADR-0018-cap-piyasa-kur-dayanikliligi.md) **Taslak**: kaynak merdiveni, LKG+banner, batch senkron/freeze, guardrail, yuvarlama, çapraz kur sanity, atomik publish, quote immutability.
+- B-04 yeniden tanım Kabul’e bağlı; kod yok. BACKLOG `[CAP-PIYASA]`; MASTER §12.3.
+- Geçici referans: kök `real_data/` (GoldXT) — toptan port yok; sonra silinebilir.
+
+### 2026-11-10 — F10-021 RFQ katalog eşleştirme + F8-003/006
+- F10-021: `RFQEslestirme` + `rfq_eslestirme_servisi` (aday/öner/onay/red); kural tabanlı skor; platform `approve_eslestirme`; mig `siparis.0006`; **7 OK**.
+- F8-003: `sentry-sdk` pin + DSN opt-in + scrub; **3 OK**; staging event DOĞRULANAMADI.
+- F8-006: quote/lock/cart_checkout soft smoke baseline; **1 OK**.
+- **Sıradaki:** CAP-PIYASA (ADR-0018 Kabul) → object-level DRF / Mahsup HTTP.
+
+### 2026-11-10 — F11-013 bildirim outbox (QC/iade)
+- `qc.passed` / `qc.failed` (`inspection_servisi`) + `return.approved` (`return_servisi`); `order.created` zaten F4-090.
+- Test: `kalite.tests.test_notify_f11_013` **3 OK**.
+
+### 2026-11-10 — ADR-0018 Kabul + CAP-PIYASA UYGULANDI
+- Ürün sahibi Kabul + uygulama talimatı.
+- `fiyat_kaynagi` (ürün/ayar/politika); `feed_health` LKG+banner; `kaynak=tcmb`; batch dry-run/publish; guardrail; Binance/TCMB adaptör + sync komutları.
+- Mig: `tanimlar.0004`, `urunler.0011`, `fiyatlama.0019`.
+- Test: `test_cap_piyasa_adr0018` + kur/quote regresyon **37 OK**.
+
+### 2026-11-10 — CAP-ALERT + F11-011/012/020
+- CAP-ALERT: `KurAlertKurali` + `kur.alert` outbox; stale’de tetik yok; mig `tanimlar.0005`; **3 OK**.
+- F11-012 ATP: `on_hand − reserved − blocked`; kör alıcı; **4 OK**.
+- F11-011 quote/lock analitik (platform); **3 OK**.
+- F11-020 replenishment öneri (checkout yok); **2 OK**.
+- **Sıradaki (ayrı takip):** object-level DRF · Mahsup HTTP · FE · F11-001/010 raporlama.
+
+### 2026-11-10 — F11-001/010/021/014 raporlama dilimi
+- F11-001: [NOTE-F11-001](decisions/NOTE-F11-001-raporlama-v1.md) RM-1…6; Product P-RM-* (DRF/Mahsup/FE/ETL) erteli.
+- F11-010 + F11-021: `siparis.services.rapor_servisi` (`ticari_siparis_ozet`, `alici_davranis_ozet`); tenant + kör; **5 OK**.
+- F11-014: `anomali_servisi.ciro_esik_tara` audit + ops uyarı; **3 OK**.
+- **Sıradaki (ayrı takip):** object-level DRF · Mahsup HTTP · FE.
+
+### 2026-11-10 — CAP-ALERT ops + rapor güvenlik sertleştirme
+- `KurAlertKuraliAdmin` (`manage_kur`); `evaluate_kur_alerts --now`; outbox `process_outbox` smoke; RUNBOOK §6/§8/§11b.
+- Rapor: alıcı foreign `alici_firma_id` yok sayılır; deny → durable audit.
+- Anomali deny → durable audit.
+- Test: `test_kur_alert_cap` **4** + `test_rapor_f11_010_021` **6** + `test_anomali_f11_014` **3** = **13 OK**.
+- F11-011: deny → durable audit; `test_fiyat_analitik_f11_011` **3 OK**.
+- **Sıradaki (ayrı takip):** object-level DRF · Mahsup HTTP · FE; F12 Product (001/011/DYNPRICE/015) onay kapılı.
+
+### 2026-11-10 — ADR-0019 Taslak + bekleyen ürün karar notu
+- [ADR-0019](decisions/ADR-0019-object-level-drf.md): endpoint/model envanteri, S-1…S-6, rol matrisi, OL-1…11 onay maddeleri; **HTTP yok**.
+- [NOTE-PENDING-PRODUCT-DECISIONS](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md): F12-001/011, CAP-DYNPRICE, F11-015 kısa formlar.
+- BACKLOG `[SEC-OBJECT-DRF]`; MASTER §12.3 ADR-0019 **Taslak**.
+
+### 2026-11-10 — ADR-0019 onay paketi netleştirme (kod yok)
+- OL-1…11: her biri Mevcut / Öneri / Güvenlik / Seçim / **Bekliyor**.
+- Matris çakışması giderildi (ops Order W ↔ OL-2).
+- OL-3/OL-4: bugün `alici_mi` ile W açık → öneri sıkılaştırma (SoD).
+- FXQ/DYN/I18N/AI ADR-0019’dan ayrık NOTE’ta.
+
+### 2026-11-10 — ADR-0019 Kabul + OL-11
+- Ürün sahibi: OL-1…11 tümü **A** → ADR **Kabul**.
+- `api.permissions`: commerce read/write + Order/Cart/Quote object access; SoD (denetçi/onaycı/finans W yok).
+- View hizası: quote/lock/cart/checkout/order/bulk; selector + `check_object_permissions`.
+- Test: `test_object_level_adr0019` **6 OK**; F8-007 **5 OK**; B2 **4 OK**.
+- Rapor/mahsup HTTP açılmadı (OL-7/8).
+
+### 2026-11-10 — Teslimat sabitleme (cleanup + docs)
+- MASTER/BACKLOG/HISTORY/RUNBOOK/decisions senkron; F9-010/011 Django HTML miras **UYGULANDI** (Next portal değil).
+- `real_data/` gitignore; NOTE-PENDING (FXQ/DYN/I18N/AI) ayrı kaldı.
+- Odaklı regresyon: **55 OK**; `manage.py check` OK; `docs_sync --check` OK; makemigrations --check OK.
+

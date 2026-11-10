@@ -1,0 +1,49 @@
+---
+description: Kuyumbank katı geliştirme ve mimari kuralları — esnetilemez
+alwaysApply: true
+---
+
+# KUYUMBANK — Katı kurallar (esnetilemez)
+
+Kod, refactor ve mimari kararlarda aşağıdaki maddeler **KESİN** uygulanır.
+
+## 0. Öncelik (ürün sahibi — 2026-11-09)
+
+- **Backend first:** Django modeller / servisler / iş kuralları / API sözleşmesi oturmadan frontend, Next.js veya UI tasarımı konuşulmaz, kodlanmaz, dosya açılmaz.
+- Bu oturum ve sonraki işlerde varsayılan odak: `backend/config` domain app’leri. FE yalnız ürün sahibi açık talimatıyla.
+
+## 1…6 (özet aşağıda)
+
+## 1. Feature-Based klasör disiplini (FE serbest bırakıldığında)
+
+- Dosyaları teknik türe (`components/`, `hooks/` yığını) göre değil; Django app’leriyle paralel **feature/domain** (`firmalar`, `urunler`, `fiyatlama`, `tanimlar`, …) olarak grupla.
+- Her feature: `components/` · `services/` · `types/` · `hooks/` · `schemas/`.
+- Global `components/` ve `lib/` yalnız gerçekten paylaşılan yapılar içindir.
+- FE rehber: `frontend/docs/FRONTEND_ARCHITECTURE.md`.
+
+## 2. Backend-first iş mantığı
+
+- Fiyat, milyem/ayar, marj, ticari kural **frontend’de sıfırdan yazılmaz**.
+- FE yalnız girdi toplar ve sonucu gösterir; hesaplama otoritesi **Django**.
+
+## 3. Güvenlik / yetki
+
+- UI’da buton/menü gizleme **güvenlik değildir**.
+- Gerçek yetki: backend servis + rol matrisi; her yazmada yeniden doğrula.
+
+## 4. Sözleşme / versiyonlama
+
+- Fiyat sözleşmesi veya kritik ticari tanım şartı değişince mevcut kayıt **sessiz overwrite edilmez**.
+- Backend iş kuralına uygun **yeni versiyon** oluşturulur.
+
+## 5. Tasarım anti-pattern yasakları
+
+- Her şeyi Card içine koymak **yasak**; önce spacing / divider.
+- Aşırı `rounded-xl`/`rounded-2xl`, gereksiz gradient/shadow yok — monokromatik, sakin (Vercel/Linear disiplini).
+- Gram, fiyat, oran: **sağa hizalı** + `tabular-nums`.
+
+## 6. API / sahte endpoint yasağı
+
+- Netleşmemiş Django endpoint/JSON şeması için “çalışıyormuş gibi” sahte servis **uydurma**.
+- Mock zorunluysa **açıkça işaretle**; alan adları gerçek modellerle birebir (`firmalar`, `urunler`, …).
+- Normatif: `docs/API_CONTRACT.md` + `docs/api/openapi-v1.json`.

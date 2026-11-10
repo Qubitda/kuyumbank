@@ -36,7 +36,9 @@
 | `LOG_LEVEL` | Hayır | `INFO` | F8-002 |
 | `LOG_JSON` | Hayır | `False` | `True` → tek satır JSON + `request_id` |
 | `DRF_THROTTLE_ANON/USER/BUYER/SUPPLIER/OPS` | Hayır | settings | F8-009; örn. `60/min` |
-| `SENTRY_DSN` | Hayır | boş | F8-003 plan; SDK henüz requirements’ta yok |
+| `SENTRY_DSN` | Hayır | boş | F8-003; boşsa SDK no-op (`sentry-sdk==2.69.1`) |
+| `SENTRY_ENVIRONMENT` | Hayır | `development` | F8-003 |
+| `SENTRY_TRACES_SAMPLE_RATE` | Hayır | `0.0` | F8-003; düşük başla |
 | `PAYMENT_PROVIDER` | Hayır | `fake` | Canlı banka yok |
 | `PAYMENT_WEBHOOK_SECRET` | Prod webhook için | boş | Boşsa webhook 401 (fail-closed) |
 | `CARRIER_PROVIDER` | Hayır | `fake` | Canlı kargo yok |
@@ -45,6 +47,8 @@
 | `HAS_POSITION_LIMIT` | Hayır | `0` | 0 = kapalı |
 | `SUPPLIER_ACCRUAL_VADE_GUN` | Hayır | `0` | F5-022 |
 | `CRM_SYNC_ENABLED` | Hayır | `False` | F7 opt-in |
+| `CSRF_TRUSTED_ORIGINS` | Next yerel için | `[]` | örn. `http://localhost:3000` (NX-FE aynı-origin rewrite) |
+| `SESSION_COOKIE_DOMAIN` / `CSRF_COOKIE_DOMAIN` | Hayır | boş | Boş = host-only; prod proxy’de gerekirse |
 
 ## 3. Yerel kurulum (geliştirme)
 
@@ -62,6 +66,18 @@ python manage.py runserver
 
 Geliştirme verisi için yönetim komutları (otomatik liste: [MASTER](MASTER.md) §2.7): `seed_tanimlar`,
 `seed_fiyat_gruplari`, `seed_urunler`. Atama denetimi (salt okunur): `audit_user_assignments`.
+
+### 3.1 Next.js iskelet (NX-FE)
+
+```bash
+# Django .env: CSRF_TRUSTED_ORIGINS=http://localhost:3000
+cd frontend
+cp .env.example .env.local   # DJANGO_ORIGIN=http://127.0.0.1:8000
+npm install
+npm run dev                  # http://localhost:3000 → /api/v1 rewrite
+```
+
+Ayrıntı: [`frontend/README.md`](../frontend/README.md).
 
 ## 4. Test ve kontrol
 
@@ -112,7 +128,7 @@ Aşağıdaki maddeler kod/ayar okumasına dayanır; **henüz üretimde doğrulan
 | 6 | API throttle | anon/user throttle **UYGULANDI** |
 | 7 | `collectstatic` (`STATIC_ROOT=staticfiles`) | Yapılacak |
 | 8 | E-posta | Varsayılan console; SMTP backend verilmeli |
-| 9 | Periyodik işler | `expire_stale_reservations` (F4-022); `process_outbox` (F4-090); cron/systemd önerilir |
+| 9 | Periyodik işler | `expire_stale_reservations` (F4-022); `process_outbox` (F4-090); `evaluate_kur_alerts` (CAP-ALERT); `sync_binance_kur` / `sync_tcmb_kur` (CAP-PIYASA); cron/systemd önerilir |
 | 10 | Yedek ve geri yükleme provası | **DOĞRULANAMADI** (§7) |
 | 11 | CI yeşil (test + `makemigrations --check` + `docs_sync --check`) | workflow + `scripts/docs_sync.py` **UYGULANDI** (OPS-001) |
 
@@ -133,6 +149,7 @@ Hosting seçilince: yedek sıklığı, saklama süresi, **geri yükleme provası
   `domain_atomic()` içinde çağrılırsa `RuntimeError` verir — çağrı yazım bloğunun **dışında** olmalı.
 - **Stok:** `StockBalance` doğrudan düzenlenmez; yalnız ledger servisi yazar. Rezervasyon expire yolu için F4-022 durumuna bakın ([BACKLOG](BACKLOG.md)).
 - **Para:** yalnız `Decimal`; `float` yok. Quote/PriceLock/Movement değişmezdir (uygulama + DB trigger); düzeltme yeni kayıtla yapılır.
+- **Kur / CAP-PIYASA / CAP-ALERT:** Sync: §11b. Alert: `python manage.py evaluate_kur_alerts [--now=ISO]`; admin `KurAlertKurali` (`manage_kur`). Stale’de alert yok. Manuel kur + LKG/banner (`kur_servisi`). Geçici örnek: kök `real_data/` (silinebilir).
 - **Kör havuz:** alıcı yüzeylerinde tedarikçi kimliği ve iç maliyet görünmez; log/export eklerken bu kuralı koruyun.
 - **request_id (F8-002):** `X-Request-ID` middleware; log satırında `request_id=…`. Secret alanları log `extra`/mesajına yazmayın (`config.logging_utils.redact_mapping`).
 
@@ -157,12 +174,29 @@ Hosting henüz yok (**DOĞRULANAMADI**). Hedef sıra:
 6. Smoke: `/api/v1/health/`, alıcı login, kritik quote→order yolu.
 7. `X-Request-ID` + hata oranı izleme (Sentry planı §11).
 
-## 11. Hata izleme planı (F8-003)
+## 11. Hata izleme (F8-003)
 
-1. Staging’de `SENTRY_DSN` + SDK pin (requirements’a eklenince) — **henüz kod yok**.
-2. `before_send` ile PII/secret scrub (`redact_mapping` ile aynı anahtar seti).
-3. Release tag = git SHA; sample rate düşük başlar.
-4. Kabul: staging’de bilerek 500 → event görünür.
+1. `sentry-sdk==2.69.1` pinli; `config/sentry_init.py` — `SENTRY_DSN` boşsa no-op.
+2. `before_send` PII/secret scrub (`redact_mapping` / `scrub_message`).
+3. Env: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` (varsayılan 0).
+4. Staging kabul: DSN set + bilerek 500 → event (ürün sahibi staging’de **DOĞRULANAMADI** bu oturumda).
+5. Smoke test: `python manage.py test api.tests.test_sentry_f8_003 --keepdb`.
+
+## 11b. CAP-PIYASA kur sync (ADR-0018)
+
+Celery yok; cron + management command:
+
+```text
+python manage.py sync_binance_kur --username <manage_kur> --metal-kod AU [--xauusdt N --usdttry N --skip-capraz]
+python manage.py sync_tcmb_kur --username <manage_kur> --pb USD --kur <TRY>
+```
+
+Stale feed → quote `hesap_girdisi.feed_health=FEED_STALE_LKG` + `feed_banner` (sessiz LKG yok).
+
+```text
+python manage.py evaluate_kur_alerts [--now=ISO]
+python manage.py process_outbox
+```
 
 ## 12. Yeni geliştirici testi
 

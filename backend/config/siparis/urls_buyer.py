@@ -5,7 +5,10 @@ from finans.views import BuyerFinanceView
 from firmalar.views import BuyerApprovalActionView, BuyerApprovalListView
 from siparis.views import (
     BuyerCartView,
+    BuyerCatalogDetailView,
+    BuyerCatalogListView,
     BuyerCheckoutView,
+    BuyerHomeView,
     BuyerLoginView,
     BuyerOrderDetailView,
     BuyerOrderListView,
@@ -24,7 +27,14 @@ urlpatterns = [
         LogoutView.as_view(next_page="buyer-login"),
         name="buyer-logout",
     ),
-    path("", BuyerCartView.as_view(), name="buyer-cart"),
+    path("", BuyerHomeView.as_view(), name="buyer-home"),
+    path("catalog/", BuyerCatalogListView.as_view(), name="buyer-catalog"),
+    path(
+        "catalog/<int:pk>/",
+        BuyerCatalogDetailView.as_view(),
+        name="buyer-catalog-detail",
+    ),
+    path("cart/", BuyerCartView.as_view(), name="buyer-cart"),
     path("checkout/", BuyerCheckoutView.as_view(), name="buyer-checkout"),
     path("orders/", BuyerOrderListView.as_view(), name="buyer-order-list"),
     path(

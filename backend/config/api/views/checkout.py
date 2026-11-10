@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from api.exc import raise_drf
 from api.mixins import IdempotencyMixin
-from api.permissions import IsAuthenticatedWithFirma
+from api.permissions import IsBuyerCommerceWrite
 from siparis.models import CheckoutAttempt
 from siparis.services import checkout_servisi
 
@@ -15,7 +15,7 @@ from siparis.services import checkout_servisi
 class CheckoutCreateView(IdempotencyMixin, APIView):
     """POST /api/v1/checkouts/ — sepet → CheckoutAttempt; key zorunlu."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite]
 
     def post(self, request):
         cached = self.idempotency_begin(request)

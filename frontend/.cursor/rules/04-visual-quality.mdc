@@ -1,0 +1,42 @@
+---
+description: Strict visual QA and anti-generic interface review.
+alwaysApply: true
+---
+
+# Visual Quality Gate
+
+Before declaring UI work complete, inspect the rendered result if browser tooling is available.
+
+Evaluate:
+1. Overall composition
+2. Information hierarchy
+3. Typography
+4. Spacing rhythm
+5. Alignment
+6. Density and scanability
+7. Table readability
+8. Card/border/shadow overuse
+9. Responsive behavior
+10. Light/dark theme
+11. Accessibility and focus states
+12. Consistency with adjacent pages
+
+Reject or refine if:
+- All sections look like identical cards.
+- Everything has the same visual weight.
+- Headings, metadata and values lack hierarchy.
+- Spacing appears arbitrary.
+- Data tables are too loose or too dense.
+- Status badges are overused.
+- Decorative icons/gradients/shadows dominate.
+- Mobile layout is just a compressed desktop page.
+
+When reviewing:
+- Name the five highest-impact issues.
+- Describe the exact element and visible problem.
+- Propose a specific correction.
+- Implement only relevant changes.
+- Capture a new screenshot and compare if possible.
+
+Never claim browser or screenshot verification unless actually performed.
+Prefer simplification over decoration.

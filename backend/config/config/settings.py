@@ -273,3 +273,15 @@ SHIPMENT_POD_REQUIRED = env.bool("SHIPMENT_POD_REQUIRED", default=False)
 SUPPLIER_ACCRUAL_VADE_GUN = env.int("SUPPLIER_ACCRUAL_VADE_GUN", default=0)
 # F5-021 webhook: boşsa endpoint 401 (fail-closed). Secret koda yazılmaz.
 PAYMENT_WEBHOOK_SECRET = env("PAYMENT_WEBHOOK_SECRET", default="")
+
+# --- F8-003 Sentry (DSN boş → no-op) ----------------------------------------
+SENTRY_DSN = env("SENTRY_DSN", default="")
+SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="development")
+SENTRY_TRACES_SAMPLE_RATE = env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0)
+from config.sentry_init import init_sentry  # noqa: E402
+
+SENTRY_ENABLED = init_sentry(
+    dsn=SENTRY_DSN,
+    environment=SENTRY_ENVIRONMENT,
+    traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+)

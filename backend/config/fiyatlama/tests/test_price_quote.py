@@ -217,17 +217,23 @@ class PriceQuoteServiceTests(PriceQuoteFixtureMixin, TestCase):
             )
         self.assertIn("quote_ttl_saniye", ctx.exception.message_dict)
 
-    def test_stale_metal_quote_yok(self):
+    def test_stale_metal_quote_lkg_banner(self):
+        """ADR-0018: stale kurda quote LKG + feed_banner ile üretilir (sessiz yok)."""
         eski = timezone.now() - timedelta(seconds=120)
         MetalKuru.objects.filter(pk=self.metal_satis.pk).update(
             zaman=eski, alinma_zamani=eski
         )
-        with self.assertRaises(ValidationError):
-            pricing_service.quote(
-                alici_firma=self.alici,
-                satis_kanali=self.kanal,
-                varyant=self.varyant,
-            )
+        MetalKuru.objects.filter(pk=self.metal_alis.pk).update(
+            zaman=eski, alinma_zamani=eski
+        )
+        pq = pricing_service.quote(
+            alici_firma=self.alici,
+            satis_kanali=self.kanal,
+            varyant=self.varyant,
+        )
+        self.assertEqual(pq.hesap_girdisi.get("feed_health"), "FEED_STALE_LKG")
+        self.assertTrue(pq.hesap_girdisi.get("feed_banner"))
+        self.assertTrue(pq.hesap_girdisi.get("feed_is_lkg"))
 
     def test_eslesme_onaysiz_quote_yok(self):
         TedarikciTeklif.objects.filter(pk=self.teklif.pk).update(

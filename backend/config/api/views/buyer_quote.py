@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from api.exc import raise_drf
 from api.mixins import IdempotencyMixin
-from api.permissions import IsAuthenticatedWithFirma
+from api.permissions import HasQuoteObjectAccess, IsBuyerCommerceWrite
 from api.presenters.buyer import BuyerQuotePresenter
 from api.throttles import BuyerRateThrottle
 from firmalar.services.yetki_servisi import can_view_all_tenants
@@ -18,22 +18,13 @@ from tanimlar.models import SatisKanali
 from urunler.models import Varyant
 
 
-def _assert_buyer(user) -> None:
-    if can_view_all_tenants(user):
-        return
-    firma = getattr(user, "firma", None)
-    if firma is None or not getattr(firma, "alici_mi", False):
-        raise PermissionDenied(detail="Quote yalnız alıcı veya ops.")
-
-
 class QuoteCreateView(IdempotencyMixin, APIView):
     """POST /api/v1/quotes/ — {varyant_id, satis_kanali_id, para_birimi?}."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite]
     throttle_classes = [BuyerRateThrottle]
 
     def post(self, request):
-        _assert_buyer(request.user)
         if can_view_all_tenants(request.user):
             raise PermissionDenied(detail="Ops quote üretemez; alıcı oturumu kullanın.")
         cached = self.idempotency_begin(request)
@@ -76,13 +67,13 @@ class QuoteCreateView(IdempotencyMixin, APIView):
 class QuoteDetailView(APIView):
     """GET /api/v1/quotes/<pk>/."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [HasQuoteObjectAccess]
     throttle_classes = [BuyerRateThrottle]
 
     def get(self, request, pk: int):
-        _assert_buyer(request.user)
         try:
             quote = get_quote_for_actor(request.user, pk)
         except BuyerQuoteNotFound as exc:
             raise NotFound(detail="Quote bulunamadı.") from exc
+        self.check_object_permissions(request, quote)
         return Response(BuyerQuotePresenter(quote))

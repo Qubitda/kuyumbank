@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.mixins import IdempotencyMixin
-from api.permissions import IsAuthenticatedWithFirma
+from api.permissions import IsBuyerCommerceWrite
 from siparis.services import bulk_servisi
 from tanimlar.models import SatisKanali
 
@@ -17,7 +17,7 @@ from tanimlar.models import SatisKanali
 class BulkOrderCreateView(IdempotencyMixin, APIView):
     """POST /api/v1/bulk-orders/ — CSV veya rows → Order; key zorunlu."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite]
 
     def post(self, request):
         cached = self.idempotency_begin(request)

@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-09 — API-B7 **Kabul** (Qubit)
+**Güncelleme:** 2026-11-10 — CAP-ALERT + F11-011/012/020 UYGULANDI; CAP-PIYASA tamam
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -76,7 +76,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | PostgreSQL + psycopg | varsayılan DB | UYGULANDI |
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis | requirements’ta yok (bilinçli) | PLANLANDI |
-| Next.js `frontend/` | henüz yok; API-B7 sonrası | ADR-0017 **Taslak** |
+| Next.js `frontend/` | **NX-FE UYGULANDI** (iskelet; App Router + session/CSRF rewrite) | ADR-0017 **Taslak** |
 | HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B7 Kabul**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
@@ -108,8 +108,8 @@ Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `
 | QC QualityInspection SM | **UYGULANDI** | F6-010+011 |
 | Shipment / lojistik | **UYGULANDI** | F6-020…023 + F6-030/031 return SM + stok IADE |
 | İnce PRE API | **Tamamlanmış** | PRE-001…005 (+ credit/finance/ops/webhook/catalog/supplier) |
-| Org / limit / onay / RFQ | **Tamamlanmış (çekirdek)** | F10-010…014/020/022/023; F10-021 KISMİ |
-| Ops readiness (F8) | **Kısmi** | 001/002/004/005/007/008/009 var; Sentry SDK + perf smoke yok |
+| Org / limit / onay / RFQ | **Tamamlanmış (çekirdek)** | F10-010…014/020/022/023; F10-021 eşleştirme UYGULANDI |
+| Ops readiness (F8) | **Kısmi** | 001–009 çekirdek var; F8-003 SDK UYGULANDI (staging event DOĞRULANAMADI); F8-006 baseline UYGULANDI |
 | Ödeme provider / kargo / tam Prosperer API | **Uygulanmamış** | Fake payment adapter var; gerçek provider yok |
 
 ### 2.4 Veri modelleri
@@ -134,7 +134,7 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 | `lojistik`: `shipment`/`pod`/`buyer_shipment` + `carriers` | F6-020…023 | UYGULANDI |
 | `fiyatlama.karlilik_simulasyonu` | Excel A/B P&L (ADR-0014); KS-6 `quote(hedef_toplam=)` | UYGULANDI |
 | `belgeler`: `document_servisi` + tenant selector | F6-012 Document + taş sertifika | UYGULANDI |
-| `api`: health / me / cart / order / credit / finance / ops / webhook | ince PRE HTTP | UYGULANDI |
+| `api`: `/api/v1/` PRE + B1–B7 (buyer/supplier/ops/org/RFQ/QC…) | HTTP + OpenAPI/API_CONTRACT | UYGULANDI |
 | tenant selectors (`firmalar`/`urunler`/`stok`/`siparis`/…) | firma scope | UYGULANDI |
 
 ### 2.6 Güvenlik (kodda karşılığı olan)
@@ -145,19 +145,21 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 - Quote/Lock: app immutability + PG trigger (mig 0007 / 0010–0011).  
 - PriceLock create: `lock_quote` / `lock_quote_on_behalf`; `view_all_tenants` create vermez.  
 - Stok: movement immutable; reservation create/cancel/expire fiziksel movement yazmaz; consume → SATIS; iptal → IADE.  
-- API: ince PRE tenant 404 (cart/order); client `firma_id` yok sayılır; Token + Basic + Session; throttle.  
+- API: B1–B7 tenant 404/403 + maske; client `firma_id` yok sayılır; Token + Basic + Session; throttle; OpenAPI `--check`.  
 - AuditOlay: create OK; instance/QuerySet UPDATE/DELETE yasak (AUD-001); `ip_address`/`changes` (AUD-001b).  
 - F8-002: `X-Request-ID` + structured log; secret scrub (`logging_utils`). F8-007 IDOR smoke paketi.  
-- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Sentry SDK; Next.js portal (`frontend/`). Django `/buyer/` `/ops/` HTML miras kalır.
+- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Next.js ürün portalı (katalog/sepet). **Var:** Sentry SDK (DSN opt-in); `frontend/` NX-FE iskelet. Django `/buyer/` `/ops/` HTML miras kalır.
 
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **599** — `api` 82 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 48 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+Statik test sayısı (`def test_`): **603** — `api` 86 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 48 · `stok` 31 · `tanimlar` 20 · `urunler` 95
 _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son suite aşağıda elle._
 <!-- /AUTO:tests -->
 
-**Son suite koşusu (elle):** **597 OK** (2026-11-09, PG `--keepdb`; CI paket listesi + diskteki Kova B WIP testleri suite’e girebilir). `makemigrations --check` temiz; `migrate` pending yok.
+**Statik sayım ≠ suite sonucu:** üstteki **603** yalnız git-tracked `def test_` sayımıdır (koşulmadı).  
+**Son kaydedilen suite (elle, tarihsel anı):** **597 OK** (2026-11-09, PG `--keepdb`) — B6/B7 ek testlerinden *önce* veya WIP karışımı olabilir; **güncel tam suite bu oturumda DOĞRULANAMADI**.  
+`makemigrations --check` / migrate pending: son kayıt temiz (üretim migrate onaysız yok).
 **Yerel/dev migrate güncel** (son: `siparis.0005` F10-022; pending yok).
 
 <!-- AUTO:migrations -->
@@ -165,15 +167,15 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 |-----|-----------------|---------------|
 | `api` | 1 | `0001_pre_005_idempotency_record` |
 | `firmalar` | 7 | `0007_f10_f7_org_rfq_webhook` |
-| `fiyatlama` | 17 | `0017_ks6_hedef_toplam_kalem` |
+| `fiyatlama` | 19 | `0019_cap_piyasa_adr0018` |
 | `finans` | 6 | `0006_f5_022_tedarikci_hak_edis` |
 | `kalite` | 2 | `0002_f6_011_quality_measurement` |
 | `lojistik` | 3 | `0003_f6_030_return_request` |
 | `belgeler` | 1 | `0001_f6_012_document_tas_sertifika` |
-| `siparis` | 5 | `0005_f10_022_rfq_talep_revizyon` |
+| `siparis` | 6 | `0006_f10_021_rfq_eslestirme` |
 | `stok` | 3 | `0003_faz4_3_stock_reservation` |
-| `tanimlar` | 3 | `0003_faz3_3_kur_index_rename` |
-| `urunler` | 10 | `0010_f4_070b_drop_legacy_stock` |
+| `tanimlar` | 5 | `0005_cap_alert_kur_alert` |
+| `urunler` | 11 | `0011_cap_piyasa_adr0018` |
 <!-- /AUTO:migrations -->
 
 > Not: `api.0001` yerel/dev `migrate` uygulandı; **üretim migrate ürün sahibi onayı olmadan yok.**
@@ -277,8 +279,11 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `manage.py process_outbox` (firmalar) | PENDING transactional outbox mesajlarını işler (F4-090, at-least-once). |
 | `manage.py seed_role_permissions` (firmalar) | Rol → permission matrisini idempotent şekilde Group |
 | `manage.py expire_stale_reservations` (stok) | ISO-8601 an (test); yoksa timezone.now() |
+| `manage.py evaluate_kur_alerts` (tanimlar) | Kur alert kurallarını tara; stale’de tetik yok. |
 | `manage.py seed_fiyat_gruplari` (tanimlar) | Varsayılan fiyat gruplarını ekler (tekrar çalıştırılabilir). Adları admin |
 | `manage.py seed_tanimlar` (tanimlar) | Varsayılan metal, ayar/milyem ve satış kanalı kayıtlarını ekler (tekrar çalıştırılabilir). |
+| `manage.py sync_binance_kur` (tanimlar) | Binance XAUUSDT×USDTTRY → gram TRY metal kuru (manage_kur actor). |
+| `manage.py sync_tcmb_kur` (tanimlar) | TCMB EOD döviz gözlemi (kaynak=tcmb). |
 | `manage.py seed_urunler` (urunler) | Ürün formundaki seçim listelerini ve ana kategorileri ekler (tekrar çalıştırılabilir). |
 <!-- /AUTO:commands -->
 
@@ -291,17 +296,18 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | ADR-0012 (audit/FX/hedge/cari) | **Kabul** |
 | PRE-005 Idempotency-Key + checkout POST | UYGULANDI · TEST EDİLDİ |
 | Ödeme / tam Prosperer API | PLANLANDI |
-| Prosperer özellik parity | DOĞRULANAMADI (hedef kıyas) |
+| Prosperer özellik parity | **DOĞRULANAMADI** — ayrı ürün/kaynak kıyası gerekir; bu repoda runtime kanıt yok |
 | U-003…007, 009…011, U-013…015 | **Kabul** (2026-11-09, Emre; dış onaylılarda ürün sahibi override) — [BACKLOG](BACKLOG.md) |
 | U-014 / U-015 / U-016 | **Kabul** (2026-11-09) |
 | ADR-0001 doküman düzeni (U-016) | **Kabul** |
 | B-01 / B-06 | **Kabul** (Qubit 2026-11-09); kod bilinçli yok |
-| ADR-0014 | **Kabul** — sim UYGULANDI; quote hedef ayrı dilim |
-| F8-003 Sentry SDK / F8-006 perf | Plan var; SDK + baseline **yok** |
-| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1/NX-2 Kabul) · **API-B1…B7 Kabul** |
-| F10-021 eşleştirme | Match motoru **yok** (create UI KISMİ) |
+| ADR-0014 | **Kabul** — sim + KS-6 `quote(hedef_toplam=)` **UYGULANDI** |
+| F8-003 Sentry SDK / F8-006 perf | **UYGULANDI** (SDK + baseline); staging event **DOĞRULANAMADI** |
+| F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1…12 madde Kabul) · **API-B1…B7 Kabul** |
+| F10-021 eşleştirme | **UYGULANDI** — `RFQEslestirme` + `rfq_eslestirme_servisi` (platform onay) |
 | F10-022 özel üretim | **UYGULANDI** (`siparis.0005`) |
 | F10-023 supplier UI | **yok** (buyer UI var) |
+| CAP-PIYASA / ADR-0018 | **UYGULANDI** — LKG+banner, batch, guardrail, Binance/TCMB adaptör |
 
 Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 
@@ -357,7 +363,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | İşçilik + kanal marj | UYGULANDI |
 | Taş maliyeti (teklif vs katalog ayrımı K-011) | UYGULANDI |
 | Sertifika kurum/no/dosya | KISMİ — metadata+tenant belge F6-012; object storage K-014 yok |
-| Kur/metal zaman damgası + stale fail-closed | UYGULANDI |
+| Kur/metal zaman damgası + stale fail-closed | UYGULANDI (CAP-PIYASA LKG/banner = ADR-0018 **Kabul**) |
 | PriceQuote + PriceLock | UYGULANDI (sipariş bağ L-11 UYGULANDI) |
 | Fiyat girdi izi (`hesap_girdisi`) | KISMİ (JSON var; UI yok) |
 | Kör çoklu teklif pazaryeri | UYGULANDI |
@@ -375,9 +381,9 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
-| ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** (NX-1/2 madde Kabul) |
-| Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`siparis.0005` F10-022) |
+| Faz | F4–F8 **UYGULANDI** · F9 HTML miras · **NX-FE UYGULANDI** · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
+| ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** · **0018 Kabul** · **0019 Kabul** |
+| Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`fiyatlama.0019` / `tanimlar.0004` CAP-PIYASA) |
 
 ### 12.1b API-B0…B7 (ürün sahibi kesin tablo)
 
@@ -393,7 +399,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | **B6** | Kullanıcı tarafından **Kabul** |
 | **B7** | Kullanıcı tarafından **Kabul** |
 
-Sabit kararlar (özet): ADR-0017 **Taslak**; NX-1/NX-2 **Kabul**; NX-3…12 açık; CORS erteli; yeni Django HTML yok; `frontend/` yalnız B7 sonrası; tam suite / prod migrate yalnız açık onay. Ayrıntı: [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md).
+Sabit kararlar (özet): ADR-0017 **Taslak**; NX-1…12 **madde Kabul** (Qubit, 2026-11-09); NX-3…12 **kod UYGULANDI/KISMİ** (TECH-NX-CONTRACT-01); CORS erteli; yeni Django HTML yok; **NX-FE** `frontend/` iskelet **UYGULANDI**; tam suite / prod migrate yalnız açık onay. Ayrıntı: [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md).
 
 ### 12.2 YAPILDI (kodda var)
 
@@ -424,6 +430,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F5-030 | Buyer finans özeti API (maskeli) | `buyer_finans_servisi` + `test_buyer_finans_f5_030` **4 OK**; `/api/v1/finance/me/` |
 | F5-031 | Platform finans ops API | `ops_finans_servisi` + `test_ops_finans_f5_031` **3 OK**; `/api/v1/ops/finance/*` |
 | F5-041 | Contract Release Plan | `release_servisi` + `ContractReleasePlan/Event`; mig `fiyatlama.0015`; `test_contract_release_f5_041` **6 OK** |
+| F5-041b | Release → sipariş tüketimi | `ContractReleaseConsumption`; order create/iptal; mig `0018`; `test_contract_release_consume_f5_041b` **4 OK** |
 | AUD-001b | AuditOlay `ip_address` / `changes` | `firmalar.0006` + sidecar sync; `client_ip`; `test_audit_aud_001b` **4 OK** |
 | F5-032 | Finans UI (RBAC) | `/buyer/finance/` + `/ops/finance/`; `test_finance_ui_f5_032` **4 OK** |
 | F6-001 | QC ADR | [ADR-0013](decisions/ADR-0013-faz6-qc-lojistik.md) **Kabul** (2026-11-09) |
@@ -446,7 +453,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F10-020 | RFQ modelleri | `RFQ`/`RFQLine`/`RFQMessage` + `rfq_servisi`; `test_rfq_f10_020` |
 | F10-014 | Onay kuyruğu UI | `/buyer/approvals/`; `test_approval_ui_f10_014` **5 OK** |
 | F10-023 | RFQ buyer UI | `/buyer/rfq/`; kör mesaj; `test_rfq_ui_f10_023` **4 OK** |
-| F10-021 | Katalog dışı (KISMİ) | varyantsız RFQ create UI; eşleştirme motoru yok |
+| F10-021 | Katalog dışı eşleştirme | `RFQEslestirme` + aday/öner/onay/red; mig `siparis.0006`; `test_rfq_eslestirme_f10_021` **7 OK** |
 | F10-022 | Özel üretim + revizyon | `talep_tipi` + `RFQRevizyon`; mig `siparis.0005`; `test_rfq_ozel_f10_022` **3 OK** |
 | F7-010…015 | API std | maske + catalog/supplier/ops; problem+json; throttle scopes; `/api/v1/` |
 | F7-020…024 | Entegrasyon iskelet | `WebhookDelivery`; FakeERP/CRM; `ConnectorRegistry`; punchout stub; **22 OK** odaklı |
@@ -454,10 +461,22 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F8-002 | Structured logging | `RequestIdMiddleware` + `logging_utils`; `test_logging_f8_002` |
 | F8-004/005/008/009 | Ops/secret/deploy/throttle | RUNBOOK §7–§10; `DRF_THROTTLE_*` env |
 | F8-007 | IDOR güvenlik smoke | `test_security_f8_007` **5 OK** |
-| F8-003 | Sentry plan | RUNBOOK §11 KISMİ (SDK yok) |
-| F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** |
-| F9-010 | Buyer dashboard | **WIP commit dışı** (Kova B); HEAD’te yok — bkz §12.3 |
-| F9-011 | Katalog browse | **WIP commit dışı** (Kova B); HEAD’te yok — bkz §12.3 |
+| F8-003 | Sentry SDK | `sentry-sdk==2.69.1` + `sentry_init`; DSN boş no-op; `test_sentry_f8_003` **3 OK**; staging event DOĞRULANAMADI |
+| F8-006 | Perf smoke | `api.services.perf_smoke` + `test_perf_smoke_f8_006` **1 OK** (quote/lock/checkout baseline) |
+| F11-013 | Bildirim outbox kuralları | `qc.passed`/`qc.failed`/`return.approved` (+ `order.created`); `test_notify_f11_013` **3 OK** |
+| CAP-PIYASA | Kur dayanıklılık (ADR-0018) | `fiyat_kaynagi` + LKG/banner + batch + guardrail + Binance/TCMB; mig `tanimlar.0004`/`urunler.0011`/`fiyatlama.0019`; odaklı **37 OK** |
+| CAP-ALERT | Canlı kur eşik alert | `KurAlertKurali` + admin + `evaluate_kur_alerts` + outbox; stale’de yok; `test_kur_alert_cap` **4 OK** |
+| F11-011 | Quote/Lock analitik | `fiyat_analitik_servisi`; **3 OK** |
+| F11-012 | ATP görünümü | `atp_servisi` formül; **4 OK** |
+| F11-020 | Smart replenishment | `replenishment_servisi`; **2 OK** |
+| F11-001 | Raporlama read-model v1 | [NOTE-F11-001](decisions/NOTE-F11-001-raporlama-v1.md) RM-1…6; P-RM-* erteli |
+| F11-010 | Ticari sipariş/ciro özet | `rapor_servisi.ticari_siparis_ozet` |
+| F11-021 | Buyer behavior | `rapor_servisi.alici_davranis_ozet`; `test_rapor_f11_010_021` **6 OK** (010+021+tenant) |
+| F11-014 | Ciro eşik anomali | `anomali_servisi.ciro_esik_tara`; `test_anomali_f11_014` **3 OK** |
+| ADR-0019 | Object-level DRF | OL-1…11 **Kabul**; `api.permissions` commerce SoD + object access; `test_object_level_adr0019` **6 OK** |
+| F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** (NX-1…12 madde Kabul) |
+| F9-010 | Buyer dashboard (Django HTML miras) | `/buyer/` home + `buyer_dashboard_servisi`; Next portal değil |
+| F9-011 | Katalog browse (Django HTML miras) | `/buyer/catalog/` + `buyer_katalog_servisi`; Next portal değil |
 | API-B0 | Next.js API boşluk analizi | **Tamamlandı** |
 | API-B1 | Çekirdek API standartları | **Kabul** (Qubit 2026-11-09); odaklı **28 OK**; CORS erteli |
 | API-B2 | Buyer commerce HTTP | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
@@ -467,34 +486,35 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | API-B5 | Ops QC / sevkiyat yazma | **Kabul** (Qubit 2026-11-09); odaklı **7 OK** |
 | API-B6 | Tedarikçi teklif/stok + ters kör RFQ | **Kabul** (Qubit 2026-11-09); odaklı **3 OK** |
 | API-B7 | API dondurma / frontend-ready | **Kabul** (Qubit 2026-11-09); OpenAPI + [API_CONTRACT](API_CONTRACT.md); odaklı **1 OK** |
-| TECH-OPENAPI-01 | OpenAPI çift önek | **UYGULANDI** (B3 sonrası bakım; NX-4 Kabul değil) |
+| TECH-OPENAPI-01 | OpenAPI çift önek | **UYGULANDI** (B3 sonrası bakım; NX-4 madde **Kabul**) |
+| TECH-NX-CONTRACT-01 | NX-3…12 kod kanıt + `application/problem+json` | **UYGULANDI**; `test_api_nx_contract` **4 OK**; NX-3…12 madde **Kabul** (Qubit) |
+| NX-FE | Next.js `frontend/` iskelet | App Router + TS + Tailwind v4; `/api/v1` rewrite; session/CSRF client; `/` + `/login`; `npm run build` OK |
+| NX-ARCH | Feature/domain FE mimarisi | `features/*` ↔ Django apps; `app/(portal)/*` page/loading/error; `FRONTEND_ARCHITECTURE.md`; Zod |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
+> **Backend first** (ürün sahibi 2026-11-09): FE/Next konuşulmaz; odak Django iş kuralları.
+
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| **1** | NX-FE | Next.js `frontend/` iskeleti | B7 **Kabul**; ayrı açık talimat |
-| — | Kova B F9 HTML | buyer home/catalog WIP | commit dışı; silinmedi |
-| — | F9-012…015 | Django HTML portal büyütme | **iptal / ertelendi** (ADR-0016 supersede) |
-| — | F8-003/006 | Sentry SDK · perf smoke | plan var; baseline yok |
-| — | F10-021 eşleştirme | Katalog dışı match motoru | create UI var |
-| — | F10-023 supplier | RFQ tedarikçi UI | Next.js / API-B6 sonrası |
-| — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 |
-| — | CAP-PIYASA | Canlı altın/döviz beslemesi | kod yok |
+| — | Mahsup HTTP | `mahsup_servisi` için REST | **Ayrı takip** — ADR-0019 OL-8; API_CONTRACT §4 |
+| — | NX-* / F9 / FE | Frontend dilimleri | **Ayrı takip** — backend first; erteli |
+| — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
+| — | F12 / DYN / AI | Product kapıları | [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) |
 
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
 Celery/Redis · gerçek ödeme/kargo/SAP · Dynamic Pricing (U-015 kilitli) · GraphQL/websocket · yeni Django app yağmuru.  
-Next.js `frontend/` iskeleti: API B7 frontend-ready sonrası (ayrı dilim). Mevcut `/buyer/` `/ops/` HTML **silinmez**.
+Next.js ürün portalı (katalog+): NX-SHELL sonrası ayrı dilimler. Mevcut `/buyer/` `/ops/` HTML **silinmez**.
 
 ### 12.5 Yeni oturum başlangıcı
 
 Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.  
 **Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
-1. Oku: `AGENTS.md` → **§2** (gerçek durum) + **§12** (B0–B7, sıradaki, oturum) → ADR-0017 **Taslak** (gerekirse).  
-2. Sıradaki: **Next.js `frontend/`** yalnız açık talimat; **tam suite onaysız yok**.
-3. Odaklı iddia: B1 **28** / B2 **11** / B2 concurrency **7** / B3 **10** / B4 **11** / B5 **7** / B6 **3** / B7 **1**. Tam suite: **§2.7**. B0–B7: **§12.1b**.
-4. B-01/B-06 Kabul; CORS erteli; `frontend/` yok; NX-3…12 açık; API-B7 **Kabul**.
+1. Oku: `AGENTS.md` → **§2** (gerçek durum) + **§12** → görev ADR.  
+2. Sıradaki: Mahsup HTTP / FE / [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) (FXQ/DYN/I18N/AI). **tam suite onaysız yok**.
+3. Odaklı teslimat doğrulama (2026-11-10): permission/IDOR/F8/F9/F10-021/F11/CAP-ALERT odaklı **55 OK** (+ CAP-PIYASA ayrı). Tam suite: **§2.7**.
+4. ADR-0018/0019 **Kabul**; rapor/mahsup HTTP kapalı (OL-7/8); Next FE portal ayrı takip; NOTE-PENDING (FXQ/DYN/I18N/AI) açık.
 
-*Son güncelleme: 2026-11-09 — API-B7 Kabul (Qubit).*
+*Son güncelleme: 2026-11-10 — teslimat sabitleme (ADR-0019 + CAP + F11 + F9 HTML miras).*

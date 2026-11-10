@@ -1,0 +1,36 @@
+---
+description: Next.js App Router + feature/domain architecture for Kuyumbank.
+globs:
+  - "src/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Frontend Architecture
+
+Normative guide: `docs/FRONTEND_ARCHITECTURE.md`.
+API contract: repo `docs/API_CONTRACT.md` + OpenAPI (do not invent fields).
+
+## Layout
+
+- `src/app` — routing only; compose features
+- `src/features/<domain>` — mirrors Django apps (`firmalar`, `urunler`, …) + `auth`
+- Each feature: `components/`, `types/`, `services/`, `hooks/`, `schemas/`, `index.ts`
+- `src/components/ui` — shadcn shared (NX-SHELL)
+- `src/lib/api` — session/CSRF client; no browser tokens
+
+## Imports
+
+- `app` → `features` / `components` / `lib` only
+- No feature → feature imports
+- Import features via `@/features/<name>` public API
+- Server Components by default; `"use client"` only when needed
+
+## Safety (kök kural: `.cursor/rules/kuyumbank-hard-rules.mdc`)
+
+- Backend owns RBAC, tenant, price math — FE’de ticari hesap yok
+- UI gizleme ≠ güvenlik; her yazmada backend RBAC
+- Blind pool: supplier identity/cost buyer UI’da yok
+- Sözleşme/kritik tanım: sessiz overwrite yok → versiyon
+- Sahte endpoint uydurma; mock açıkça işaretli
+- Card spam / aşırı radius-gradient-shadow yok; sayılar `tabular-nums` + sağa
+- Idempotency-Key on mutating commerce/finance/ops writes

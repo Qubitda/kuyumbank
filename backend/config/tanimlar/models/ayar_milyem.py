@@ -1,6 +1,10 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from tanimlar.fiyat_kaynagi import FiyatKaynagi
+
 from .kiymetli_metal import KiymetliMetal
+
 
 class AyarMilyem(models.Model):
     metal = models.ForeignKey(
@@ -8,6 +12,13 @@ class AyarMilyem(models.Model):
         verbose_name="Metal",
         related_name="ayarlar",
         on_delete=models.PROTECT,
+    )
+    fiyat_kaynagi = models.CharField(
+        "Fiyat kaynağı",
+        max_length=16,
+        choices=FiyatKaynagi.CHOICES_KATMAN,
+        default=FiyatKaynagi.MIRAS,
+        help_text="ADR-0018: MIRAS → KurPolitikasi; CANLI/MANUEL override.",
     )
     # Örn: 14, 18, 22, 925 (Sayısal filtrelemeler ve sıralamalar için)
     ayar_degeri = models.PositiveIntegerField(

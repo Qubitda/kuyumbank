@@ -1,7 +1,7 @@
 # İş havuzu (kanonik)
 
 <!-- AUTO:backlog_count -->
-Toplam iş/karar kartı (`### [ID]` başlığı): **131**
+Toplam iş/karar kartı (`### [ID]` başlığı): **149**
 <!-- /AUTO:backlog_count -->
 
 Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıdır; çelişirse MASTER ve kod kazanır.
@@ -61,10 +61,11 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-021] Katalog dışı ürün talebi
 
 - **Faz:** Faz 10
-- **Durum:** **KISMİ** · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F10-020
 - **Kabul kriterleri:** Platform aracılı eşleştirme
-- **Kanıt:** `/buyer/rfq/new/` varyantsız RFQ satırı (F10-023 UI); eşleştirme motoru yok
+- **Kanıt:** `RFQEslestirme` + `rfq_eslestirme_servisi` (aday/öner/onay/red); mig `siparis.0006`; `test_rfq_eslestirme_f10_021` **7 OK**; create UI F10-023
+- **Karar (uygulama):** kural tabanlı skor + platform `approve_eslestirme` onayı; otomatik/AI bağlama yok; kör (tedarikçi SKU yok)
 
 ### [F10-022] Özel üretim / tasarım talep akışı
 
@@ -85,46 +86,53 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F11-001] Raporlama veri modeli / read-model kararı
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Product
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Product
 - **Bağımlılıklar:** Order+Finance veri
 - **Kabul kriterleri:** ADR veya teknik not
+- **Kanıt:** [NOTE-F11-001](decisions/NOTE-F11-001-raporlama-v1.md) RM-1…6; P-RM-* Product erteli (DRF/Mahsup/FE)
 
 ### [F11-010] Ticari raporlar (sipariş/ciro tenant kesitli)
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F11-001
 - **Kabul kriterleri:** Çapraz tenant yok
+- **Kanıt:** `rapor_servisi.ticari_siparis_ozet`; `test_rapor_f11_010_021` (F11-010 kısmı)
 
 ### [F11-011] Fiyat analitiği (quote/lock geçmişi)
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** PriceQuote, PriceLock
 - **Gizlilik:** alıcıya maliyet yok
 - **Kabul kriterleri:** Platform finans rolü
+- **Kanıt:** `fiyat_analitik_servisi`; `test_fiyat_analitik_f11_011` **3 OK**
 
 ### [F11-012] Stok tahmin / ATP görünümü (kural tabanlı v1)
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** F4-012
 - **Kapsam dışı:** ML zorunluluğu
 - **Kabul kriterleri:** Deterministik formül dokümante
+- **Kanıt:** `atp_servisi` — `ATP = on_hand − reserved − blocked`; kör alıcı boş; `test_atp_f11_012` **4 OK**
 
 ### [F11-013] Bildirim otomasyonu kuralları
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** Notification outbox
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** Notification outbox (F4-090)
 - **Kabul kriterleri:** Sipariş/QC olayında bildirim
+- **Kanıt:** `order.created` (mevcut) + `qc.passed`/`qc.failed` (`inspection_servisi`) + `return.approved` (`return_servisi`); `test_notify_f11_013` **3 OK**
+- **Not:** Handler iskelet (F4-090 default log); canlı push/email yok (Celery yok)
 
 ### [F11-014] Anomali tespiti (basit eşik)
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** F11-010
 - **Kabul kriterleri:** Audit + ops uyarı
+- **Kanıt:** `anomali_servisi.ciro_esik_tara`; `test_anomali_f11_014` **3 OK**
 
 ### [F11-015] AI ürün eşleştirme asistanı (opsiyonel)
 
@@ -133,22 +141,25 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Bağımlılıklar:** Eşleştirme servisi, veri politikası
 - **Kapsam dışı:** Otomatik onay
 - **Kabul kriterleri:** İnsan onayı zorunlu; kör havuz bozulmaz
+- **Karar formu:** [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) AI-1…4
 
 ### [F11-020] Smart Replenishment (kural tabanlı)
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** F4-012, F4-050, F11-012
 - **Amaç:** Stok eşiği / hız → önerilen sipariş (otomatik checkout yok)
 - **Kabul kriterleri:** Öneri audit’li; tenant scope; birim karışmaz
+- **Kanıt:** `replenishment_servisi.oneri_uret`; `test_replenishment_f11_020` **2 OK**
 
 ### [F11-021] Buyer Behavior Analytics
 
 - **Faz:** Faz 11
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** F4-050, F11-001
 - **Amaç:** Alıcı firma kesitli sipariş/quote davranış özeti
 - **Kabul kriterleri:** Tedarikçi kimliği/kör alan sızıntısı yok
+- **Kanıt:** `rapor_servisi.alici_davranis_ozet`; `test_rapor_f11_010_021` **5 OK** (010+021)
 
 ### [CAP-COMPARE] Multi-Variant Comparison
 
@@ -158,13 +169,24 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Amaç:** Alıcıya varyant özellik+fiyat (maskeli) karşılaştırma
 - **Kabul kriterleri:** Maliyet/tedarikçi yok; F4’ü bloklamaz
 
+### [CAP-PIYASA] Canlı kur beslemesi + dayanıklı fiyat kaynağı
+
+- **Faz:** Pricing / Kur (MASTER §12.3 öncelik 0)
+- **Durum:** **UYGULANDI** · ADR-0018 **Kabul** (2026-11-10) · **Öncelik:** P0 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0008/0010; `manage_kur`
+- **Amaç:** Binance anlık + TCMB EOD; ürün→ayar→politika `fiyat_kaynagi`; LKG+banner; batch canlı senkron + manuel freeze (dry-run, atomik publish); negatif marj guardrail; çapraz kur sanity; Decimal yuvarlama net
+- **Kabul kriterleri:** Soft uydurma/`0` yok; PriceQuote/Lock/OrderLine dokunulmaz; partial batch yasak; kör havuz maliyet sızıntısı yok
+- **Geçici ref:** kök `real_data/` (GoldXT) — toptan port yok; sonra silinebilir
+- **Kanıt:** mig `tanimlar.0004` / `urunler.0011` / `fiyatlama.0019`; `kaynak_resolve` / `resolve_metal_kuru_detay` / `feed_adapters` / `fiyat_batch_servisi` / `guardrail_servisi`; `test_cap_piyasa_adr0018` + kur/quote regresyon **37 OK**
+
 ### [CAP-ALERT] Live Gold Price Alert
 
 - **Faz:** Faz 9+
-- **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** kur_servisi, F4-090 (outbox)
 - **Amaç:** Kur eşiği bildirimi
 - **Kabul kriterleri:** Stale kurda alert yok; F4 checkout’u bozmaz
+- **Kanıt:** `KurAlertKurali` + `kur_alert_servisi` + admin + `evaluate_kur_alerts` (+ `process_outbox`); mig `tanimlar.0005`; `test_kur_alert_cap` **4 OK**
 
 ### [CAP-DYNPRICE] Dynamic Pricing (koşullu)
 
@@ -173,6 +195,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Bağımlılıklar:** **U-015**, ADR-0008/0010
 - **Amaç:** Kanal/hacim/süre koşullu fiyat — yalnızca **yeni** quote üretiminde
 - **Kabul kriterleri:** Mevcut PriceQuote/PriceLock/OrderLine snapshot değişmez
+- **Karar formu:** [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) DYN-1…3
 
 ### [F12-001] Dil/i18n strateji ADR
 
@@ -180,6 +203,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Durum:** Backlog · **Öncelik:** P3 · **Tip:** Product
 - **Bağımlılıklar:** —
 - **Kabul kriterleri:** Ürün sahibi
+- **Karar formu:** [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) I18N-1…4
 
 ### [F12-010] Katalog/UI çeviri altyapısı
 
@@ -194,6 +218,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Backend
 - **Bağımlılıklar:** U-009 (ADR-0008 §6)
 - **Kabul kriterleri:** PB bazlı quantize testleri
+- **Karar formu:** [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) FXQ-1…3
 
 ### [F12-012] Ülke bazlı ticari kural motoru (iskelet)
 
@@ -557,8 +582,18 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
 - **Bağımlılıklar:** `FiyatSozlesmesi`, F4-050, F5-001
 - **Amaç:** Sözleşmeli miktarın dönemsel serbest bırakılması (release ≠ yeni PriceQuote)
-- **Kanıt:** `ContractReleasePlan` / `ContractReleaseEvent` + `release_servisi` (`olustur_plan` / `aktif_et` / `serbest_birak` / `kapat`); yalnız AKTIF ALICI sözleşme; `manage_sozlesme`; Quote/Lock’a yazmaz; tüketim iskelet (`kullanilabilir` = released − 0); mig `fiyatlama.0015`
+- **Kanıt:** `ContractReleasePlan` / `ContractReleaseEvent` + `release_servisi` (`olustur_plan` / `aktif_et` / `serbest_birak` / `kapat`); yalnız AKTIF ALICI sözleşme; `manage_sozlesme`; Quote/Lock’a yazmaz; mig `fiyatlama.0015`
 - **Test:** `fiyatlama.tests.test_contract_release_f5_041` **6 OK**
+- **Tüketim:** → **F5-041b**
+
+### [F5-041b] Contract Release sipariş tüketimi
+
+- **Faz:** Faz 5+
+- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Backend
+- **Bağımlılıklar:** F5-041, F4-050/053
+- **Amaç:** `kullanilabilir = serbest − (TUKETIM − IADE)`; order create tüketir, iptal iade eder; Quote/Lock yazılmaz
+- **Kanıt:** `ContractReleaseConsumption` append-only; `tuket_order_line` / `iade_order_line`; `order_servisi` bağ; mig `fiyatlama.0018`
+- **Test:** `siparis.tests.test_contract_release_consume_f5_041b` **4 OK** (+ F5-041 **6 OK**)
 
 ### [F5-032] Finans UI (RBAC finance)
 
@@ -666,6 +701,16 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Durum:** Backlog · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F6-030
 - **Kabul kriterleri:** RBAC ops
+
+### [SEC-OBJECT-DRF] Object-level DRF yetki matrisi
+
+- **Faz:** API / Güvenlik
+- **Durum:** **UYGULANDI** (ADR-0019 **Kabul** + OL-11) · **Öncelik:** P1 · **Tip:** Security/Product
+- **Bağımlılıklar:** ADR-0003, API-B1…B7, F8-007
+- **Amaç:** Rol × kaynak × işlem dondurma; IDOR/tenant/kör havuz
+- **Kapsam dışı:** Rapor/anomali HTTP; Mahsup HTTP; FE; yeni endpoint
+- **Kabul kriterleri:** [ADR-0019](decisions/ADR-0019-object-level-drf.md) OL-1…11 **A**
+- **Kanıt:** `api.permissions` (`IsBuyerCommerceWrite` / `Has*ObjectAccess`); `test_object_level_adr0019` **6 OK** + F8-007 **5 OK**
 
 ### [PRE-001] DRF bağımlılık pin + INSTALLED_APPS
 
@@ -801,9 +846,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F8-003] Hata izleme (Sentry veya eşdeğer) bağlama planı
 
 - **Faz:** Faz 8
-- **Durum:** **KISMİ** (plan RUNBOOK §11; SDK/staging event yok) · **Öncelik:** P1 · **Tip:** Infrastructure
+- **Durum:** **UYGULANDI** (kod) · staging event **DOĞRULANAMADI** · **Öncelik:** P1 · **Tip:** Infrastructure
 - **Bağımlılıklar:** F8-002
 - **Kabul kriterleri:** staging’de event görülür
+- **Kanıt:** `sentry-sdk==2.69.1`; `config/sentry_init.py` + settings DSN opt-in; `test_sentry_f8_003` **3 OK**; RUNBOOK §11
 
 ### [F8-004] Backup/restore runbook
 
@@ -824,9 +870,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F8-006] Performans smoke (quote/lock/order kritik yollar)
 
 - **Faz:** Faz 8
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Backend
+- **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
 - **Bağımlılıklar:** F4-050
 - **Kabul kriterleri:** Baseline raporu
+- **Kanıt:** `api.services.perf_smoke` + `test_perf_smoke_f8_006` **1 OK** (quote/lock/cart_checkout soft ≤30s)
 
 ### [F8-007] Güvenlik test paketi (tenant/IDOR regresyon)
 
@@ -892,10 +939,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 ### [API-B4] Kurumsal HTTP
 
-- **Faz:** API readiness · **Durum:** **Backlog — henüz başlatılmadı** · **Öncelik:** P1 · **Tip:** API
+- **Faz:** API readiness · **Durum:** **Kabul** (Qubit 2026-11-09) · **Öncelik:** P1 · **Tip:** API
 - **Bağımlılıklar:** API-B3 Kabul, F10
 - **Kapsam:** onay / RFQ (+revizyon) / org — mevcut F10 servisleri; icat yok
-- **Not:** Erken ajan WIP dosyaları çalışma ağacında kalabilir; resmi B4 talimatı olmadan UYGULANDI sayılmaz
+- **Kanıt:** `api.tests.test_api_b4_enterprise` **11 OK** ([MASTER](MASTER.md) §12.1b)
 
 ### [TECH-OPENAPI-01] OpenAPI path çift `/api/v1` önek
 
@@ -903,7 +950,16 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Kök neden:** `SchemaGenerator(url="/api/v1/")` + ROOT_URLCONF `path("api/v1/", …)` → çift önek
 - **Çözüm:** `api_urlpatterns` + `url="/api/v1/"` (`scripts/export_openapi.py`, `api/urls.py` schema_view)
 - **Kanıt:** export sonrası `double_prefix=0`; canlı `/api/v1/*` değişmedi
-- **Not:** NX-4 hâlâ Kabul değil
+- **Not:** NX-4 madde **Kabul** (Qubit, 2026-11-09)
+
+### [TECH-NX-CONTRACT-01] NX-3…12 kod kanıt matrisi + problem+json media type
+
+- **Faz:** API readiness · **Durum:** **UYGULANDI** · **Öncelik:** P0 · **Tip:** API/Docs
+- **Bağımlılıklar:** API-B7 Kabul; ADR-0017 Taslak
+- **Kapsam:** Hata yanıtlarında `Content-Type: application/problem+json` (DRF `accepted_renderer`); ADR-0017 NX-3…12 satır satır kod kanıtı; odaklı smoke test
+- **Kabul kriterleri (kod):** `test_api_nx_contract` **4 OK**; OpenAPI drift yok
+- **Not:** NX-3…12 madde **Kabul** (Qubit, 2026-11-09); ADR bütünü **Taslak** kalır
+- **Kanıt:** `api.exception_handler.ProblemJSONRenderer`; [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md)
 
 ### [API-B5] Ops API yüzeyi
 
@@ -927,23 +983,44 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Kapsam:** `docs/api/openapi-v1.json` (koddan üret + `--check`); [API_CONTRACT.md](API_CONTRACT.md) (yetki/sızıntı matrisi + frontend checklist); B1–B6 path dondurma
 - **Kanıt:** `api.tests.test_api_b7_openapi` **1 OK**; `python scripts/export_openapi.py --check` (çift önek 0; 81 path)
 
-### [F9-010] Buyer dashboard iskeleti
+### [NX-FE] Next.js `frontend/` iskeleti
+
+- **Faz:** Faz 9 / Experience · **Durum:** **UYGULANDI** (2026-11-09) · **Öncelik:** P0 · **Tip:** Frontend
+- **Bağımlılıklar:** API-B7 **Kabul**; NX-1…12 madde **Kabul**
+- **Kapsam:** App Router + TS + Tailwind v4; `next.config` `/api/v1` → Django rewrite; `lib/api` session+CSRF; `/` health/me smoke; `/login`; tasarım dokümanları `frontend/docs`
+- **Kapsam dışı:** shadcn tam kit, katalog/sepet portal, supplier UI
+- **Kanıt:** `frontend/` · `npm run lint` + `npm run build` OK · [MASTER](MASTER.md) §12.2
+
+### [NX-ARCH] Feature/domain frontend mimarisi
+
+- **Faz:** Faz 9 / Experience · **Durum:** **UYGULANDI** (2026-11-09) · **Öncelik:** P0 · **Tip:** Frontend
+- **Bağımlılıklar:** NX-FE
+- **Kapsam:** `src/features/<app>` (components/types/services/hooks/schemas) + `src/app/(portal)/<domain>` (page/loading/error/_components); `auth` feature; `docs/FRONTEND_ARCHITECTURE.md`
+- **Kanıt:** 10 domain route + lint/build OK
+
+### [NX-SHELL] Application shell + shadcn temel
+
+- **Faz:** Faz 9 / Experience · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Bağımlılıklar:** NX-FE, NX-ARCH
+- **Kabul kriterleri:** Nav shell; light/dark; Button/Input/Dialog temel; kör havuz UI kuralları
+
+### [F9-010] Buyer dashboard iskeleti (Django HTML miras)
 
 - **Faz:** Faz 9
-- **Durum:** **WIP commit dışı** (Kova B; HEAD’te yok) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (Django `/buyer/` miras; Next portal değil) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-001, F7-010
 - **Kabul kriterleri:** Auth + tenant context
-- **Kanıt (disk WIP, commit yok):** `buyer_dashboard_servisi` / `test_buyer_dashboard_f9_010` — [MASTER](MASTER.md) §12.3
-- **Not:** Mevcut committed alıcı UI: F4-062 `/buyer/`
+- **Kanıt:** `buyer_dashboard_servisi` / `BuyerHomeView`; `test_buyer_dashboard_f9_010`
+- **Not:** Next ürün portalı ayrı (FE kapısı)
 
 ### [F9-011] Katalog arama/browse UI
 
 - **Faz:** Faz 9
-- **Durum:** **WIP commit dışı** (Kova B; HEAD’te yok) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (Django `/buyer/catalog/` miras; Next portal değil) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-010, search API
 - **Gizlilik:** kör
 - **Kabul kriterleri:** Maliyet sızıntısı yok
-- **Kanıt (disk WIP, commit yok):** `buyer_katalog_servisi` / `test_buyer_catalog_f9_011` — [MASTER](MASTER.md) §12.3
+- **Kanıt:** `buyer_katalog_servisi` / catalog views; `test_buyer_catalog_f9_011`
 
 ### [F9-012] Sepet/sipariş portal akışı
 

@@ -67,7 +67,7 @@ Ortak: teklif YAYINDA + geçerli + eşleşme onaylı (ADR-0007 kapısı); kur st
 
 | Madde | Karar |
 |-------|--------|
-| Sağlayıcı (B-04) | `KurSaglayici`; aynı anda **tek aktif**; otomatik fallback **yok**. Kesintide resolve hata verir. |
+| Sağlayıcı (B-04) | `KurSaglayici`; aynı anda **tek aktif anlık**; otomatik soft hop **yok**. Stale → **LKG + `FEED_STALE_LKG` banner** ([ADR-0018](ADR-0018-cap-piyasa-kur-dayanikliligi.md) **Kabul**). TCMB EOD / manuel kriz snapshot bilinçli düşüş. |
 | Gözlem | Mevcut `MetalKuru` / `DovizKuru` genişletilir: `saglayici`, `kur_tipi`, piyasa `zaman` ≠ `alinma_zamani`, manuel `neden` + onaylayan. |
 | Stale | `(alinma − zaman)` veya `(now − zaman)` > sağlayıcı `max_gecikme_saniye` → geçersiz; sessiz “son bilinen kur” **yok**. |
 | Kur tipi (B-05) | `KurPolitikasi`: `alici_kur_tipi` ve `tedarikci_kur_tipi` ayrı; resolve taraf parametresiyle seçer. |

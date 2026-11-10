@@ -1,6 +1,6 @@
-"""F5-041 — Contract release plan / dönemsel serbest bırakma.
+"""F5-041 / F5-041b — Contract release plan + sipariş tüketimi.
 
-PriceQuote ve PriceLock’a yazmaz; yalnız release aggregate + audit.
+PriceQuote ve PriceLock’a yazmaz; yalnız release/consumption aggregate + audit.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from firmalar.services.audit_servisi import (
 )
 from firmalar.services.yetki_servisi import require_perm
 from fiyatlama.models import (
+    ContractReleaseConsumption,
     ContractReleaseEvent,
     ContractReleasePlan,
     FiyatSozlesmesi,
@@ -54,9 +55,149 @@ def serbest_bakiye(plan: ContractReleasePlan) -> Decimal:
     return plan.toplam_taahhut - serbest_birakilan(plan)
 
 
+def tuketilen(plan: ContractReleasePlan) -> Decimal:
+    """Net tüketim = TUKETIM − IADE (F5-041b)."""
+    tuk = (
+        plan.consumptions.filter(yon=ContractReleaseConsumption.Yon.TUKETIM)
+        .aggregate(s=Sum("miktar"))
+        .get("s")
+        or Decimal("0")
+    )
+    iade = (
+        plan.consumptions.filter(yon=ContractReleaseConsumption.Yon.IADE)
+        .aggregate(s=Sum("miktar"))
+        .get("s")
+        or Decimal("0")
+    )
+    return tuk - iade
+
+
 def kullanilabilir(plan: ContractReleasePlan) -> Decimal:
-    """Siparişe açık miktar — tüketim takibi iskelet (consumed=0)."""
-    return serbest_birakilan(plan) - Decimal("0")
+    """Siparişe açık miktar = serbest bırakılan − net tüketim."""
+    return serbest_birakilan(plan) - tuketilen(plan)
+
+
+def _aktif_plan_qs(*, alici_firma_id: int, varyant_id: int, birim: str):
+    return (
+        ContractReleasePlan.objects.select_for_update()
+        .filter(
+            durum=ContractReleasePlan.Durum.AKTIF,
+            varyant_id=varyant_id,
+            birim=birim,
+            sozlesme__firma_id=alici_firma_id,
+            sozlesme__durum=FiyatSozlesmesi.Durum.AKTIF,
+            sozlesme__kontrat_tipi=FiyatSozlesmesi.KontratTipi.ALICI,
+        )
+        .order_by("pk")
+    )
+
+
+def tuket_order_line(*, actor, order_line) -> list[ContractReleaseConsumption]:
+    """AKTIF plan varsa satır miktarını FIFO tüket; yetersizse ValidationError.
+
+    Plan yoksa no-op (sözleşme zorunlu değil). Çağıran domain_atomic içinde olmalı.
+    """
+    if order_line.birim not in ContractReleasePlan.Birim.values:
+        return []
+
+    plans = list(
+        _aktif_plan_qs(
+            alici_firma_id=order_line.order.alici_firma_id,
+            varyant_id=order_line.varyant_id,
+            birim=order_line.birim,
+        )
+    )
+    if not plans:
+        return []
+
+    remaining = Decimal(order_line.miktar)
+    created: list[ContractReleaseConsumption] = []
+    for plan in plans:
+        if remaining <= 0:
+            break
+        avail = kullanilabilir(plan)
+        if avail <= 0:
+            continue
+        take = remaining if remaining <= avail else avail
+        cons = ContractReleaseConsumption(
+            plan=plan,
+            order_line=order_line,
+            yon=ContractReleaseConsumption.Yon.TUKETIM,
+            miktar=take,
+            olusturan=actor if getattr(actor, "pk", None) else None,
+        )
+        cons.save()
+        created.append(cons)
+        remaining -= take
+        record_audit(
+            actor=actor,
+            action="fiyatlama.release.consumed",
+            entity_type="ContractReleaseConsumption",
+            entity_id=str(cons.pk),
+            success=True,
+            detail={
+                "plan_id": plan.pk,
+                "order_line_id": order_line.pk,
+                "miktar": str(take),
+                "kullanilabilir_sonra": str(kullanilabilir(plan)),
+            },
+        )
+
+    if remaining > 0:
+        raise ValidationError(
+            "Contract release kullanılabilir miktar yetersiz: "
+            f"kalan_ihtiyaç={remaining} varyant={order_line.varyant_id} "
+            f"birim={order_line.birim}."
+        )
+    return created
+
+
+def iade_order_line(*, actor, order_line) -> list[ContractReleaseConsumption]:
+    """Order iptalinde satırdaki tüm TUKETIM kayıtları için IADE yazar (idempotent)."""
+    tuketimler = list(
+        ContractReleaseConsumption.objects.select_for_update()
+        .filter(
+            order_line_id=order_line.pk,
+            yon=ContractReleaseConsumption.Yon.TUKETIM,
+        )
+        .order_by("pk")
+    )
+    if not tuketimler:
+        return []
+
+    created: list[ContractReleaseConsumption] = []
+    for tuketim in tuketimler:
+        existing = ContractReleaseConsumption.objects.filter(
+            order_line_id=order_line.pk,
+            plan_id=tuketim.plan_id,
+            yon=ContractReleaseConsumption.Yon.IADE,
+        ).first()
+        if existing is not None:
+            created.append(existing)
+            continue
+        iade = ContractReleaseConsumption(
+            plan_id=tuketim.plan_id,
+            order_line=order_line,
+            yon=ContractReleaseConsumption.Yon.IADE,
+            miktar=tuketim.miktar,
+            olusturan=actor if getattr(actor, "pk", None) else None,
+        )
+        iade.save()
+        created.append(iade)
+        record_audit(
+            actor=actor,
+            action="fiyatlama.release.consumption_reversed",
+            entity_type="ContractReleaseConsumption",
+            entity_id=str(iade.pk),
+            success=True,
+            detail={
+                "plan_id": tuketim.plan_id,
+                "order_line_id": order_line.pk,
+                "miktar": str(tuketim.miktar),
+                "tuketim_id": tuketim.pk,
+            },
+        )
+    return created
 
 
 def olustur_plan(

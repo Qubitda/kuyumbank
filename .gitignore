@@ -30,3 +30,6 @@ _recovery/
 
 # Archives (never commit zip dumps)
 *.zip
+
+# Geçici CAP/örnek veri (üretime gitmez; silinebilir)
+real_data/

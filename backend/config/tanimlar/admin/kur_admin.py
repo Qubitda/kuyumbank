@@ -3,10 +3,18 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 
-from tanimlar.models import DovizKuru, KurPolitikasi, KurSaglayici, MetalKuru
-from tanimlar.services import kur_servisi
+from firmalar.services.yetki_servisi import has_perm
+from tanimlar.models import (
+    DovizKuru,
+    KurAlertKurali,
+    KurPolitikasi,
+    KurSaglayici,
+    MetalKuru,
+)
+from tanimlar.services import kur_alert_servisi, kur_servisi
 
 User = get_user_model()
+P_MANAGE_KUR = "tanimlar.manage_kur"
 
 
 class KurAdminTaban(admin.ModelAdmin):
@@ -170,3 +178,69 @@ class KurPolitikasiAdmin(admin.ModelAdmin):
             self.message_user(request, str(exc), level=messages.ERROR)
             raise
         obj.pk = kur_servisi.get_or_create_politikasi().pk
+
+
+@admin.register(KurAlertKurali)
+class KurAlertKuraliAdmin(admin.ModelAdmin):
+    """CAP-ALERT ops yüzeyi — oluşturma servis üzerinden; silme yok."""
+
+    list_display = (
+        "id",
+        "metal",
+        "kur_tipi",
+        "yon",
+        "esik_fiyat",
+        "aktif",
+        "son_tetik_gozlem",
+        "olusturma_tarihi",
+    )
+    list_filter = ("aktif", "yon", "kur_tipi", "metal")
+    search_fields = ("metal__kod", "metal__ad")
+    list_select_related = ("metal", "son_tetik_gozlem", "olusturan")
+    autocomplete_fields = ("metal",)
+    readonly_fields = (
+        "son_tetik_gozlem",
+        "olusturan",
+        "olusturma_tarihi",
+        "guncelleme_tarihi",
+    )
+
+    def has_module_permission(self, request):
+        return has_perm(request.user, P_MANAGE_KUR)
+
+    def has_view_permission(self, request, obj=None):
+        return has_perm(request.user, P_MANAGE_KUR)
+
+    def has_add_permission(self, request):
+        return has_perm(request.user, P_MANAGE_KUR)
+
+    def has_change_permission(self, request, obj=None):
+        return has_perm(request.user, P_MANAGE_KUR)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return self.readonly_fields
+        # Güncellemede metal/eşik/yön kilit; yalnız aktif toggle
+        return self.readonly_fields + ("metal", "kur_tipi", "yon", "esik_fiyat")
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            try:
+                saved = kur_alert_servisi.kural_olustur(
+                    actor=request.user,
+                    metal=form.cleaned_data["metal"],
+                    esik_fiyat=form.cleaned_data["esik_fiyat"],
+                    yon=form.cleaned_data["yon"],
+                    kur_tipi=form.cleaned_data.get("kur_tipi") or obj.kur_tipi,
+                )
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, str(exc), level=messages.ERROR)
+                raise
+            obj.pk = saved.pk
+            return
+        # Yalnız aktif
+        KurAlertKurali.objects.filter(pk=obj.pk).update(aktif=bool(obj.aktif))
+        obj.refresh_from_db()

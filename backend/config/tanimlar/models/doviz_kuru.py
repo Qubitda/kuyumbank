@@ -11,7 +11,11 @@ from .kur_tipi import KurTipi
 
 
 class DovizKuru(models.Model):
-    KAYNAK = [("manuel", "Manuel"), ("api", "API")]
+    KAYNAK = [
+        ("manuel", "Manuel"),
+        ("api", "API"),
+        ("tcmb", "TCMB EOD"),
+    ]
     PARA_BIRIMI = [("USD", "USD"), ("EUR", "EUR"), ("GBP", "GBP")]
 
     para_birimi = models.CharField("Para birimi", max_length=10, choices=PARA_BIRIMI)

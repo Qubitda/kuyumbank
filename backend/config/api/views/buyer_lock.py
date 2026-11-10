@@ -1,4 +1,4 @@
-"""API-B2 — PriceLock oluştur / oku (pricing_service.lock_quote)."""
+"""API-B2 — PriceLock oluştur / oku. ADR-0019 commerce W."""
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from api.exc import raise_drf
 from api.mixins import IdempotencyMixin
-from api.permissions import IsAuthenticatedWithFirma
+from api.permissions import IsBuyerCommerceRead, IsBuyerCommerceWrite
 from api.presenters.buyer import BuyerPriceLockPresenter
 from api.throttles import BuyerRateThrottle
 from firmalar.services.yetki_servisi import can_view_all_tenants
@@ -16,14 +16,6 @@ from fiyatlama.models import PriceLock
 from fiyatlama.selectors.buyer_quote import BuyerQuoteNotFound, get_quote_for_actor
 from fiyatlama.selectors.tenant import scope_price_lock_queryset
 from fiyatlama.services import pricing_service
-
-
-def _assert_buyer(user) -> None:
-    if can_view_all_tenants(user):
-        return
-    firma = getattr(user, "firma", None)
-    if firma is None or not getattr(firma, "alici_mi", False):
-        raise PermissionDenied(detail="PriceLock yalnız alıcı veya ops.")
 
 
 def _get_lock(user, lock_id: int) -> PriceLock:
@@ -39,11 +31,10 @@ def _get_lock(user, lock_id: int) -> PriceLock:
 class PriceLockCreateView(IdempotencyMixin, APIView):
     """POST /api/v1/price-locks/ — {quote_id} (+ Idempotency-Key)."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite]
     throttle_classes = [BuyerRateThrottle]
 
     def post(self, request):
-        _assert_buyer(request.user)
         if can_view_all_tenants(request.user):
             raise PermissionDenied(
                 detail="Ops on-behalf kilit için ayrı yüzey; alıcı oturumu kullanın."
@@ -74,10 +65,9 @@ class PriceLockCreateView(IdempotencyMixin, APIView):
 class PriceLockDetailView(APIView):
     """GET /api/v1/price-locks/<pk>/ — expires_at + server_now + gecerli."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceRead]
     throttle_classes = [BuyerRateThrottle]
 
     def get(self, request, pk: int):
-        _assert_buyer(request.user)
         lock = _get_lock(request.user, pk)
         return Response(BuyerPriceLockPresenter(lock))

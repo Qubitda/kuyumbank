@@ -2,7 +2,7 @@
 
 **Durum:** **Taslak** (ADR bütünü henüz Kabul değil — agent Kabul etmez)
 **Bağımlılık:** ADR-0002/0003/0004 **Kabul**; PRE/F7; [ADR-0016](ADR-0016-faz9-frontend.md) **Supersede**
-**Kod:** API-B1…B7 **Kabul** (ürün sahibi Qubit, 2026-11-09); ADR bütünü hâlâ **Taslak** (NX-3…12 açık)
+**Kod:** API-B1…B7 **Kabul** (ürün sahibi Qubit, 2026-11-09); NX-1…12 **madde Kabul** (Qubit, 2026-11-09); NX-3…12 **kod UYGULANDI/KISMİ** (TECH-NX-CONTRACT-01); ADR bütünü **Taslak** kalır
 
 ## Sabit ürün yönü
 
@@ -10,23 +10,29 @@
 |------|-------|
 | Yeni Django HTML | **Yok** |
 | Mevcut `/buyer/`, `/ops/` | **Korunur** |
-| Yeni ürün UI | **Next.js** (`frontend/` B7 sonrası) |
+| Yeni ürün UI | **Next.js** (`frontend/` — NX-FE iskelet UYGULANDI; portal dilimleri sonra) |
 | Backend | Mevcut servisleri güvenli REST ile sunmak |
 | Deploy | Aynı-origin reverse proxy tercih |
 
 ## Madde durumları
 
-| ID | Konu | Durum | Karar |
-|----|------|-------|-------|
-| **NX-1** | Kimlik | **Kabul** (Qubit, 2026-11-09) | Session; cookie HttpOnly + Secure (prod) + SameSite=Lax; CSRF zorunlu; tarayıcıda token yok; Token/Basic S2S |
-| **NX-2** | Sayfalama | **Kabul** (Qubit, 2026-11-09) | `page` + `page_size` (ledger dahil); max page_size; deterministik sıra (`-pk`); tenant izolasyonu |
-| **CORS** | Cross-origin | **Ertelendi** | Aynı-origin; ihtiyaç çıkarsa ayrı karar |
-| NX-3 | Hata zarfı | Açık | B1’de uygulandı; ADR maddesi henüz Kabul değil |
-| NX-4 | OpenAPI/drift | Açık | B1’de uygulandı |
-| NX-5 | `/me` capabilities | Açık | B1’de uygulandı |
-| NX-6 | Idempotency tüm yazmalar | Açık | Altyapı + kısmi uçlar; B2+ |
-| NX-7 | Rol serializer ayrımı | Açık | B2 Buyer* |
-| NX-8…12 | PriceLock alanları, allowed_actions, no-store, sürüm, katman | Açık | |
+**Etiket:** Madde **Kabul** = ürün sahibi onayı. **Kod: UYGULANDI** = runtime/test kanıtı (agent maddeyi Kabul etmez).
+
+| ID | Konu | Madde | Kod | Karar / kanıt |
+|----|------|-------|-----|----------------|
+| **NX-1** | Kimlik | **Kabul** (Qubit, 2026-11-09) | UYGULANDI | Session; cookie HttpOnly + Secure (prod) + SameSite=Lax; CSRF; tarayıcıda token yok; Token/Basic S2S |
+| **NX-2** | Sayfalama | **Kabul** (Qubit, 2026-11-09) | UYGULANDI | `page` + `page_size`; max; sıra `-pk`; tenant |
+| **CORS** | Cross-origin | **Ertelendi** | — | Aynı-origin; ihtiyaçta ayrı karar |
+| **NX-3** | Hata zarfı | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `api.exception_handler` → `type`/`title`/`status`/`detail`/`code`/`request_id`; `Content-Type: application/problem+json`; `test_api_b1_standards` + `test_api_nx_contract` |
+| **NX-4** | OpenAPI/drift | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `docs/api/openapi-v1.json` + `export_openapi.py --check`; B7 + TECH-OPENAPI-01 |
+| **NX-5** | `/me` capabilities | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `GET /api/v1/me/` → `firma` + `capabilities`; B1 testleri |
+| **NX-6** | Idempotency yazmalar | **Kabul** (Qubit, 2026-11-09) | **KISMİ (bilinçli)** | `IdempotencyMixin` + actor-scoped storage: commerce/finance/ops/supplier yazmaları. **Hariç:** `auth/login|logout` (oturum); `payments/webhook` (olay kimliği). B2 concurrency **7 OK** |
+| **NX-7** | Rol sunum ayrımı | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `api.presenters.buyer` / `supplier` / `ops` / `enterprise` / `finance_ops`; ters kör B6 |
+| **NX-8** | PriceLock alanları | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `expires_at`, `server_now`, `gecerli`, Decimal string; `BuyerPriceLockPresenter`; `test_api_nx_contract` |
+| **NX-9** | `allowed_actions` | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | Presenter’lar; UI keşif; yazmada RBAC yeniden; B2–B6 testleri |
+| **NX-10** | Cache-Control no-store | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `ApiNoStoreMiddleware` kimlikli `/api/v1/`; B1 + NX test |
+| **NX-11** | API sürüm | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | `settings.API_VERSION=v1`; path `/api/v1/`; `GET /health` → `api: v1` |
+| **NX-12** | Katman | **Kabul** (Qubit, 2026-11-09) | **UYGULANDI** | ADR-0004 paketler + `api` views/presenters/services; erken mikroservis yok (ROADMAP §1.1) |
 
 ## Fazlar
 

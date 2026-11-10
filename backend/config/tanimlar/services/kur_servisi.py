@@ -1,11 +1,13 @@
-"""Kur politikası servisi (ADR-0008 Dilim 3.3 / K-019).
+"""Kur politikası servisi (ADR-0008 Dilim 3.3 / K-019 + ADR-0018 CAP-PIYASA).
 
-Quote motoru yok. Resolve: yalnız aktif sağlayıcı; stale → hata; fallback yok.
+Resolve: tek aktif anlık sağlayıcı; soft provider hop yok.
+Stale: sessiz LKG yasak — FEED_STALE_LKG + banner ile LKG kullanılabilir.
 Manuel giriş: neden + dört göz + audit.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
 
@@ -15,6 +17,7 @@ from django.utils import timezone
 
 from firmalar.services.audit_servisi import domain_atomic, record_audit, record_audit_durable
 from firmalar.services.yetki_servisi import require_perm
+from tanimlar.fiyat_kaynagi import FeedHealth, FiyatKaynagi
 
 from tanimlar.models import (
     DovizKuru,
@@ -74,9 +77,35 @@ def get_or_create_politikasi() -> KurPolitikasi:
         defaults={
             "alici_kur_tipi": KurTipi.SATIS,
             "tedarikci_kur_tipi": KurTipi.ALIS,
+            "fiyat_kaynagi": FiyatKaynagi.CANLI_PIYASA,
+            "feed_health": FeedHealth.FEED_OK,
         },
     )
     return obj
+
+
+def set_feed_health(
+    *,
+    health: str,
+    banner: str = "",
+) -> KurPolitikasi:
+    """Feed health yüzeyi (LKG/banner); soft uydurma yok."""
+    if health not in {c[0] for c in FeedHealth.CHOICES}:
+        raise ValidationError({"feed_health": "Geçersiz feed_health."})
+    pol = get_or_create_politikasi()
+    pol.feed_health = health
+    pol.feed_banner = (banner or "")[:255]
+    pol.save(update_fields=["feed_health", "feed_banner", "guncelleme"])
+    return pol
+
+
+@dataclass(frozen=True)
+class MetalKurResolve:
+    gozlem: MetalKuru
+    feed_health: str
+    banner: str
+    is_lkg: bool
+    etkin_kaynak: str
 
 
 def aktif_saglayici() -> KurSaglayici:
@@ -179,30 +208,101 @@ def politikayi_guncelle(
     return pol
 
 
-def resolve_metal_kuru(metal, *, taraf: str, now=None) -> MetalKuru:
-    """Aktif sağlayıcı + taraf kur tipi; stale/yok → hata. Fallback yok."""
+def resolve_metal_kuru(
+    metal, *, taraf: str, now=None, etkin_kaynak: str | None = None
+) -> MetalKuru:
+    """Geriye uyumlu: detaylı resolve'un gözlemi. Stale+LKG → gözlem döner (banner politika)."""
+    return resolve_metal_kuru_detay(
+        metal, taraf=taraf, now=now, etkin_kaynak=etkin_kaynak
+    ).gozlem
+
+
+def resolve_metal_kuru_detay(
+    metal,
+    *,
+    taraf: str,
+    now=None,
+    etkin_kaynak: str | None = None,
+) -> MetalKurResolve:
+    """ADR-0018: CANLI → api; stale → LKG+banner; MANUEL → manuel kaynak; 0 fiyat yok."""
     now = now or timezone.now()
-    saglayici = aktif_saglayici()
+    kaynak = (etkin_kaynak or FiyatKaynagi.CANLI_PIYASA).strip()
     kur_tipi = tarafa_kur_tipi(taraf)
-    gozlem = (
+    metal_id = metal.pk if hasattr(metal, "pk") else metal
+
+    if kaynak == FiyatKaynagi.MANUEL_GIRIS:
+        gozlem = (
+            MetalKuru.objects.filter(
+                metal_id=metal_id,
+                kur_tipi=kur_tipi,
+                kaynak="manuel",
+            )
+            .select_related("saglayici", "metal")
+            .order_by("-zaman", "-pk")
+            .first()
+        )
+        if gozlem is None or gozlem.saf_birim_fiyat <= 0:
+            set_feed_health(
+                health=FeedHealth.FEED_FAIL,
+                banner="Manuel metal kuru yok.",
+            )
+            raise KurYokError("Manuel metal kuru yok.")
+        set_feed_health(
+            health=FeedHealth.FEED_LOCKED_MANUEL,
+            banner="Manuel kur kilidi aktif.",
+        )
+        return MetalKurResolve(
+            gozlem=gozlem,
+            feed_health=FeedHealth.FEED_LOCKED_MANUEL,
+            banner="Manuel kur kilidi aktif.",
+            is_lkg=False,
+            etkin_kaynak=kaynak,
+        )
+
+    # CANLI_PIYASA — tek aktif anlık sağlayıcı; soft hop yok
+    saglayici = aktif_saglayici()
+    qs = (
         MetalKuru.objects.filter(
-            metal_id=metal.pk if hasattr(metal, "pk") else metal,
+            metal_id=metal_id,
             saglayici=saglayici,
             kur_tipi=kur_tipi,
+            kaynak__in=["api", "websocket", "tcmb"],
         )
         .select_related("saglayici", "metal")
         .order_by("-zaman", "-pk")
-        .first()
     )
-    if gozlem is None:
+    gozlem = qs.first()
+    if gozlem is None or gozlem.saf_birim_fiyat <= 0:
+        set_feed_health(
+            health=FeedHealth.FEED_FAIL,
+            banner="Canlı metal kuru yok.",
+        )
         raise KurYokError(
             f"Metal kuru yok (sağlayıcı={saglayici.kod}, tip={kur_tipi})."
         )
-    if gozlem_stale_mi(gozlem, now=now):
-        raise KurStaleError(
-            f"Metal kuru stale (id={gozlem.pk}, max={saglayici.max_gecikme_saniye}s)."
+    if not gozlem_stale_mi(gozlem, now=now):
+        set_feed_health(health=FeedHealth.FEED_OK, banner="")
+        return MetalKurResolve(
+            gozlem=gozlem,
+            feed_health=FeedHealth.FEED_OK,
+            banner="",
+            is_lkg=False,
+            etkin_kaynak=kaynak,
         )
-    return gozlem
+
+    # Stale → LKG = son bilinen gözlem; sessiz yasak — banner zorunlu (CP-3)
+    banner = (
+        f"Kur stale; LKG kullanılıyor (gözlem=#{gozlem.pk}, "
+        f"max={saglayici.max_gecikme_saniye}s)."
+    )
+    set_feed_health(health=FeedHealth.FEED_STALE_LKG, banner=banner)
+    return MetalKurResolve(
+        gozlem=gozlem,
+        feed_health=FeedHealth.FEED_STALE_LKG,
+        banner=banner,
+        is_lkg=True,
+        etkin_kaynak=kaynak,
+    )
 
 
 def resolve_doviz_kuru(para_birimi: str, *, taraf: str, now=None) -> DovizKuru:

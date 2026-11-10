@@ -1,38 +1,28 @@
-"""API-B2 — sipariş oluştur (checkout’tan), iptal, reorder."""
+"""API-B2 — sipariş oluştur / iptal / reorder. ADR-0019 commerce W; OL-2 ops iptal yok."""
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.exc import raise_drf
 from api.mixins import IdempotencyMixin
-from api.permissions import IsAuthenticatedWithFirma
+from api.permissions import HasOrderObjectAccess, IsBuyerCommerceWrite
 from api.presenters.buyer import BuyerCartPresenter, BuyerOrderPresenter
 from api.throttles import BuyerRateThrottle
-from firmalar.services.yetki_servisi import can_view_all_tenants
 from siparis.models import CheckoutAttempt
 from siparis.selectors.tenant import OrderNotFound, get_order_for_actor
 from siparis.services import order_servisi, reorder_servisi
 
 
-def _assert_buyer(user) -> None:
-    if can_view_all_tenants(user):
-        raise PermissionDenied(detail="Ops bu yazma uçlarını kullanamaz.")
-    firma = getattr(user, "firma", None)
-    if firma is None or not getattr(firma, "alici_mi", False):
-        raise PermissionDenied(detail="Yalnız alıcı.")
-
-
 class OrderFromCheckoutView(IdempotencyMixin, APIView):
     """POST /api/v1/orders/from-checkout/ — {checkout_id}."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite]
     throttle_classes = [BuyerRateThrottle]
 
     def post(self, request):
-        _assert_buyer(request.user)
         cached = self.idempotency_begin(request)
         if cached is not None:
             return cached
@@ -58,13 +48,12 @@ class OrderFromCheckoutView(IdempotencyMixin, APIView):
 
 
 class OrderCancelView(IdempotencyMixin, APIView):
-    """POST /api/v1/orders/<pk>/cancel/."""
+    """POST /api/v1/orders/<pk>/cancel/ — yalnız alıcı commerce W (OL-2)."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite, HasOrderObjectAccess]
     throttle_classes = [BuyerRateThrottle]
 
     def post(self, request, pk: int):
-        _assert_buyer(request.user)
         cached = self.idempotency_begin(request)
         if cached is not None:
             return cached
@@ -72,6 +61,7 @@ class OrderCancelView(IdempotencyMixin, APIView):
             order = get_order_for_actor(request.user, order_id=pk)
         except OrderNotFound as exc:
             raise NotFound(detail="Sipariş bulunamadı.") from exc
+        self.check_object_permissions(request, order)
         try:
             order = order_servisi.iptal_siparis(actor=request.user, order=order)
         except DjangoValidationError as exc:
@@ -84,11 +74,10 @@ class OrderCancelView(IdempotencyMixin, APIView):
 class OrderReorderView(IdempotencyMixin, APIView):
     """POST /api/v1/orders/<pk>/reorder/ — {replace_cart?: bool}."""
 
-    permission_classes = [IsAuthenticatedWithFirma]
+    permission_classes = [IsBuyerCommerceWrite, HasOrderObjectAccess]
     throttle_classes = [BuyerRateThrottle]
 
     def post(self, request, pk: int):
-        _assert_buyer(request.user)
         cached = self.idempotency_begin(request)
         if cached is not None:
             return cached
@@ -96,6 +85,7 @@ class OrderReorderView(IdempotencyMixin, APIView):
             order = get_order_for_actor(request.user, order_id=pk)
         except OrderNotFound as exc:
             raise NotFound(detail="Sipariş bulunamadı.") from exc
+        self.check_object_permissions(request, order)
         replace = request.data.get("replace_cart", True)
         if isinstance(replace, str):
             replace = replace.lower() not in ("0", "false", "no")

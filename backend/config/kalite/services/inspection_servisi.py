@@ -152,6 +152,17 @@ def pass_et(*, actor, inspection: QualityInspection) -> QualityInspection:
         from finans.services import hak_edis_servisi
 
         hak_edis_servisi.kaydet_qc_pass(actor=actor, inspection=locked)
+        # F11-013: bildirim outbox (aynı atomic)
+        from firmalar.services import outbox_servisi
+
+        outbox_servisi.enqueue(
+            event_type="qc.passed",
+            payload={
+                "inspection_id": locked.pk,
+                "order_id": locked.order_id,
+                "shipment_blok": locked.shipment_blok,
+            },
+        )
         record_audit(
             actor=actor,
             action="kalite.qc.pass",
@@ -185,6 +196,18 @@ def fail_et(
                 locked.save(update_fields=["notlar", "guncelleme_tarihi"])
             finally:
                 locked._allow_status_transition = False
+        # F11-013: bildirim outbox (aynı atomic)
+        from firmalar.services import outbox_servisi
+
+        outbox_servisi.enqueue(
+            event_type="qc.failed",
+            payload={
+                "inspection_id": locked.pk,
+                "order_id": locked.order_id,
+                "shipment_blok": locked.shipment_blok,
+                "reason": (reason or "")[:120],
+            },
+        )
         record_audit(
             actor=actor,
             action="kalite.qc.fail",

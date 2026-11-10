@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from firmalar.models import Firma
 from firmalar.services.yetki_servisi import can_view_all_tenants
 from fiyatlama.models import (
+    ContractReleaseConsumption,
     ContractReleaseEvent,
     ContractReleasePlan,
     FiyatSozlesmesi,
@@ -16,6 +17,7 @@ from fiyatlama.models import (
     TeklifTasMaliyeti,
 )
 from fiyatlama.selectors.tenant import (
+    scope_contract_release_consumption_queryset,
     scope_contract_release_event_queryset,
     scope_contract_release_plan_queryset,
     scope_fiyat_sozlesmesi_kalemi_queryset,
@@ -713,6 +715,44 @@ class ContractReleaseEventAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return scope_contract_release_event_queryset(
+            super().get_queryset(request), request.user
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ContractReleaseConsumption)
+class ContractReleaseConsumptionAdmin(admin.ModelAdmin):
+    """F5-041b — append-only tüketim; salt okunur."""
+
+    list_display = (
+        "id",
+        "plan",
+        "order_line",
+        "yon",
+        "miktar",
+        "olusturma_tarihi",
+    )
+    list_filter = ("yon",)
+    list_select_related = ("plan", "plan__sozlesme", "order_line")
+    readonly_fields = (
+        "plan",
+        "order_line",
+        "yon",
+        "miktar",
+        "olusturan",
+        "olusturma_tarihi",
+    )
+
+    def get_queryset(self, request):
+        return scope_contract_release_consumption_queryset(
             super().get_queryset(request), request.user
         )
 

@@ -78,6 +78,8 @@
     <strong>KUYUMBANK</strong>
     {% if user.is_authenticated %}
     <nav>
+      <a href="{% url 'buyer-home' %}">Panel</a>
+      <a href="{% url 'buyer-catalog' %}">Katalog</a>
       <a href="{% url 'buyer-cart' %}">Sepet</a>
       <a href="{% url 'buyer-order-list' %}">Siparişler</a>
       <a href="{% url 'buyer-finance' %}">Finans</a>

@@ -177,9 +177,10 @@ class KurPolitikasiTests(TestCase):
         self.assertEqual(ted.kur_tipi, KurTipi.ALIS)
         self.assertEqual(ted.saf_birim_fiyat, Decimal("6900.0000"))
 
-    def test_stale_resolve_hata(self):
+    def test_stale_resolve_lkg_banner(self):
+        """ADR-0018: stale → sessiz hata yok; LKG + FEED_STALE_LKG banner."""
         eski = timezone.now() - timedelta(seconds=120)
-        MetalKuru.objects.create(
+        goz = MetalKuru.objects.create(
             metal=self.metal,
             saglayici=self.saglayici,
             kur_tipi=KurTipi.SATIS,
@@ -188,10 +189,13 @@ class KurPolitikasiTests(TestCase):
             saf_birim_fiyat=Decimal("1.0000"),
             kaynak="api",
         )
-        with self.assertRaises(kur_servisi.KurStaleError):
-            kur_servisi.resolve_metal_kuru(
-                self.metal, taraf=KurTaraf.ALICI, now=timezone.now()
-            )
+        detay = kur_servisi.resolve_metal_kuru_detay(
+            self.metal, taraf=KurTaraf.ALICI, now=timezone.now()
+        )
+        self.assertEqual(detay.gozlem.pk, goz.pk)
+        self.assertTrue(detay.is_lkg)
+        self.assertEqual(detay.feed_health, "FEED_STALE_LKG")
+        self.assertTrue(detay.banner)
 
     def test_pasif_saglayici_resolve_yok_fallback(self):
         """Aktif olmayan sağlayıcının kuru kullanılmaz (B-04)."""

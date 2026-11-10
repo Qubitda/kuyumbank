@@ -1,0 +1,42 @@
+---
+description: Always-on visual foundation for the minimal monochrome Kuyumbank product.
+alwaysApply: true
+---
+
+# Core Design System
+
+Build a refined, minimal enterprise SaaS interface for a jewelry, catalog and pricing platform.
+
+Visual direction:
+- Restrained monochromatic discipline inspired by Vercel.
+- Clear information hierarchy and density inspired by Linear.
+- Do not copy either product's screens.
+- Build a coherent product-specific interface.
+
+Read and follow `docs/DESIGN_SYSTEM.md` and `docs/UI_UX_GUIDELINES.md`.
+
+## Non-negotiable principles
+1. Function before decoration.
+2. Typography, spacing and alignment create hierarchy.
+3. Cards are exceptional, not the default layout.
+4. Borders define meaningful boundaries only.
+5. Shadows are rare.
+6. Color communicates semantic meaning.
+7. Use existing semantic tokens; never invent arbitrary colors.
+8. Keep density appropriate to the user's task.
+9. Do not invent data, business rules, statuses or workflows.
+10. Prefer removing unnecessary UI over adding decoration.
+
+## Visual anti-patterns
+- Every section inside a card.
+- Excessive rounded-xl/2xl.
+- Gradient decoration.
+- Shadow on every surface.
+- Badge for every value.
+- Icon beside every heading.
+- Fake charts or fake KPIs.
+- Random spacing and typography.
+- Repeated generic dashboard templates.
+
+## Theme
+Preserve light and dark themes. Use Geist Sans and Geist Mono if already configured or explicitly approved for setup. Respect contrast and focus visibility.

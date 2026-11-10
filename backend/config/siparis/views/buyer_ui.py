@@ -1,4 +1,4 @@
-"""F4-062 — Minimal alıcı sepet/sipariş ekranı (session; portal değil)."""
+"""F4-062 sepet/sipariş + F9-010 alıcı dashboard (Django session portal; ADR-0016)."""
 
 from __future__ import annotations
 
@@ -21,7 +21,12 @@ from siparis.selectors.tenant import (
     get_order_for_actor,
     scope_order_queryset,
 )
-from siparis.services import cart_servisi, checkout_servisi, order_servisi
+from siparis.services import (
+    buyer_dashboard_servisi,
+    cart_servisi,
+    checkout_servisi,
+    order_servisi,
+)
 from siparis.services.presenters import present_cart, present_order
 from siparis.models import Order
 
@@ -39,7 +44,18 @@ class BuyerLoginView(LoginView):
     redirect_authenticated_user = True
 
     def get_success_url(self):
-        return reverse_lazy("buyer-cart")
+        return reverse_lazy("buyer-home")
+
+
+class BuyerHomeView(LoginRequiredMixin, View):
+    """F9-010 — Auth + tenant context dashboard iskeleti."""
+
+    login_url = reverse_lazy("buyer-login")
+
+    def get(self, request):
+        _require_buyer(request.user)
+        dash = buyer_dashboard_servisi.ozet_for_actor(actor=request.user)
+        return render(request, "buyer/home.html", {"dash": dash})
 
 
 class BuyerCartView(LoginRequiredMixin, View):

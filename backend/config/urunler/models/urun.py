@@ -70,6 +70,17 @@ class Urun(models.Model):
         on_delete=models.PROTECT, help_text="Metal buradan belirlenir. Çelik için Ayarsız seçilir.",
     )
     fiyat_tipi = models.CharField("Fiyat tipi", max_length=10, choices=FIYAT_TIPI, default="gram")
+    fiyat_kaynagi = models.CharField(
+        "Fiyat kaynağı",
+        max_length=16,
+        choices=[
+            ("CANLI_PIYASA", "Canlı piyasa"),
+            ("MANUEL_GIRIS", "Manuel giriş"),
+            ("MIRAS", "Miras (ayar→politika)"),
+        ],
+        default="MIRAS",
+        help_text="ADR-0018 CP-1: ürün → ayar → politika.",
+    )
     temin_tipi = models.CharField("Temin tipi", max_length=15, choices=TEMIN_TIPI, default="hazir")
     termin_gun = models.PositiveIntegerField("Termin (gün)", null=True, blank=True)
 

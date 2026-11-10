@@ -123,11 +123,19 @@ class RFQLine(models.Model):
     def __str__(self) -> str:
         return f"RFQL#{self.pk or '?'} RFQ#{self.rfq_id}"
 
+    @property
+    def katalog_disi(self) -> bool:
+        """F10-021: varyantsız satır = katalog dışı talep."""
+        return self.varyant_id is None
+
     def save(self, *args, **kwargs):
-        if not self._state.adding:
-            raise ValidationError("RFQLine değişmez.")
-        self.full_clean()
-        return super().save(*args, **kwargs)
+        if self._state.adding:
+            self.full_clean()
+            return super().save(*args, **kwargs)
+        # F10-021: platform eşleştirme onayı yalnız null → varyant bağlar.
+        if getattr(self, "_allow_katalog_eslestirme", False):
+            return super().save(*args, **kwargs)
+        raise ValidationError("RFQLine değişmez.")
 
 
 class RFQMessage(models.Model):

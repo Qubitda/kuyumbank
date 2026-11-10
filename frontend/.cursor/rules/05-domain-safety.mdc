@@ -1,0 +1,26 @@
+---
+description: Domain-specific correctness and data-safety constraints for Kuyumbank.
+globs:
+  - "src/**/*.{ts,tsx}"
+  - "app/**/*.{ts,tsx}"
+  - "components/**/*.{ts,tsx}"
+  - "lib/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Domain and Data Safety
+
+This product includes firms/tenants, users and roles, jewelry products, variants, precious metals, purity/milyem definitions, price calculations, supplier offers and price contracts.
+
+Rules:
+- Do not invent business rules from labels or assumptions.
+- Verify statuses and choices from backend code/API contract.
+- Never treat frontend visibility as authorization.
+- Never bypass backend tenant isolation.
+- Do not expose internal audit/ownership fields to customer-facing screens unless explicitly approved.
+- The inspected product model describes `olusturan_firma` as an audit field that must not be shown to buyers; respect this constraint in buyer-facing UI.
+- Price calculation authority remains backend unless a documented contract explicitly says otherwise.
+- Do not silently overwrite immutable/versioned price contracts. The inspected contract model documents version creation for changed terms; reflect the verified workflow.
+- Preserve numeric precision and rounding rules from backend.
+- Treat tax, supplier, buyer, pricing and approval data as sensitive business information.
+- Avoid logging secrets or personal/business data unnecessarily.

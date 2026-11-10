@@ -45,7 +45,7 @@
 | EDI/Punchout | **UYGULANDI** stub (F7-024) | Canlı ERP yok |
 | Celery/Redis | **Yok** (bilinçli) | F8-003/006 açık; Celery hâlâ opsiyonel |
 | Dynamic Pricing | **Kilitli** (U-015) | Snapshot bozulmaz |
-| Contract Release tüketim | **KISMİ** | F5-041 iskelet; sipariş consume yok |
+| Contract Release tüketim | **UYGULANDI** | F5-041b; order create/iptal |
 
 ### 1.3 Prosperer / kritik gap tablosu (Mevcut = kod iddiası; MASTER doğrular)
 
@@ -64,16 +64,16 @@
 | 11 | İade | **UYGULANDI** stok-only | Ödeme iadesi yok (U-004); F6-032 UI | P2 |
 | 12 | Portallar | **KISMİ** `/buyer` F4-062 (+ F9-010 WIP) | F9-011…015 erteli; `/supplier` Next | **P1** |
 | 13 | Onay workflow | **UYGULANDI** + minimal UI | Escalation zinciri | P2 |
-| 14 | Raporlama | Yok | F11 | P2 |
+| 14 | Raporlama | **KISMİ** F11-001/010/011/014/021 | HTTP/FE Product | P2 |
 | 15 | Entegrasyon/EDI | **KISMİ** stub | Canlı ERP/SAP | P2 |
 | 16 | API/headless | **UYGULANDI** ince PRE (+POST) | Object-level DRF; Prosperer | P1 |
 | 17 | i18n/FX | KISMİ | F12 / U-009 | P3 |
-| 18 | Bildirim/outbox | **UYGULANDI** iskelet | Worker ölçek; S3 belge | P2 |
-| 19 | Güvenlik/audit | **UYGULANDI** + F8-007 | Sentry SDK | P1 |
+| 18 | Bildirim/outbox | **UYGULANDI** + F11-013 olaylar | Worker ölçek; push/email; S3 | P2 |
+| 19 | Güvenlik/audit | **UYGULANDI** + F8-007 + F8-003 | Staging Sentry event | P2 |
 | 20 | Quick/Bulk | **UYGULANDI** | — | — |
 | 21 | Dynamic pricing | Yok (kilitli) | U-015 açılmadan yok | — |
 
-**Güncel gap sırası (MASTER §12.3 ile hizalı):** Next.js `frontend/` → F8-003/006 → F10-021 → CAP-PIYASA. (B0–B7 Kabul; F9 HTML büyütme yok; ADR-0017 Taslak.)
+**Güncel gap sırası (MASTER §12.3 ile hizalı, backend first):** Mahsup HTTP · FE · [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md). ADR-0019 **Kabul** + OL-11 UYGULANDI.
 
 ---
 
@@ -84,9 +84,9 @@
 | Identity & RBAC | UYGULANDI | — |
 | Product Catalog | KISMİ | Search; F9-011 WIP commit dışı |
 | Supplier Mgmt | UYGULANDI | Supplier portal |
-| Pricing Engine | UYGULANDI | B-01/B-06 bilinçli kapalı |
+| Pricing Engine | UYGULANDI | B-01/B-06 kapalı; CAP-PIYASA / ADR-0018 **Kabul+UYGULANDI** |
 | PriceLock | UYGULANDI (L-11) | — |
-| RFQ & Quotation | **UYGULANDI** (+ F10-022) | Match motoru; supplier UI |
+| RFQ & Quotation | **UYGULANDI** (+ F10-021/022) | Supplier UI |
 | Cart & Checkout | UYGULANDI | — |
 | Order Mgmt | UYGULANDI | — |
 | Inventory & WH | UYGULANDI | — |
@@ -146,13 +146,13 @@ G0–G4 kapandı (3.7 + ADR-0010/0011 + U-002 + ince PRE).
 **UYGULANDI** iskelet (maske, catalog/supplier/ops, throttle, FakeERP/CRM, punchout stub).
 
 ### Faz 8 — Prod readiness
-**KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env). **Açık:** Sentry SDK (F8-003), perf baseline (F8-006), Celery/Redis, hosting/yedek prova.
+**KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env, Sentry SDK, perf baseline). **Açık:** staging Sentry event kanıtı, Celery/Redis, hosting/yedek prova.
 
 ### Faz 9 — Portal / API readiness
-**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1/NX-2 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B7 Kabul.** **Sırada:** Next.js `frontend/` (ayrı talimat) — [MASTER](MASTER.md) §12.1b.
+**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1…12 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B7 Kabul.** **NX-FE UYGULANDI.** **Sırada:** NX-SHELL — [MASTER](MASTER.md) §12.3.
 
 ### Faz 10 — Kurumsal & RFQ
-**UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI). **Açık:** F10-021 eşleştirme; F10-023 supplier UI.
+**UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI + F10-021 eşleştirme). **Açık:** F10-023 supplier UI.
 
 ### Faz 11 — Analitik · Faz 12 — i18n
 PLANLANDI.

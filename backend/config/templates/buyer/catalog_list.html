@@ -1,0 +1,39 @@
+{% extends "buyer/base.html" %}
+{% block title %}Katalog — Kuyumbank Alıcı{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0;">Katalog</h1>
+  <p class="muted">F9-011 — yayınlı ürünler (kör vitrin).</p>
+  <form method="get" class="stack" style="max-width:420px;margin-bottom:1rem">
+    <label for="id_q">Ara (ad / kod)</label>
+    <input id="id_q" type="text" name="q" value="{{ q }}" placeholder="ör. yüzük">
+    <button type="submit">Ara</button>
+  </form>
+  {% if items %}
+  <table>
+    <thead>
+      <tr>
+        <th>Ad</th>
+        <th>Kod</th>
+        <th>Kategori</th>
+        <th>Ayar</th>
+        <th>Varyant</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td><a href="{% url 'buyer-catalog-detail' it.id %}">{{ it.ad }}</a></td>
+        <td class="muted">{{ it.platform_kodu }}</td>
+        <td>{{ it.kategori }}</td>
+        <td>{{ it.ayar }}</td>
+        <td>{{ it.varyant_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Sonuç yok.</p>
+  {% endif %}
+</section>
+{% endblock %}

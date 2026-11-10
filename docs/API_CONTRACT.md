@@ -2,7 +2,7 @@
 
 **Rol:** Frontend / entegrasyon için kısa rehber.  
 **Normatif teknik sözleşme:** [`docs/api/openapi-v1.json`](api/openapi-v1.json)  
-**Politika:** [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) (Taslak; NX-1/NX-2 madde Kabul)  
+**Politika:** [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) (Taslak; NX-1…12 madde Kabul)  
 **Durum:** API-B7 dondurma dilimi — OpenAPI ile çelişen ikinci sözleşme değildir; şüphede OpenAPI + kod kazanır.
 
 Üretim / doğrulama:
@@ -23,7 +23,7 @@ python scripts/export_openapi.py --check
 | 3 | Tenant | `firma_id` / `tedarikci_id` / `alici_id` client’tan **güvenilmez**; sunucu `request.user.firma` |
 | 4 | Keşif | `GET /api/v1/me/` → `firma` + `capabilities` (UI bayrak; her uç yine RBAC) |
 | 5 | Sözleşme | Path/method/status → OpenAPI; alan uydurma yok |
-| 6 | Hata | `problem+json` (`type`/`title`/`status`/`detail`) — `api.exception_handler` |
+| 6 | Hata | `application/problem+json` (`type`/`title`/`status`/`detail`/`code`/`request_id`) — `api.exception_handler` |
 | 7 | Sayfalama | `page` + `page_size` (NX-2); sıralama whitelist view’da |
 | 8 | Idempotency | Yazma `POST`’larda `Idempotency-Key` (actor-scoped storage); 409 conflict |
 | 9 | Maske | Buyer’da tedarikçi kimlik/maliyet yok; supplier RFQ’da alıcı firma/şube yok |
@@ -92,11 +92,12 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 1. **CORS erteli** — aynı-origin reverse proxy (ADR-0017).
 2. **RFQ eşleştirme yok** — supplier tüm `GONDERILDI` havuzunu görür (ters kör; B6 bilinçli v1).
 3. **Teklif create HTTP yok** — yalnız yaşam döngüsü (`submit` / `deactivate` / `versions`); create admin/servis dışı.
-4. **Mahsup HTTP** — servis var; B3 HTTP yüzeyi iade SM odaklı (mahsup uç uydurulmaz).
+4. **Mahsup HTTP** — servis var; B3 HTTP yüzeyi iade SM odaklı (mahsup uç uydurulmaz). Object-level / mahsup açılımı: [ADR-0019](decisions/ADR-0019-object-level-drf.md) **Taslak** (OL-8).
 5. **OpenAPI alan şemaları** — DRF AutoSchema; bazı body alanları generic olabilir → runtime presenter + test esas.
-6. **NX-3…12** ADR maddeleri açık (uygulama kısmen var; ADR bütünü Taslak).
-7. **`frontend/`** henüz yok — Next.js iskeleti B7 sonrası ayrı dilim.
+6. **NX-1…12** ADR **maddeleri Kabul** (Qubit, 2026-11-09); **kod** kanıt matrisi ADR-0017’de; ADR bütünü **Taslak**.
+7. **`frontend/`** — NX-FE iskelet **UYGULANDI** (App Router; aynı-origin `/api/v1` rewrite; session/CSRF). Ürün portalı (katalog/sepet) sonraki dilim.
 8. **F9 Django HTML WIP** commit dışı; API yüzeyi bundan bağımsız.
+9. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook` (olay kimliği).
 
 ---
 
@@ -111,3 +112,4 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 | B5 | `test_api_b5_ops` | 7 |
 | B6 | `test_api_b6_supplier` | 3 |
 | B7 | `test_api_b7_openapi` | OpenAPI freeze smoke |
+| NX-3…12 smoke | `test_api_nx_contract` | **4 OK** (madde **Kabul**) |

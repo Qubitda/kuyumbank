@@ -205,6 +205,11 @@ def olustur_from_checkout(
                 )
                 line.save()
 
+                # F5-041b: AKTIF contract release planı varsa serbest miktarı tüket
+                from fiyatlama.services.release_servisi import tuket_order_line
+
+                tuket_order_line(actor=actor, order_line=line)
+
             # F10-012: satır snapshot toplamı ≤ harcama limiti (onaysız aşım yok)
             from firmalar.services.limiti_servisi import assert_order_limit
 
@@ -359,6 +364,11 @@ def iptal_siparis(*, actor, order: Order, now=None) -> Order:
                 )
                 mv.save()
                 iade_ids.append(mv.pk)
+
+                # F5-041b: release tüketimini geri al
+                from fiyatlama.services.release_servisi import iade_order_line
+
+                iade_order_line(actor=actor, order_line=line)
 
             locked.durum = Order.Durum.IPTAL
             locked._allow_status_transition = True

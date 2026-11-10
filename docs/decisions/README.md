@@ -23,11 +23,14 @@
 | [ADR-0014](ADR-0014-karlilik-simulasyonu.md) | İç karlılık sim (Excel A/B) | P&L sim + KS-6 hedef toplam quote | **Kabul** (2026-11-09, Qubit) | — | Pricing | Sim + KS-6 quote UYGULANDI | `karlilik_simulasyonu` + `quote(hedef_toplam=)` |
 | [ADR-0015](ADR-0015-account-hierarchy.md) | Account Hierarchy (U-014 A) | OrgBirimi firma-içi; tenant=Firma; Order.sube nullable | **Kabul** (2026-11-09, Qubit plan) | 10 | Identity/Org | F10-010+ dilimler | [ADR-0015](ADR-0015-account-hierarchy.md) |
 | [ADR-0016](ADR-0016-faz9-frontend.md) | Faz 9 frontend stack (eski) | C→A Django v1 — **yürürlükte değil** | **Supersede** → [0017](ADR-0017-nextjs-api-sozlesmesi.md) | 9 | Experience | F9-010/011 HTML kalır | F9-001 |
-| [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md) | Next.js + `/api/v1/` sözleşme | NX-1/NX-2 **Kabul**; CORS erteli; NX-3…12 açık | **Taslak** | 9 / API | Experience/API | B1…B7 **Kabul** | F9-001 / API-B* · [MASTER](../MASTER.md) §12.1b · [API_CONTRACT](../API_CONTRACT.md) |
+| [ADR-0017](ADR-0017-nextjs-api-sozlesmesi.md) | Next.js + `/api/v1/` sözleşme | NX-1…12 madde **Kabul**; CORS erteli; ADR bütünü Taslak | **Taslak** | 9 / API | Experience/API | B1…B7 **Kabul** | F9-001 / API-B* · [MASTER](../MASTER.md) §12.1b · [API_CONTRACT](../API_CONTRACT.md) |
+| [ADR-0018](ADR-0018-cap-piyasa-kur-dayanikliligi.md) | CAP-PIYASA kur dayanıklılığı | Kaynak merdiveni, LKG, batch freeze/senkron, guardrail, sanity, atomik publish; B-04 yeniden tanım | **Kabul** (2026-11-10) | Pricing / Kur | Pricing | UYGULANDI | CAP-PIYASA · `test_cap_piyasa_adr0018` |
+| [ADR-0019](ADR-0019-object-level-drf.md) | Object-level DRF matrisi | OL-1…11 **A**; Permission+selector; rapor/mahsup HTTP yok | **Kabul** (2026-11-10) | API / Güvenlik | API | OL-11 UYGULANDI | `api.permissions` · `test_object_level_adr0019` |
+| [NOTE-PENDING](NOTE-PENDING-PRODUCT-DECISIONS.md) | FXQ / DYN / I18N / AI | ADR-0019’dan ayrı kapılar | **Açık** | — | Product | — | F12-001/011, CAP-DYNPRICE, F11-015 |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
 | B-03 | Quote TTL | Kanal bazlı; ≤ kur max gecikme | **Kabul** | 3.3–3.5 | Pricing | UYGULANDI | SatisKanali |
-| B-04 | Kur sağlayıcı | Tek aktif; fallback yok | **Kabul** | 3.3 | Pricing | UYGULANDI | KurSaglayici |
+| B-04 | Kur sağlayıcı | Tek aktif anlık; stale→LKG+banner (ADR-0018) | **Kabul** | 3.3 | Pricing | UYGULANDI | KurSaglayici · [ADR-0018](ADR-0018-cap-piyasa-kur-dayanikliligi.md) **Kabul** |
 | B-05 | Kur tipi | Alıcı/tedarikçi ayrı | **Kabul** | 3.3 | Pricing | UYGULANDI | KurPolitikasi |
 | B-06 | Vergi | KDV yok / proforma devam | **Kabul** (2026-11-09, Qubit; erteli politika sabit) | 3 | Pricing | Bilinçli yok | ADR-0008 §2.9 |
 
@@ -56,3 +59,9 @@
 - 2026-11-09: API-B4 **Kabul**; API-B5 ops QC/sevkiyat **uygulandı** (inceleme; Kabul değil).
 - 2026-11-09: API-B6 **Kabul**; API-B7 dondurma **uygulandı** (OpenAPI + API_CONTRACT; inceleme; Kabul değil).
 - 2026-11-09 (Qubit): API-B7 **Kabul**; Next.js `frontend/` ayrı talimat.
+- 2026-11-09 (Qubit): NX-3…12 madde **Kabul**; NX-1…12 tamamı madde Kabul; ADR-0017 **Taslak** kalır; sıradaki NX-FE açık talimat.
+- 2026-11-09 (Qubit talimatı): **NX-FE** `frontend/` iskelet UYGULANDI; sıradaki NX-SHELL; ADR-0017 **Taslak** kalır.
+- 2026-11-09 (Qubit): **ADR-0018 Taslak** — CAP-PIYASA (kaynak merdiveni, LKG, batch, guardrail, çapraz kur sanity, atomik publish). B-04 yeniden tanım Kabul’e bağlı. Geçici ref: `real_data/`. Kod yok.
+- 2026-11-10 (ürün sahibi): **ADR-0018 Kabul** + uygulama talimatı; CAP-PIYASA kod UYGULANDI.
+- 2026-11-10: **ADR-0019 Taslak** netleştirildi — OL-1…11 karar kartları (mevcut/öneri/güvenlik/seçim); matris OL-2 ile hizalandı; FXQ/DYN/I18N/AI [NOTE-PENDING](NOTE-PENDING-PRODUCT-DECISIONS.md)’de ayrı. Hiçbir OL Kabul varsayılmadı.
+- 2026-11-10 (ürün sahibi): **ADR-0019 Kabul** — OL-1…11 tümü Öneri **A**; OL-11 kod: `api.permissions` + commerce SoD; `test_object_level_adr0019`.

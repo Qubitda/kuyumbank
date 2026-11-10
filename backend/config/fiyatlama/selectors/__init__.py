@@ -5,6 +5,7 @@ from .buyer_quote import (
     present_buyer_quote,
 )
 from .tenant import (
+    scope_contract_release_consumption_queryset,
     scope_contract_release_event_queryset,
     scope_contract_release_plan_queryset,
     scope_fiyat_sozlesmesi_queryset,
@@ -24,6 +25,7 @@ __all__ = [
     "get_buyer_quote_view",
     "get_quote_for_actor",
     "present_buyer_quote",
+    "scope_contract_release_consumption_queryset",
     "scope_contract_release_event_queryset",
     "scope_contract_release_plan_queryset",
     "scope_fiyat_sozlesmesi_queryset",

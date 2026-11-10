@@ -192,6 +192,21 @@ WebhookDelivery(id, outbox, endpoint_key, idempotency_key, durum, attempts, last
 
 ## `fiyatlama`
 
+### ContractReleaseConsumption
+
+Append-only release tüketimi (F5-041b) — sipariş satırına bağlanır.
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `plan` | ForeignKey | fiyatlama.ContractReleasePlan (PROTECT) |  |  |
+| `order_line` | ForeignKey | siparis.OrderLine (PROTECT) |  |  |
+| `yon` | CharField | max 16, choices |  |  |
+| `miktar` | DecimalField | 18,6 |  |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  |  |  |
+
+**Kısıtlar:** `contractreleaseconsumption_miktar_pozitif` (CheckConstraint); `contractreleaseconsumption_yon_gecerli` (CheckConstraint); `contractreleaseconsumption_tek_tuketim_per_plan_line` (UniqueConstraint); `contractreleaseconsumption_tek_iade_per_plan_line` (UniqueConstraint)
+
 ### ContractReleaseEvent
 
 Append-only dönemsel serbest bırakma kaydı.
@@ -225,6 +240,38 @@ ContractReleasePlan(id, sozlesme, varyant, birim, toplam_taahhut, durum, aciklam
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
 
 **Kısıtlar:** `contractreleaseplan_taahhut_pozitif` (CheckConstraint); `contractreleaseplan_birim_gecerli` (CheckConstraint); `contractreleaseplan_durum_gecerli` (CheckConstraint)
+
+### FiyatBatchIslek
+
+FiyatBatchIslek(id, tip, durum, filtre, ozet, olusturan, olusturma_tarihi, yayin_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `tip` | CharField | max 16, choices |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `filtre` | JSONField |  | blank |  |
+| `ozet` | JSONField |  | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `yayin_tarihi` | DateTimeField |  | null |  |
+
+**Kısıtlar:** `fiyatbatch_tip_gecerli` (CheckConstraint); `fiyatbatch_durum_gecerli` (CheckConstraint)
+
+### FiyatBatchSatir
+
+FiyatBatchSatir(id, islek, varyant, onceki_sabit_fiyat, yeni_sabit_fiyat, delta_yuzde, sonuc, neden)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `islek` | ForeignKey | fiyatlama.FiyatBatchIslek (CASCADE) |  |  |
+| `varyant` | ForeignKey | urunler.Varyant (PROTECT) |  |  |
+| `onceki_sabit_fiyat` | DecimalField | 14,2 | null |  |
+| `yeni_sabit_fiyat` | DecimalField | 14,2 | null |  |
+| `delta_yuzde` | DecimalField | 10,4 | null |  |
+| `sonuc` | CharField | max 16, choices |  |  |
+| `neden` | CharField | max 255 | blank |  |
+
+**Kısıtlar:** `fiyatbatchsatir_islek_varyant_uniq` (UniqueConstraint)
 
 ### FiyatSozlesmesi
 
@@ -772,6 +819,23 @@ RFQ(id, alici_firma, sube, baslik, talep_tipi, durum, olusturan, olusturma_tarih
 
 **Kısıtlar:** `rfq_durum_gecerli` (CheckConstraint); `rfq_talep_tipi_gecerli` (CheckConstraint)
 
+### RFQEslestirme
+
+Platform aracılı eşleştirme önerisi (kör havuz; tedarikçi kimliği yok).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `rfq_line` | ForeignKey | siparis.RFQLine (CASCADE) |  |  |
+| `onerilen_varyant` | ForeignKey | urunler.Varyant (PROTECT) |  |  |
+| `durum` | CharField | max 16, choices |  |  |
+| `skor` | PositiveSmallIntegerField |  |  |  |
+| `kanit` | JSONField |  | blank |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `rfqeslestirme_durum_gecerli` (CheckConstraint); `rfqeslestirme_line_varyant_onerildi_uniq` (UniqueConstraint); `rfqeslestirme_line_onaylandi_uniq` (UniqueConstraint)
+
 ### RFQLine
 
 RFQLine(id, rfq, aciklama, miktar, birim, varyant)
@@ -891,11 +955,12 @@ Warehouse(id, kod, ad, sahip_firma, sahip_tipi, aktif, olusturma_tarihi, guncell
 
 ### AyarMilyem
 
-AyarMilyem(id, metal, ayar_degeri, ayar_kodu, milyem)
+AyarMilyem(id, metal, fiyat_kaynagi, ayar_degeri, ayar_kodu, milyem)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
 | `metal` | ForeignKey | tanimlar.KiymetliMetal (PROTECT) |  |  |
+| `fiyat_kaynagi` | CharField | max 16, choices |  | ADR-0018: MIRAS → KurPolitikasi; CANLI/MANUEL override. |
 | `ayar_degeri` | PositiveIntegerField |  |  | Altın için karat (14, 22), Gümüş için saflık derecesi (925) giriniz. |
 | `ayar_kodu` | CharField | max 15 |  |  |
 | `milyem` | DecimalField | 4,3 |  | Has metal oranını ondalık girin. Örn: 14K Altın için 0.585, 925 Gümüş için 0.925 |
@@ -944,6 +1009,24 @@ KiymetliMetal(id, kod, ad, gram_bazli)
 | `ad` | CharField | max 50 |  |  |
 | `gram_bazli` | BooleanField |  |  |  |
 
+### KurAlertKurali
+
+KurAlertKurali(id, metal, kur_tipi, yon, esik_fiyat, aktif, son_tetik_gozlem, olusturan, olusturma_tarihi, guncelleme_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `metal` | ForeignKey | tanimlar.KiymetliMetal (CASCADE) |  |  |
+| `kur_tipi` | CharField | max 16, choices |  |  |
+| `yon` | CharField | max 8, choices |  |  |
+| `esik_fiyat` | DecimalField | 14,4 |  | TL/gr eşik; 0 yasak. |
+| `aktif` | BooleanField |  |  |  |
+| `son_tetik_gozlem` | ForeignKey | tanimlar.MetalKuru (SET_NULL) | null |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+| `guncelleme_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `kuralert_esik_pozitif` (CheckConstraint); `kuralert_yon_gecerli` (CheckConstraint)
+
 ### KurPolitikasi
 
 Tek satır beklenir (`anahtar=default`); servis get_or_create ile okur.
@@ -953,6 +1036,13 @@ Tek satır beklenir (`anahtar=default`); servis get_or_create ile okur.
 | `anahtar` | CharField | max 16 | benzersiz |  |
 | `alici_kur_tipi` | CharField | max 16, choices |  |  |
 | `tedarikci_kur_tipi` | CharField | max 16, choices |  |  |
+| `fiyat_kaynagi` | CharField | max 16, choices |  |  |
+| `feed_health` | CharField | max 24, choices |  |  |
+| `feed_banner` | CharField | max 255 | blank |  |
+| `sok_esigi_yuzde` | DecimalField | 6,2 |  |  |
+| `capraz_makas_esigi_yuzde` | DecimalField | 6,2 |  |  |
+| `min_marj_pct` | DecimalField | 6,2 |  |  |
+| `max_batch_satir` | PositiveIntegerField |  |  |  |
 | `guncelleme` | DateTimeField |  | blank |  |
 
 ### KurSaglayici
@@ -1213,6 +1303,7 @@ Müşterinin vitrinde gördüğü model (ör. "Tek taş yüzük").
 | `kategori` | ForeignKey | urunler.Kategori (PROTECT) |  |  |
 | `ayar` | ForeignKey | tanimlar.AyarMilyem (PROTECT) |  | Metal buradan belirlenir. Çelik için Ayarsız seçilir. |
 | `fiyat_tipi` | CharField | max 10, choices |  |  |
+| `fiyat_kaynagi` | CharField | max 16, choices |  | ADR-0018 CP-1: ürün → ayar → politika. |
 | `temin_tipi` | CharField | max 15, choices |  |  |
 | `termin_gun` | PositiveIntegerField |  | null |  |
 | `renk_ekseni` | BooleanField |  |  | İşaretliyse her varyantın rengi zorunlu (sarı/beyaz/rose gibi). |
