@@ -109,6 +109,17 @@ def present_return(req: ReturnRequest, *, actor=None) -> dict:
             actions.append("reject")
         if ReturnRequest.Durum.IPTAL in next_states:
             actions.append("cancel")
+    can_mahsup = False
+    if actor is not None:
+        can_mahsup = has_perm(actor, P["post_ledger"]) and (
+            can_manage or can_view_all_tenants(actor)
+        )
+    if (
+        can_mahsup
+        and req.durum == ReturnRequest.Durum.ONAYLANDI
+        and not req.finans_mahsup_yapildi
+    ):
+        actions.append("mahsup")
     data = {
         "id": req.pk,
         "order_id": req.order_id,
@@ -122,7 +133,7 @@ def present_return(req: ReturnRequest, *, actor=None) -> dict:
         if req.olusturma_tarihi
         else None,
     }
-    if can_manage:
+    if can_manage or can_mahsup:
         data["stok_iade_yapildi"] = req.stok_iade_yapildi
         data["finans_mahsup_yapildi"] = req.finans_mahsup_yapildi
     assert_masked(data)

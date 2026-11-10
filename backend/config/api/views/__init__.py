@@ -52,11 +52,13 @@ from .order import OrderDetailView, OrderListView
 from .org import OrgMemberListCreateView, OrgUnitDetailView, OrgUnitListCreateView
 from .payment import PaymentIntentCreateView
 from .payment_webhook import PaymentWebhookView
+from .reports import AliciDavranisOzetView, CiroAnomaliView, TicariSiparisOzetView
 from .returns import (
     ReturnApproveView,
     ReturnCancelView,
     ReturnDetailView,
     ReturnListCreateView,
+    ReturnMahsupView,
     ReturnRejectView,
     ReturnSubmitView,
 )
@@ -141,11 +143,15 @@ __all__ = [
     "QuoteCreateView",
     "QuoteDetailView",
     "ReturnApproveView",
+    "ReturnMahsupView",
     "ReturnCancelView",
     "ReturnDetailView",
     "ReturnListCreateView",
     "ReturnRejectView",
     "ReturnSubmitView",
+    "TicariSiparisOzetView",
+    "AliciDavranisOzetView",
+    "CiroAnomaliView",
     "RfqDetailView",
     "RfqListCreateView",
     "RfqMessageView",

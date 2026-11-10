@@ -15,6 +15,7 @@ P = {
     "view_all_tenants": "firmalar.view_all_tenants",
     "manage_users": "firmalar.manage_users",
     "manage_all_users": "firmalar.manage_all_users",
+    "act_as_user": "firmalar.act_as_user",
     "submit_urun": "urunler.submit_urun",
     "approve_urun": "urunler.approve_urun",
     "publish_urun": "urunler.publish_urun",
@@ -27,6 +28,7 @@ P = {
     "manage_warehouse": "stok.manage_warehouse",
     "manage_own_warehouse": "stok.manage_own_warehouse",
     "manage_kur": "tanimlar.manage_kur",
+    "manage_piyasa": "piyasa.manage_piyasa",
     "post_ledger": "finans.post_ledger",
     "manage_qc": "kalite.manage_qc",
     "view_qc": "kalite.view_qc",
@@ -52,6 +54,17 @@ _KUR_ADMIN = (
     "tanimlar.add_metalkuru",
     "tanimlar.view_dovizkuru",
     "tanimlar.add_dovizkuru",
+)
+_PIYASA_ADMIN = (
+    P["manage_piyasa"],
+    "piyasa.view_piyasaurun",
+    "piyasa.add_piyasaurun",
+    "piyasa.change_piyasaurun",
+    "piyasa.delete_piyasaurun",
+    "piyasa.view_piyasafiyatkurali",
+    "piyasa.add_piyasafiyatkurali",
+    "piyasa.change_piyasafiyatkurali",
+    "piyasa.delete_piyasafiyatkurali",
 )
 
 # Admin changelist/inline için Django model izinleri (grup üzerinden)
@@ -99,6 +112,7 @@ ROLE_PERMISSION_MATRIX = {
         P["view_all_tenants"],
         P["manage_users"],
         P["manage_all_users"],
+        P["act_as_user"],
         P["submit_urun"],
         P["approve_urun"],
         P["publish_urun"],
@@ -122,12 +136,14 @@ ROLE_PERMISSION_MATRIX = {
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
+        *_PIYASA_ADMIN,
     ),
     roles.PLATFORM_ADMIN: (
         P["approve_firma"],
         P["view_all_tenants"],
         P["manage_users"],
         P["manage_all_users"],
+        P["act_as_user"],
         P["approve_urun"],
         P["publish_urun"],
         P["approve_teklif"],
@@ -149,6 +165,7 @@ ROLE_PERMISSION_MATRIX = {
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
+        *_PIYASA_ADMIN,
     ),
     roles.PLATFORM_OPS: (
         P["view_all_tenants"],
@@ -168,6 +185,7 @@ ROLE_PERMISSION_MATRIX = {
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
+        *_PIYASA_ADMIN,
     ),
     roles.PLATFORM_CATALOG: (
         P["view_all_tenants"],

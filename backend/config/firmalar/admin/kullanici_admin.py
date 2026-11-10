@@ -1,11 +1,20 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.shortcuts import redirect
+from django.utils.html import format_html
 
 from firmalar import roles
 from firmalar.models import Firma
+from firmalar.role_permissions import P
 from firmalar.selectors.tenant import scope_queryset
+from firmalar.services import act_as_servisi
 from firmalar.services.rol_servisi import assign_user_role, sync_user_role_groups
-from firmalar.services.yetki_servisi import can_manage_all_users, can_view_all_tenants
+from firmalar.services.yetki_servisi import (
+    can_manage_all_users,
+    can_view_all_tenants,
+    has_perm,
+)
 
 from ..models import Kullanici
 
@@ -44,10 +53,46 @@ class KullaniciAdmin(UserAdmin):
     )
     readonly_fields = ("user_permissions",)
     filter_horizontal = ()
-    list_display = ("username", "firma", "rol", "is_active", "is_staff", "is_superuser")
+    list_display = (
+        "username",
+        "firma",
+        "rol",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "act_as_hint",
+    )
     list_filter = ("rol", "is_active", "is_staff", "is_superuser", "firma__aktif")
     search_fields = ("username", "first_name", "last_name", "email", "firma__ad")
     ordering = ("username",)
+    actions = ("aksiyon_act_as",)
+
+    @admin.display(description="Önizleme")
+    def act_as_hint(self, obj):
+        firma = obj.firma
+        if firma and firma.alici_mi:
+            return format_html('<span title="Act-as → /buyer/">alıcı portal</span>')
+        if firma and firma.tedarikci_mi:
+            return format_html('<span title="Act-as → /supplier/">tedarikçi portal</span>')
+        return "—"
+
+    @admin.action(description="Seçilen kullanıcı olarak gör (act-as)")
+    def aksiyon_act_as(self, request, queryset):
+        if not has_perm(request.user, P["act_as_user"]):
+            self.message_user(request, "Act-as yetkisi yok.", level=messages.ERROR)
+            return
+        if queryset.count() != 1:
+            self.message_user(request, "Tam olarak bir kullanıcı seçin.", level=messages.ERROR)
+            return
+        target = queryset.select_related("firma").get()
+        try:
+            act_as_servisi.baslat(
+                actor=request.user, target=target, session=request.session
+            )
+        except (PermissionDenied, ValidationError) as exc:
+            self.message_user(request, str(exc), level=messages.ERROR)
+            return
+        return redirect(act_as_servisi.portal_hedef_url(target))
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

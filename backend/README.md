@@ -12,15 +12,31 @@ Django **6.1.2** modular monolith. Proje paketi: `config/` · `manage.py` bu diz
 
 ## Gereksinimler
 
-- Python 3.12–3.14
+- Python 3.12–3.14 (geliştirme: 3.14.x)
 - PostgreSQL
 - Bağımlılıklar: [`config/requirements.txt`](config/requirements.txt) (DRF var; Celery **yok**)
+
+## Ortam kurulumu
+
+Tek sanal ortam yolu: **`backend/.venv`** (bu dizinde). `config/` altında `.venv` oluşturma.
+
+```powershell
+# repo kökünden
+cd backend
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r config\requirements.txt
+```
+
+IDE: workspace `.vscode/settings.json` interpreter’ı `backend/.venv` olarak sabitler.  
+Aynı klasörde ikinci bir venv açma (`config/.venv` vb.).
 
 ## Kurulum
 
 ```powershell
-cd backend\config
-python -m pip install -r requirements.txt
+cd backend
+.\.venv\Scripts\Activate.ps1   # yoksa yukarıdaki Ortam kurulumu
+cd config
 copy .env.example .env
 # .env zorunlu: SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD
 # isteğe bağlı: DB_HOST (localhost), DB_PORT (5432), DEBUG, ALLOWED_HOSTS

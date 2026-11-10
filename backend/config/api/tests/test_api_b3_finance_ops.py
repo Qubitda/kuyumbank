@@ -263,6 +263,98 @@ class ApiB3FinanceOpsTests(B3FixtureMixin, APITestCase):
         self.assertEqual(appr.json()["durum"], ReturnRequest.Durum.ONAYLANDI)
         self.assertTrue(appr.json()["stok_iade_yapildi"])
 
+    def test_return_mahsup_http_finance(self):
+        """ADR-0023: onay sonrası finance mahsup; logistics mahsup 403."""
+        order, ship = self._delivered("b3-mah")
+        line = order.lines.get()
+        self.api.force_authenticate(user=self.log)
+        create = self.api.post(
+            reverse("api-return-list"),
+            {
+                "order_id": order.pk,
+                "shipment_id": ship.pk,
+                "sebep": "Mahsup HTTP testi",
+                "lines": [{"order_line_id": line.pk, "miktar": "1.000"}],
+            },
+            format="json",
+            **self._idem("b3-mah-c"),
+        )
+        rid = create.json()["id"]
+        self.api.post(
+            reverse("api-return-submit", kwargs={"pk": rid}),
+            {},
+            format="json",
+            **self._idem("b3-mah-s"),
+        )
+        appr = self.api.post(
+            reverse("api-return-approve", kwargs={"pk": rid}),
+            {},
+            format="json",
+            **self._idem("b3-mah-a"),
+        )
+        self.assertEqual(appr.status_code, 200)
+        self.assertFalse(appr.json()["finans_mahsup_yapildi"])
+
+        denied = self.api.post(
+            reverse("api-return-mahsup", kwargs={"pk": rid}),
+            {},
+            format="json",
+            **self._idem("b3-mah-deny"),
+        )
+        self.assertEqual(denied.status_code, 403)
+
+        self.api.force_authenticate(user=self.finance)
+        ok = self.api.post(
+            reverse("api-return-mahsup", kwargs={"pk": rid}),
+            {},
+            format="json",
+            **self._idem("b3-mah-ok"),
+        )
+        self.assertEqual(ok.status_code, 200)
+        self.assertTrue(ok.json()["finans_mahsup_yapildi"])
+        self.assertNotIn("mahsup", ok.json().get("allowed_actions") or [])
+        self.assertEqual(
+            LedgerEntry.objects.filter(
+                referans_tip="ReturnRequest", referans_id=str(rid)
+            ).count(),
+            1,
+        )
+
+    def test_approve_with_mahsup_requires_post_ledger(self):
+        order, ship = self._delivered("b3-mah-ap")
+        line = order.lines.get()
+        self.api.force_authenticate(user=self.log)
+        create = self.api.post(
+            reverse("api-return-list"),
+            {
+                "order_id": order.pk,
+                "shipment_id": ship.pk,
+                "sebep": "Approve mahsup yetki",
+                "lines": [{"order_line_id": line.pk, "miktar": "0.500"}],
+            },
+            format="json",
+            **self._idem("b3-mah-ap-c"),
+        )
+        rid = create.json()["id"]
+        self.api.post(
+            reverse("api-return-submit", kwargs={"pk": rid}),
+            {},
+            format="json",
+            **self._idem("b3-mah-ap-s"),
+        )
+        bad = self.api.post(
+            reverse("api-return-approve", kwargs={"pk": rid}),
+            {"mahsup": True},
+            format="json",
+            **self._idem("b3-mah-ap-bad"),
+        )
+        self.assertEqual(bad.status_code, 403)
+        # onay geri alınmış olmalı
+        self.assertEqual(
+            ReturnRequest.objects.get(pk=rid).durum,
+            ReturnRequest.Durum.INCELENIYOR,
+        )
+
 
 class ApiB3ConcurrencyTests(B3FixtureMixin, TransactionTestCase):
     def setUp(self):

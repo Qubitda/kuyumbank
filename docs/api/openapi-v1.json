@@ -1,6 +1,40 @@
 {
   "components": {
     "schemas": {
+      "AliciDavranisOzet": {
+        "properties": {
+          "alici_firma_id": {
+            "type": "integer"
+          },
+          "ciro_vergisiz": {
+            "type": "string"
+          },
+          "quote_adet": {
+            "type": "integer"
+          },
+          "quote_toplam_sum": {
+            "type": "string"
+          },
+          "read_model": {
+            "type": "string"
+          },
+          "satir_adet": {
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "siparis_adet": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scope",
+          "alici_firma_id",
+          "read_model"
+        ],
+        "type": "object"
+      },
       "Approval": {
         "properties": {
           "allowed_actions": {
@@ -1268,6 +1302,36 @@
         ],
         "type": "object"
       },
+      "CiroAnomali": {
+        "properties": {
+          "esik_ciro": {
+            "type": "string"
+          },
+          "read_model": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "uyari_adet": {
+            "type": "integer"
+          },
+          "uyarilar": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "scope",
+          "esik_ciro",
+          "uyari_adet",
+          "uyarilar",
+          "read_model"
+        ],
+        "type": "object"
+      },
       "CreditCheckRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2075,6 +2139,16 @@
         },
         "type": "object"
       },
+      "ReturnApproveRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "mahsup": {
+            "description": "ONAYLANDI ile birlikte F5-023 mahsup (post_ledger)",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "ReturnCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2566,6 +2640,48 @@
         },
         "type": "object"
       },
+      "TicariSiparisOzet": {
+        "properties": {
+          "alici_firma_id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ciro_vergisiz": {
+            "type": "string"
+          },
+          "read_model": {
+            "type": "string"
+          },
+          "satir_adet": {
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "siparis_adet": {
+            "type": "integer"
+          },
+          "siparis_iptal": {
+            "type": "integer"
+          },
+          "siparis_olusturuldu": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scope",
+          "siparis_adet",
+          "ciro_vergisiz",
+          "read_model"
+        ],
+        "type": "object"
+      },
       "WebhookAck": {
         "properties": {
           "duplicate": {
@@ -2600,7 +2716,7 @@
     }
   },
   "info": {
-    "description": "Kuyumbank `/api/v1/` — ADR-0017. Auth: session+CSRF (tarayıcı) veya Token (S2S). Hata: application/problem+json. Tenant: client firma_id yok sayılır. Kapalı: rapor/mahsup HTTP (ADR-0019 OL-7/8).",
+    "description": "Kuyumbank `/api/v1/` — ADR-0017. Auth: session+CSRF (tarayıcı) veya Token (S2S). Hata: application/problem+json. Tenant: client firma_id yok sayılır. Rapor HTTP: ADR-0026. Mahsup HTTP: ADR-0023.",
     "title": "Kuyumbank API",
     "version": "1.0.0"
   },
@@ -4967,6 +5083,89 @@
         "summary": "GET /api/v1/me/",
         "tags": [
           "me"
+        ]
+      }
+    },
+    "/api/v1/ops/anomalies/ciro/": {
+      "get": {
+        "description": "GET /api/v1/ops/anomalies/ciro/?esik_ciro=...",
+        "operationId": "listCiroAnomalis",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CiroAnomali"
+                }
+              }
+            },
+            "description": "CiroAnomali"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/ops/anomalies/ciro/",
+        "tags": [
+          "ops"
         ]
       }
     },
@@ -8443,6 +8642,172 @@
         ]
       }
     },
+    "/api/v1/reports/buyer-behavior/": {
+      "get": {
+        "description": "GET /api/v1/reports/buyer-behavior/",
+        "operationId": "listAliciDavranisOzets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AliciDavranisOzet"
+                }
+              }
+            },
+            "description": "AliciDavranisOzet"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/reports/buyer-behavior/",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
+    "/api/v1/reports/orders/": {
+      "get": {
+        "description": "GET /api/v1/reports/orders/",
+        "operationId": "listTicariSiparisOzets",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicariSiparisOzet"
+                }
+              }
+            },
+            "description": "TicariSiparisOzet"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/reports/orders/",
+        "tags": [
+          "reports"
+        ]
+      }
+    },
     "/api/v1/returns/": {
       "get": {
         "description": "GET liste; POST oluştur (manage_return + Idempotency-Key).",
@@ -8729,11 +9094,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EmptyRequest"
+                "$ref": "#/components/schemas/ReturnApproveRequest"
               }
             }
           },
-          "required": false
+          "required": true
         },
         "responses": {
           "200": {
@@ -8911,6 +9276,109 @@
           }
         },
         "summary": "POST /api/v1/returns/{id}/cancel/",
+        "tags": [
+          "returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/mahsup/": {
+      "post": {
+        "description": "POST /api/v1/returns/<pk>/mahsup/ — ADR-0023 MH-1.",
+        "operationId": "createReturnMahsup",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerReturn"
+                }
+              }
+            },
+            "description": "BuyerReturn"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/returns/{id}/mahsup/",
         "tags": [
           "returns"
         ]

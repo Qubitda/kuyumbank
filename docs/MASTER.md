@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-10 — API readiness gate: **FRONTEND NOT READY**; katalog API hizası + OpenAPI DTO dilimi
+**Güncelleme:** 2026-11-10 — ops güvenlik dilimi (act-as audit AA-9, login throttle, idempotency purge); kapı **FRONTEND READY** (FE-SUITE kanıtı KISMİ)
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -87,7 +87,7 @@ Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `
 **HTTP:** `admin/` + `/api/v1/` + `/buyer/` + `/ops/finance/` (DOĞRULANDI).
 
 <!-- AUTO:apps -->
-`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `drf_spectacular`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `lojistik`, `belgeler`, `api`
+`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `drf_spectacular`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `lojistik`, `belgeler`, `piyasa`, `api`
 <!-- /AUTO:apps -->
 
 ### 2.3 Modül uygulama durumu (kod gerçeği)
@@ -153,20 +153,20 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **670** — `api` 101 · `firmalar` 72 · `fiyatlama` 151 · `finans` 61 · `kalite` 19 · `lojistik` 20 · `belgeler` 6 · `siparis` 76 · `stok` 37 · `tanimlar` 32 · `urunler` 95
+Statik test sayısı (`def test_`): **677** — `api` 107 · `firmalar` 72 · `fiyatlama` 152 · `finans` 61 · `kalite` 19 · `lojistik` 20 · `belgeler` 6 · `siparis` 76 · `stok` 37 · `tanimlar` 32 · `urunler` 95
 _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son suite aşağıda elle._
 <!-- /AUTO:tests -->
 
-**Statik sayım ≠ suite sonucu:** üstteki **603** yalnız git-tracked `def test_` sayımıdır (koşulmadı).  
-**Son kaydedilen suite (elle, tarihsel anı):** **597 OK** (2026-11-09, PG `--keepdb`) — B6/B7 ek testlerinden *önce* veya WIP karışımı olabilir; **güncel tam suite bu oturumda DOĞRULANAMADI**.  
-`makemigrations --check` / migrate pending: son kayıt temiz (üretim migrate onaysız yok).
-**Yerel/dev migrate güncel** (son: `siparis.0005` F10-022; pending yok).
+**Statik sayım ≠ suite sonucu:** üstteki AUTO blok koşulmuş test değildir.  
+**Son kaydedilen suite (elle):** **597 OK** (2026-11-09, PG `--keepdb`) — tarihsel.  
+**Ara kayıt:** tam suite **713** hedef / **4 migration ERROR** (keepdb/eski mig; DOĞRULANAMADI bu oturumda yeniden koşulmadıysa).  
+`makemigrations --check` / migrate pending: üretim migrate onaysız yok. Yerel dilim: `firmalar.0010` (audit `on_behalf_of`) bekleyebilir.
 
 <!-- AUTO:migrations -->
 | App | Migration sayısı | Son migration |
 |-----|-----------------|---------------|
 | `api` | 1 | `0001_pre_005_idempotency_record` |
-| `firmalar` | 7 | `0007_f10_f7_org_rfq_webhook` |
+| `firmalar` | 10 | `0010_audit_on_behalf_of` |
 | `fiyatlama` | 19 | `0019_cap_piyasa_adr0018` |
 | `finans` | 6 | `0006_f5_022_tedarikci_hak_edis` |
 | `kalite` | 2 | `0002_f6_011_quality_measurement` |
@@ -215,6 +215,7 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `/api/v1/returns/<int:pk>/approve/` | `api-return-approve` |
 | `/api/v1/returns/<int:pk>/reject/` | `api-return-reject` |
 | `/api/v1/returns/<int:pk>/cancel/` | `api-return-cancel` |
+| `/api/v1/returns/<int:pk>/mahsup/` | `api-return-mahsup` |
 | `/api/v1/supplier/offers/` | `api-supplier-offers` |
 | `/api/v1/supplier/offers/<int:pk>/` | `api-supplier-offer-detail` |
 | `/api/v1/supplier/offers/<int:pk>/submit/` | `api-supplier-offer-submit` |
@@ -232,11 +233,14 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `/api/v1/finance/cari/` | `api-finance-cari` |
 | `/api/v1/finance/cari/<int:pk>/` | `api-finance-cari-detail` |
 | `/api/v1/finance/ledger/` | `api-finance-ledger` |
+| `/api/v1/reports/orders/` | `api-reports-orders` |
+| `/api/v1/reports/buyer-behavior/` | `api-reports-buyer-behavior` |
 | `/api/v1/payments/intents/` | `api-payment-intent-create` |
 | `/api/v1/ops/finance/` | `api-ops-finance` |
 | `/api/v1/ops/finance/cari/` | `api-ops-finance-cari` |
 | `/api/v1/ops/finance/ledger/` | `api-ops-finance-ledger` |
 | `/api/v1/ops/finance/payments/` | `api-ops-finance-payments` |
+| `/api/v1/ops/anomalies/ciro/` | `api-ops-anomalies-ciro` |
 | `/api/v1/ops/orders/summary/` | `api-ops-orders-summary` |
 | `/api/v1/ops/inspections/` | `api-ops-inspection-list` |
 | `/api/v1/ops/inspections/<int:pk>/` | `api-ops-inspection-detail` |
@@ -274,9 +278,11 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 <!-- AUTO:commands -->
 | Komut | Açıklama |
 |-------|----------|
+| `manage.py purge_idempotency_records` (api) | En fazla kaç kayıt silinsin |
 | `manage.py audit_user_assignments` (firmalar) | Kullanıcıların firma/rol atamalarını salt okunur biçimde denetler. |
 | `manage.py bootstrap_platform` (firmalar) | Firmasız superuser/staff için atanacak platform rolü |
 | `manage.py process_outbox` (firmalar) | PENDING transactional outbox mesajlarını işler (F4-090, at-least-once). |
+| `manage.py seed_demo_portals` (firmalar) | DEMO_ALICI / DEMO_TEDARIKCI + portal kullanıcıları (idempotent). |
 | `manage.py seed_role_permissions` (firmalar) | Rol → permission matrisini idempotent şekilde Group |
 | `manage.py expire_stale_reservations` (stok) | ISO-8601 an (test); yoksa timezone.now() |
 | `manage.py evaluate_kur_alerts` (tanimlar) | Kur alert kurallarını tara; stale’de tetik yok. |
@@ -306,8 +312,16 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | F9 / API readiness | ADR-0016 Supersede · ADR-0017 **Taslak** (NX-1…12 madde Kabul) · **API-B1…B7 Kabul** |
 | F10-021 eşleştirme | **UYGULANDI** — `RFQEslestirme` + `rfq_eslestirme_servisi` (platform onay) |
 | F10-022 özel üretim | **UYGULANDI** (`siparis.0005`) |
-| F10-023 supplier UI | **yok** (buyer UI var) |
+| F10-023 supplier UI | **UYGULANDI** (ADR-0021 `/supplier/` okuma; yazma API) |
 | CAP-PIYASA / ADR-0018 | **UYGULANDI** — LKG+banner, batch, guardrail, Binance/TCMB adaptör |
+| CAP-PANO / ADR-0020 | **UYGULANDI** (çekirdek v1) — baz fiyat + admin + kar yardımcısı + PANO/MANUEL |
+| CAP-PANO-v2 / ADR-0022 | **UYGULANDI** — grup/darphane/global marj/birimli kesinti (ONS/KG v2.1) |
+| CAP-MAHSUP-HTTP / ADR-0023 | **UYGULANDI** — `POST returns/{id}/mahsup/` + approve `mahsup` |
+| CAP-PANO-PP9 / ADR-0024 | **UYGULANDI** — PANO\|MANUEL → PriceQuote (`quote_baglama`) |
+| CAP-PANO-v2.1 / ADR-0025 | **UYGULANDI** — ONS/KG + TRY/USD pano satırları |
+| CAP-RAPOR-HTTP / ADR-0026 | **UYGULANDI** — reports + ciro anomali HTTP |
+| API_READINESS | **FRONTEND READY** (2026-11-10, Qubit) |
+| CAP-ACTAS / ADR-0021 | **UYGULANDI** — act-as + `/supplier/` HTML + `seed_demo_portals` |
 
 Karar tablosu ve ADR durumları: [decisions/README](decisions/README.md).
 
@@ -465,6 +479,12 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F8-006 | Perf smoke | `api.services.perf_smoke` + `test_perf_smoke_f8_006` **1 OK** (quote/lock/checkout baseline) |
 | F11-013 | Bildirim outbox kuralları | `qc.passed`/`qc.failed`/`return.approved` (+ `order.created`); `test_notify_f11_013` **3 OK** |
 | CAP-PIYASA | Kur dayanıklılık (ADR-0018) | `fiyat_kaynagi` + LKG/banner + batch + guardrail + Binance/TCMB; mig `tanimlar.0004`/`urunler.0011`/`fiyatlama.0019`; `test_cap_piyasa_adr0018` **8 OK** (+ kur/quote regresyon tarihsel) |
+| CAP-PANO | Piyasa panosu baz fiyat (ADR-0020) | `piyasa` app; `baz_fiyat` / `cozumle_islem_birim_fiyati` / kar yardımcısı; mig `0001`/`0002` |
+| CAP-PANO-v2 | Pano domain GoldXT hizası (ADR-0022) | grup/varyant; global marj; Darphane; birimli kesinti; metal+ayar sim; mig `0003`; `piyasa.tests`+karlilik **21 OK** |
+| CAP-MAHSUP-HTTP | İade mahsup REST (ADR-0023) | `POST /api/v1/returns/{id}/mahsup/`; approve `mahsup`; B3+OpenAPI **13 OK** odaklı |
+| CAP-PANO-PP9 | Pano→Quote (ADR-0024) | `quote_from_islem_fiyati` → KS-6; `test_quote_baglama` **4 OK** |
+| CAP-PANO-v2.1 | ONS/KG çapraz (ADR-0025) | `olcek`/`cikti_pb`; mig `0004`; hesap+fiyat **22 OK** |
+| CAP-ACTAS | Act-as + tedarikçi portal (ADR-0021) | `act_as_servisi` + middleware; `/supplier/`; `seed_demo_portals`; `test_act_as_adr0021` **6 OK** |
 | CAP-ALERT | Canlı kur eşik alert | `KurAlertKurali` + admin + `evaluate_kur_alerts` + outbox; stale’de yok; `test_kur_alert_cap` **4 OK** |
 | F11-011 | Quote/Lock analitik | `fiyat_analitik_servisi`; **3 OK** |
 | F11-012 | ATP görünümü | `atp_servisi` formül; **4 OK** |
@@ -493,16 +513,13 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
-> **Backend first** (ürün sahibi 2026-11-09): FE/Next konuşulmaz; odak Django iş kuralları.
+> **FRONTEND READY** (2026-11-10). Next dilimleri ayrı açık talimatla.
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| P0 | FE v1 imza + suite + TS client | [API_READINESS](API_READINESS.md) §4 — **FRONTEND NOT READY** |
-| — | Mahsup HTTP | `mahsup_servisi` için REST | ADR-0019 OL-8 kapalı |
-| — | Rapor HTTP | OL-7 | ADR-0019 kapalı |
-| — | NX-* / F9 / FE | Frontend dilimleri | Kapı READY + ürün sahibi onayı |
-| — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
-| — | F12 / DYN / AI | Product kapıları | [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) |
+| P1 | NX / F9 Next portal dilimleri | [API_READINESS](API_READINESS.md) **READY**; ürün sahibi dilim talimatı |
+| P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
+| — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
 
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
@@ -515,8 +532,9 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 **Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
 1. Oku: `AGENTS.md` → **§2** (gerçek durum) + **§12** → görev ADR.  
-2. Sıradaki: Mahsup HTTP / FE / [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) (FXQ/DYN/I18N/AI). **tam suite onaysız yok**.
-3. Odaklı teslimat doğrulama (2026-11-10): permission/IDOR/F8/F9/F10-021/F11/CAP-ALERT odaklı **55 OK** (+ CAP-PIYASA ayrı). Tam suite: **§2.7**.
-4. ADR-0018/0019 **Kabul**; rapor/mahsup HTTP kapalı (OL-7/8); Next FE portal ayrı takip; NOTE-PENDING (FXQ/DYN/I18N/AI) açık.
+2. Sıradaki: PG tam suite yeşil (FE-SUITE kanıtı) → Ready yeniden kilitle; Next dilimleri ayrı talimat / F6-032.
+3. Ops dilim: act-as AA-9 (`firmalar.0010`), login throttle, idempotency purge, CI `piyasa.tests`.
+4. **P0 kullanıcı:** zip/`.env` sızıntısı varsa `SECRET_KEY` + `DB_PASSWORD` rotasyonu (değerler repoda yok; gitignore OK).
+5. ADR-0018…0026 **Kabul**; ADR-0021 AA-9; NOTE-PENDING **Kabul** (A); **FRONTEND READY** (FE-SUITE KISMİ).
 
-*Son güncelleme: 2026-11-10 — API readiness: **FRONTEND NOT READY** ([API_READINESS](API_READINESS.md)).*
+*Son güncelleme: 2026-11-10 — ops güvenlik + doküman drift.*

@@ -44,7 +44,11 @@ _LIVE_MD = (
     ADR_README,
     ROOT / "docs" / "BACKLOG.md",
     ROOT / "docs" / "RUNBOOK.md",
+    ROOT / "docs" / "API_CONTRACT.md",
+    ROOT / "docs" / "API_READINESS.md",
 )
+_API_CONTRACT = ROOT / "docs" / "API_CONTRACT.md"
+_API_READINESS = ROOT / "docs" / "API_READINESS.md"
 
 _HASH_RE = re.compile(r"(?<![0-9a-fA-F/`])\b([0-9a-f]{7,40})\b(?![0-9a-fA-F])")
 _FENCE_RE = re.compile(r"```.*?```", flags=re.S)
@@ -484,6 +488,47 @@ def _lint_adr_status_table() -> list[str]:
     return warnings
 
 
+def _lint_frontend_ready_consistency() -> list[str]:
+    """API_READINESS verdict ↔ API_CONTRACT §6 / MASTER header drift."""
+    out: list[str] = []
+    if not _API_READINESS.is_file() or not _API_CONTRACT.is_file():
+        return out
+    readiness = _API_READINESS.read_text(encoding="utf-8", errors="ignore")
+    contract = _API_CONTRACT.read_text(encoding="utf-8", errors="ignore")
+    ready = bool(
+        re.search(
+            r"^\s*#\s*FRONTEND READY\s*$", readiness, flags=re.M
+        )
+    )
+    not_ready = bool(
+        re.search(
+            r"^\s*#\s*FRONTEND NOT READY\s*$", readiness, flags=re.M
+        )
+    )
+    if ready and "FRONTEND NOT READY" in contract:
+        out.append(
+            "yanlış statü: API_READINESS READY ama API_CONTRACT hâlâ "
+            "«FRONTEND NOT READY»"
+        )
+    if not_ready and re.search(
+        r"Canlı karar.*FRONTEND READY\b", contract
+    ):
+        out.append(
+            "yanlış statü: API_READINESS NOT READY ama API_CONTRACT "
+            "«FRONTEND READY» diyor"
+        )
+    if MASTER.is_file() and ready:
+        master = MASTER.read_text(encoding="utf-8", errors="ignore")
+        # Üst güncelleme satırında bayat NOT READY kalmasın
+        head = "\n".join(master.splitlines()[:8])
+        if "FRONTEND NOT READY" in head and "FRONTEND READY" not in head:
+            out.append(
+                "yanlış statü: MASTER üst özet «FRONTEND NOT READY» "
+                "(API_READINESS READY)"
+            )
+    return out
+
+
 def lint_docs() -> list[str]:
     """Bayat metin / hash / faz tutarlılığı — uyarı listesi."""
     warnings: list[str] = []
@@ -494,6 +539,7 @@ def lint_docs() -> list[str]:
         warnings.extend(_lint_banned_phrases(path))
     warnings.extend(_lint_phase_consistency())
     warnings.extend(_lint_adr_status_table())
+    warnings.extend(_lint_frontend_ready_consistency())
     return warnings
 
 

@@ -223,6 +223,9 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "PaymentIntentCreateRequest": PAYMENT_INTENT_CREATE,
     "PaymentWebhookRequest": PAYMENT_WEBHOOK,
     "ReturnCreateRequest": RETURN_CREATE,
+    "ReturnApproveRequest": _obj(
+        {"mahsup": _bool(description="ONAYLANDI ile birlikte F5-023 mahsup (post_ledger)")}
+    ),
     "ApprovalCreateRequest": APPROVAL_CREATE,
     "OrgUnitCreateRequest": ORG_UNIT_CREATE,
     "OrgMemberCreateRequest": ORG_MEMBER_CREATE,
@@ -277,9 +280,10 @@ REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     "/api/v1/approvals/{id}/approve/": {"post": "EmptyRequest"},
     "/api/v1/approvals/{id}/reject/": {"post": "ReasonRequest"},
     "/api/v1/returns/{id}/submit/": {"post": "EmptyRequest"},
-    "/api/v1/returns/{id}/approve/": {"post": "EmptyRequest"},
+    "/api/v1/returns/{id}/approve/": {"post": "ReturnApproveRequest"},
     "/api/v1/returns/{id}/reject/": {"post": "ReasonRequest"},
     "/api/v1/returns/{id}/cancel/": {"post": "EmptyRequest"},
+    "/api/v1/returns/{id}/mahsup/": {"post": "EmptyRequest"},
     "/api/v1/ops/inspections/{id}/start/": {"post": "EmptyRequest"},
     "/api/v1/ops/inspections/{id}/pass/": {"post": "EmptyRequest"},
     "/api/v1/ops/inspections/{id}/fail/": {"post": "ReasonRequest"},

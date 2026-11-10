@@ -79,6 +79,24 @@ def lookup(*, firma_id: int, key: str) -> IdempotencyRecord | None:
     return record
 
 
+def purge_expired(*, limit: int | None = None) -> int:
+    """TTL geçmiş IdempotencyRecord toplu silme (lazy lookup dışından).
+
+    Dönüş: silinen satır sayısı.
+    """
+    qs = IdempotencyRecord.objects.filter(created_at__lt=_cutoff()).order_by(
+        "created_at"
+    )
+    if limit is not None:
+        ids = list(qs.values_list("pk", flat=True)[: max(0, int(limit))])
+        if not ids:
+            return 0
+        deleted, _ = IdempotencyRecord.objects.filter(pk__in=ids).delete()
+        return int(deleted)
+    deleted, _ = qs.delete()
+    return int(deleted)
+
+
 def cached_response(record: IdempotencyRecord) -> Response:
     return Response(record.response_body, status=record.status_code)
 

@@ -1,0 +1,26 @@
+{% extends "supplier/base.html" %}
+{% block title %}Stok{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0">Stok bakiyeleri</h1>
+  <table>
+    <thead>
+      <tr><th>Depo</th><th>Teklif</th><th>Birim</th><th>On hand</th><th>Reserved</th><th>Available</th></tr>
+    </thead>
+    <tbody>
+      {% for b in balances %}
+      <tr>
+        <td>{{ b.warehouse }}</td>
+        <td>#{{ b.teklif_id }}</td>
+        <td>{{ b.birim }}</td>
+        <td class="tabular-nums">{{ b.on_hand }}</td>
+        <td class="tabular-nums">{{ b.reserved }}</td>
+        <td class="tabular-nums">{{ b.available }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="muted">Bakiye yok.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

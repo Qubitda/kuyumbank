@@ -1,0 +1,22 @@
+{% extends "supplier/base.html" %}
+{% block title %}RFQ{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0">Açık RFQ (ters kör)</h1>
+  <p class="muted">Alıcı kimliği gösterilmez.</p>
+  <table>
+    <thead><tr><th>ID</th><th>Durum</th><th>Oluşturma</th></tr></thead>
+    <tbody>
+      {% for r in rfqs %}
+      <tr>
+        <td>#{{ r.pk }}</td>
+        <td>{{ r.durum }}</td>
+        <td>{{ r.olusturma_tarihi }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="muted">Açık RFQ yok.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

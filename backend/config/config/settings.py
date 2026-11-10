@@ -55,9 +55,29 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 # Ortak üst alan (opsiyonel cookie paylaşımı): .kuyumbank.local
 SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default="") or None
 CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="") or None
+# Varsayılan 2 hafta yerine 8 saat (finans portalı); idle timeout ayrıca yok.
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=28800)
 
 # AUD-001b — X-Forwarded-For güvenilir proxy hop sayısı (0 = yalnız REMOTE_ADDR)
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
+
+# --- Cache (DRF throttle + HTML login throttle; çoklu worker için db/redis) ---
+# Varsayılan locmem (test/dev). Prod multi-worker: CACHE_BACKEND=db + createcachetable
+# veya Redis backend. LocMem = worker başına ayrı sayaç (limit N× büyür).
+_CACHE_BACKEND = env(
+    "CACHE_BACKEND",
+    default="django.core.cache.backends.locmem.LocMemCache",
+)
+_CACHE_LOCATION = env("CACHE_LOCATION", default="kuyumbank-default")
+CACHES = {
+    "default": {
+        "BACKEND": _CACHE_BACKEND,
+        "LOCATION": _CACHE_LOCATION,
+    }
+}
+# HTML login (buyer/supplier/admin) POST throttle — LoginThrottleMiddleware
+LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", default="10/min")
+
 
 # --- Uygulamalar ------------------------------------------------------------
 INSTALLED_APPS = [
@@ -84,6 +104,7 @@ INSTALLED_APPS = [
     'kalite.apps.KaliteConfig',
     'lojistik.apps.LojistikConfig',
     'belgeler.apps.BelgelerConfig',
+    'piyasa.apps.PiyasaConfig',
     'api.apps.ApiConfig',
 
 ]
@@ -146,6 +167,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'firmalar.middleware.ActAsMiddleware',  # ADR-0021: act-as (Authentication sonrası)
+    'firmalar.middleware.LoginThrottleMiddleware',  # HTML login brute-force
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.IdempotencyKeyMiddleware',  # PRE-005: header → request.idempotency_key
@@ -208,6 +231,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'firmalar.context_processors.act_as',
             ],
         },
     },

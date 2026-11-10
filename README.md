@@ -16,8 +16,11 @@ Kanonik durum: `docs/MASTER.md` §2 + §12. Dağınık faz raporu / ikinci yol h
 ## Hızlı başlangıç
 
 ```powershell
-cd backend\config
-python -m pip install -r requirements.txt
+cd backend
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r config\requirements.txt
+cd config
 copy .env.example .env
 # .env: SECRET_KEY, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
 python manage.py migrate
@@ -28,7 +31,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Ayrıntı ve test komutları: [`backend/README.md`](backend/README.md).
+Ortam yolu ve ayrıntı: [`backend/README.md`](backend/README.md) → **Ortam kurulumu**.
 
 ## Teknoloji
 

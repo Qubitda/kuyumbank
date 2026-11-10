@@ -31,6 +31,10 @@ def _can_manage_returns(user) -> bool:
     return has_perm(user, P["manage_return"]) or can_view_all_tenants(user)
 
 
+def _can_post_ledger(user) -> bool:
+    return has_perm(user, P["post_ledger"])
+
+
 def _assert_buyer_or_ops(user) -> None:
     if _can_manage_returns(user) or can_view_all_tenants(user):
         return
@@ -228,8 +232,19 @@ class _ReturnTransitionView(IdempotencyMixin, APIView):
                     actor=request.user, return_request=req
                 )
             elif self.action == "approve":
+                mahsup_raw = request.data.get("mahsup", False)
+                if isinstance(mahsup_raw, str):
+                    mahsup = mahsup_raw.strip().lower() in ("1", "true", "yes", "evet")
+                else:
+                    mahsup = bool(mahsup_raw)
+                if mahsup and not _can_post_ledger(request.user):
+                    raise PermissionDenied(
+                        detail="Mahsup için finans.post_ledger gerekir."
+                    )
                 req = return_servisi.onayla(
-                    actor=request.user, return_request=req
+                    actor=request.user,
+                    return_request=req,
+                    mahsup=mahsup,
                 )
             elif self.action == "reject":
                 reason = request.data.get("reason") or ""
@@ -269,3 +284,36 @@ class ReturnRejectView(_ReturnTransitionView):
 
 class ReturnCancelView(_ReturnTransitionView):
     action = "cancel"
+
+
+class ReturnMahsupView(IdempotencyMixin, APIView):
+    """POST /api/v1/returns/<pk>/mahsup/ — ADR-0023 MH-1."""
+
+    permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [OpsRateThrottle]
+
+    def post(self, request, pk: int):
+        if not _can_post_ledger(request.user):
+            raise PermissionDenied(detail="Mahsup için finans.post_ledger gerekir.")
+        cached = self.idempotency_begin(request)
+        if cached is not None:
+            return cached
+        # view_all / manage_return ile kapsam; finance view_all ile görür
+        if not _can_manage_returns(request.user):
+            raise PermissionDenied(detail="İade erişimi yok.")
+        req = _get_return(request.user, pk)
+        try:
+            from finans.services import mahsup_servisi
+
+            mahsup_servisi.iade_mahsup(actor=request.user, return_request=req)
+        except (DjangoPermissionDenied, DjangoValidationError) as exc:
+            raise_drf(exc)
+        req = (
+            ReturnRequest.objects.prefetch_related("lines")
+            .select_related("order", "shipment")
+            .get(pk=req.pk)
+        )
+        return self.idempotency_commit(
+            request,
+            Response(present_return(req, actor=request.user)),
+        )

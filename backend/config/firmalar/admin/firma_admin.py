@@ -20,6 +20,7 @@ class FirmaAdresiInline(admin.TabularInline):
 class FirmaBankaHesabiInline(admin.TabularInline):
     model = FirmaBankaHesabi
     extra = 0
+    fields = ("banka_adi", "iban", "swift_bic", "para_birimi", "aktif")
 
 
 @admin.register(Firma)
@@ -56,11 +57,12 @@ class FirmaAdresiAdmin(admin.ModelAdmin):
 
 @admin.register(FirmaBankaHesabi)
 class FirmaBankaHesabiAdmin(admin.ModelAdmin):
-    list_display = ("firma", "banka_adi", "iban", "para_birimi", "aktif")
+    list_display = ("firma", "banka_adi", "iban", "swift_bic", "para_birimi", "aktif")
     list_filter = ("para_birimi", "aktif")
-    search_fields = ("firma__ad", "banka_adi", "iban")
+    search_fields = ("firma__ad", "banka_adi", "iban", "swift_bic")
     list_select_related = ("firma",)
     autocomplete_fields = ("firma",)
+    fields = ("firma", "banka_adi", "iban", "swift_bic", "para_birimi", "aktif")
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

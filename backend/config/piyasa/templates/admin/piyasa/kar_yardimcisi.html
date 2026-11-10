@@ -1,0 +1,80 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Piyasa — Kar hesaplama yardımcısı</h1>
+<p>Pano veya metal/ayar + ADR-0014/0022 simülasyon. Quote/ledger yazılmaz. Global marj modu: <strong>{{ marj_modu }}</strong></p>
+{% if hata %}<p style="color:#b00"><strong>{{ hata }}</strong></p>{% endif %}
+<form method="get">
+  <fieldset>
+    <label>Giriş
+      <select name="giris">
+        <option value="PANO" {% if giris == "PANO" %}selected{% endif %}>Pano ürün kodu</option>
+        <option value="METAL_AYAR" {% if giris == "METAL_AYAR" %}selected{% endif %}>Metal + ayar</option>
+      </select>
+    </label>
+    <label>Ürün kodu <input name="urun_kod" value="{{ urun_kod }}"></label>
+    <label>Metal kodu <input name="metal_kod" value="{{ metal_kod }}" placeholder="ALTIN"></label>
+    <label>Ayar kodu <input name="ayar_kodu" value="{{ ayar_kodu }}" placeholder="boş=has"></label>
+    <label>Taraf
+      <select name="taraf">
+        <option value="SATIS" {% if taraf == "SATIS" %}selected{% endif %}>Satış</option>
+        <option value="ALIS" {% if taraf == "ALIS" %}selected{% endif %}>Alış</option>
+      </select>
+    </label>
+    <label>Ağırlık (gr) <input name="agirlik_gr" value="{{ agirlik_gr }}" class="tabular-nums"></label>
+    <label>Kar % <input name="kar_pct" value="{{ kar_pct }}" class="tabular-nums"></label>
+    <label>İşçilik TL <input name="iscilik_tl" value="{{ iscilik_tl }}" class="tabular-nums"></label>
+    <label>Hedef toplam (Mod B) <input name="hedef_toplam" value="{{ hedef_toplam }}" class="tabular-nums"></label>
+  </fieldset>
+  <fieldset>
+    <legend>Kesintiler (birimli)</legend>
+    <label>Banka
+      <select name="banka_tipi">
+        <option value="YUZDE" {% if banka_tipi == "YUZDE" %}selected{% endif %}>%</option>
+        <option value="TL" {% if banka_tipi == "TL" %}selected{% endif %}>TL</option>
+      </select>
+      <input name="banka_degeri" value="{{ banka_degeri }}" class="tabular-nums">
+    </label>
+    <label>İşletme
+      <select name="isletme_tipi">
+        <option value="YUZDE" {% if isletme_tipi == "YUZDE" %}selected{% endif %}>%</option>
+        <option value="TL" {% if isletme_tipi == "TL" %}selected{% endif %}>TL</option>
+      </select>
+      <input name="isletme_degeri" value="{{ isletme_degeri }}" class="tabular-nums">
+    </label>
+    <label>Gelir vergisi
+      <select name="gv_tipi">
+        <option value="YUZDE" {% if gv_tipi == "YUZDE" %}selected{% endif %}>%</option>
+        <option value="TL" {% if gv_tipi == "TL" %}selected{% endif %}>TL</option>
+      </select>
+      <input name="gv_degeri" value="{{ gv_degeri }}" class="tabular-nums">
+    </label>
+    <label>Diğer
+      <select name="diger_tipi">
+        <option value="TL" {% if diger_tipi == "TL" %}selected{% endif %}>TL</option>
+        <option value="YUZDE" {% if diger_tipi == "YUZDE" %}selected{% endif %}>%</option>
+      </select>
+      <input name="diger_degeri" value="{{ diger_degeri }}" class="tabular-nums">
+    </label>
+  </fieldset>
+  <button type="submit">Hesapla</button>
+</form>
+{% if sonuc %}
+<table>
+  <tr><th>Kaynak</th><td>{{ sonuc.kaynak }}</td></tr>
+  <tr><th>Baz birim</th><td class="tabular-nums">{{ sonuc.baz_birim }}</td></tr>
+  <tr><th>Feed</th><td>{{ sonuc.feed_health }} {{ sonuc.banner }}</td></tr>
+  <tr><th>Mod</th><td>{{ sonuc.mod }}</td></tr>
+  <tr><th>Gr maliyet</th><td class="tabular-nums">{{ sonuc.gr_maliyet }}</td></tr>
+  <tr><th>Kar / gr</th><td class="tabular-nums">{{ sonuc.kar_gr }}</td></tr>
+  <tr><th>Gr satış</th><td class="tabular-nums">{{ sonuc.gr_satis }}</td></tr>
+  <tr><th>Toplam satış</th><td class="tabular-nums">{{ sonuc.toplam_satis }}</td></tr>
+  <tr><th>Brüt kar</th><td class="tabular-nums">{{ sonuc.brut_kar }} ({{ sonuc.brut_kar_marji_pct }}%)</td></tr>
+  <tr><th>Banka</th><td class="tabular-nums">{{ sonuc.banka_kesinti }} ({{ sonuc.banka_tipi }})</td></tr>
+  <tr><th>İşletme</th><td class="tabular-nums">{{ sonuc.isletme_gideri }} ({{ sonuc.isletme_tipi }})</td></tr>
+  <tr><th>GV</th><td class="tabular-nums">{{ sonuc.gelir_vergisi }} ({{ sonuc.gelir_vergisi_tipi }})</td></tr>
+  <tr><th>Diğer</th><td class="tabular-nums">{{ sonuc.diger_kesintiler }} ({{ sonuc.diger_tipi }})</td></tr>
+  <tr><th>Net kar</th><td class="tabular-nums">{{ sonuc.net_kar }} ({{ sonuc.net_kar_marji_pct }}%)</td></tr>
+</table>
+{% endif %}
+<p><a href="{% url 'admin:piyasa_piyasaurun_changelist' %}">← Piyasa ürünleri</a></p>
+{% endblock %}

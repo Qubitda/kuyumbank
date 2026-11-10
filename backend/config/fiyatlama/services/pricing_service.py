@@ -264,6 +264,7 @@ def quote(
     teklif_id: int | None = None,
     para_birimi: str = "TRY",
     hedef_toplam: Decimal | None = None,
+    hesap_girdisi_extra: dict[str, Any] | None = None,
     now=None,
 ) -> PriceQuote:
     """
@@ -272,6 +273,7 @@ def quote(
     Giriş: alıcı firma, satış kanalı, varyant; isteğe bağlı teklif_id.
     ADR-0014 KS-6: `hedef_toplam` verilirse toplam = hedef (platform
     `manage_sozlesme`); banka/GV quote'a girmez.
+    ADR-0024: `hesap_girdisi_extra` pano/MANUEL bağlama metadata (opsiyonel).
     """
     now = now or timezone.now()
     bugun = timezone.localdate(now) if timezone.is_aware(now) else now.date()
@@ -406,12 +408,22 @@ def quote(
 
     if hedef_toplam is not None:
         # ADR-0014 KS-6 — platform hedef toplam → quote
-        if kullanici is None or not (
-            is_platform_firm_user(kullanici)
-            and has_perm(kullanici, P["manage_sozlesme"])
-        ):
+        # ADR-0024: pano bağında manage_piyasa da yeter (hesap_girdisi_extra.pano_baglama)
+        pano_bag = bool(
+            hesap_girdisi_extra and hesap_girdisi_extra.get("pano_baglama")
+        )
+        yetkili = (
+            kullanici is not None
+            and is_platform_firm_user(kullanici)
+            and (
+                has_perm(kullanici, P["manage_sozlesme"])
+                or (pano_bag and has_perm(kullanici, P["manage_piyasa"]))
+            )
+        )
+        if not yetkili:
             raise PermissionDenied(
-                "HEDEF_TOPLAM quote için platform manage_sozlesme gerekir."
+                "HEDEF_TOPLAM quote için platform manage_sozlesme "
+                "(veya pano bağında manage_piyasa) gerekir."
             )
         hedef_n = _d(hedef_toplam)
         if hedef_n <= 0:
@@ -504,6 +516,10 @@ def quote(
             hesap_girdisi["maliyet_referans_toplam"] = str(
                 maliyet_referans["toplam_vergisiz"]
             )
+    if hesap_girdisi_extra:
+        for k, v in hesap_girdisi_extra.items():
+            if k not in hesap_girdisi:
+                hesap_girdisi[k] = v
 
     # ADR-0018 CP-10 guardrail
     from fiyatlama.services.guardrail_servisi import assert_marj_guardrail

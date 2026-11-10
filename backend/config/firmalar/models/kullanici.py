@@ -24,7 +24,12 @@ class KullaniciManager(UserManager):
         if not extra_fields.get("firma"):
             extra_fields["firma"] = ensure_platform_firma()
         extra_fields.setdefault("rol", roles.PLATFORM_SUPER)
-        return self._create_user(username, email, password, **extra_fields)
+        user = self._create_user(username, email, password, **extra_fields)
+        # Rol grubu + permission matrisi (admin app listesi yetki_servisi ile)
+        from ..services.rol_servisi import sync_user_role_groups
+
+        sync_user_role_groups(user)
+        return user
 
 
 class Kullanici(AbstractUser):
@@ -51,6 +56,7 @@ class Kullanici(AbstractUser):
         permissions = [
             ("manage_users", "Kendi firma kullanıcılarını yönetebilir"),
             ("manage_all_users", "Tüm firma kullanıcılarını yönetebilir"),
+            ("act_as_user", "Başka kullanıcı olarak uygulamayı gezebilir (act-as)"),
         ]
 
     def clean(self):

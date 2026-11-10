@@ -12,6 +12,7 @@ Kritik işlem denetim kaydı — silinmez, güncellenmez (AUD-001).
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
 | `actor` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `on_behalf_of` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `actor_firma` | ForeignKey | firmalar.Firma (SET_NULL) | null |  |
 | `action` | CharField | max 64 |  |  |
 | `entity_type` | CharField | max 64 | blank |  |
@@ -61,13 +62,14 @@ FirmaAdresi(id, firma, tip, il, ilce, adres, varsayilan)
 
 ### FirmaBankaHesabi
 
-FirmaBankaHesabi(id, firma, banka_adi, iban, para_birimi, aktif)
+FirmaBankaHesabi(id, firma, banka_adi, iban, swift_bic, para_birimi, aktif)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
 | `firma` | ForeignKey | firmalar.Firma (CASCADE) |  |  |
 | `banka_adi` | CharField | max 80 |  |  |
 | `iban` | CharField | max 34 |  |  |
+| `swift_bic` | CharField | max 11 | blank | Uluslararası transfer için banka SWIFT/BIC kodu (8 veya 11 karakter). |
 | `para_birimi` | CharField | max 10 |  |  |
 | `aktif` | BooleanField |  |  |  |
 
@@ -717,6 +719,74 @@ Tam olarak bir taş satırına (katalog veya teklif) bağlanır.
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 
 **Kısıtlar:** `tassertifikabelgesi_tek_hedef` (CheckConstraint)
+
+## `piyasa`
+
+### DarphaneIscilik
+
+DarphaneIscilik(id, urun, kanal, iscilik_tl, aktif, sira, guncelleme)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `urun` | ForeignKey | piyasa.PiyasaUrun (CASCADE) |  |  |
+| `kanal` | CharField | max 16, choices |  |  |
+| `iscilik_tl` | DecimalField | 14,4 |  |  |
+| `aktif` | BooleanField |  |  |  |
+| `sira` | PositiveIntegerField |  |  |  |
+| `guncelleme` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `piyasa_darphane_urun_kanal_uniq` (UniqueConstraint)
+
+### PiyasaKarPolitikasi
+
+Tek satır (`anahtar=default`); kar yardımcısı default alır.
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `anahtar` | CharField | max 16 | benzersiz |  |
+| `banka_tipi` | CharField | max 8, choices |  |  |
+| `banka_degeri` | DecimalField | 14,4 |  |  |
+| `isletme_tipi` | CharField | max 8, choices |  |  |
+| `isletme_degeri` | DecimalField | 14,4 |  |  |
+| `gelir_vergisi_tipi` | CharField | max 8, choices |  |  |
+| `gelir_vergisi_degeri` | DecimalField | 14,4 |  |  |
+| `diger_tipi` | CharField | max 8, choices |  |  |
+| `diger_degeri` | DecimalField | 14,4 |  |  |
+| `guncelleme` | DateTimeField |  | blank |  |
+
+### PiyasaMarjPolitikasi
+
+Tek satır beklenir (`anahtar=default`).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `anahtar` | CharField | max 16 | benzersiz |  |
+| `marj_modu` | CharField | max 8, choices |  | Tüm pano ürünlerine uygulanır (alış↓ / satış↑). |
+| `guncelleme` | DateTimeField |  | blank |  |
+
+### PiyasaUrun
+
+Pano kalemi — metal/ayar **Tanımlar**dan FK (yeni metal/ayar burada açılmaz).
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `kod` | SlugField | max 24 | benzersiz |  |
+| `ad` | CharField | max 80 |  |  |
+| `grup` | CharField | max 16, choices |  |  |
+| `varyant_etiket` | CharField | max 8, choices | blank | Sarrafiye yeni/eski; boş = yok. |
+| `metal` | ForeignKey | tanimlar.KiymetliMetal (PROTECT) |  | Tanımlar → Kıymetli metaller. Burada yeni metal tanımlanmaz. |
+| `ayar` | ForeignKey | tanimlar.AyarMilyem (PROTECT) | null | Tanımlar → Milyem tablosu. Boş = has (milyem 1). Seçilirse metal ayardan gelir. |
+| `olcek` | CharField | max 8, choices |  | GRAM / ONS / KG — ham fiyat ölçeği (ADR-0025). |
+| `cikti_pb` | CharField | max 3, choices |  | TRY veya USD (USD için DovizKuru USDTRY gerekir). |
+| `gram` | DecimalField | 12,4 |  | 1 = birim ölçek (1 gr / 1 oz / 1 kg); çeyrek vb. için sabit gram. |
+| `alis_marj` | DecimalField | 14,4 |  | ≥0. Mod global politikadan: TL → baz−marj; % → baz×(1−marj/100). |
+| `satis_marj` | DecimalField | 14,4 |  | ≥0. Mod global politikadan: TL → baz+marj; % → baz×(1+marj/100). |
+| `yuvarlama_adimi` | DecimalField | 10,2 |  | 0 = yok. Örn. 10 → 6670. |
+| `yuvarlama_yontemi` | CharField | max 6, choices |  |  |
+| `sira` | PositiveIntegerField |  |  |  |
+| `aktif` | BooleanField |  |  |  |
+| `olusturma` | DateTimeField |  | blank |  |
+| `guncelleme` | DateTimeField |  | blank |  |
 
 ## `siparis`
 

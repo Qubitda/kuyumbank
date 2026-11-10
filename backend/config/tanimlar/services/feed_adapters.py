@@ -70,7 +70,10 @@ def sync_binance_metal(
     )
     fetch = fetcher or _http_json
     if xauusdt is None:
-        payload = fetch("https://api.binance.com/api/v3/ticker/price?symbol=XAUUSDT")
+        # XAUUSDT spot'ta yok; Binance USD-M futures (GoldXT ile aynı)
+        payload = fetch(
+            "https://fapi.binance.com/fapi/v1/ticker/price?symbol=XAUUSDT"
+        )
         xauusdt = parse_binance_xauusdt(payload)
     if usdttry is None:
         # Basit: USDTTRY ticker (yoksa test inject)

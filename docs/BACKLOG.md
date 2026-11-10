@@ -78,7 +78,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-023] RFQ buyer/supplier UI (maskeli)
 
 - **Faz:** Faz 10
-- **Durum:** **UYGULANDI** (buyer minimal; supplier UI yok) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (buyer + ADR-0021 `/supplier/` okuma; yazma API) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-020, F7 APIs
 - **Kabul kriterleri:** Kimlik sızıntısı yok
 - **Kanıt:** `buyer_rfq_ui` + `selectors.rfq`; `test_rfq_ui_f10_023` **4 OK**
@@ -178,6 +178,67 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Kabul kriterleri:** Soft uydurma/`0` yok; PriceQuote/Lock/OrderLine dokunulmaz; partial batch yasak; kör havuz maliyet sızıntısı yok
 - **Geçici ref:** `real_data/` (GoldXT) — **kaldırıldı** (2026-11-10); özet ADR-0018 §GoldXT
 - **Kanıt:** mig `tanimlar.0004` / `urunler.0011` / `fiyatlama.0019`; `kaynak_resolve` / `feed_adapters` / `fiyat_batch_servisi` / `guardrail_servisi`; `test_cap_piyasa_adr0018` (**8 OK** odaklı, 2026-11-10)
+
+### [CAP-PANO] Piyasa panosu (baz fiyat) + kar yardımcısı
+
+- **Faz:** Pricing / Pano
+- **Durum:** **UYGULANDI** (çekirdek v1) · ADR-0020 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P0 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0018 kur; ADR-0014 karlılık sim; `manage_piyasa`
+- **Amaç:** Ham kur → işaretli alış/satış panosu (WhatsApp dernek listesi mantığı); admin yönetimi; kar yardımcısı; iç işlemde `PANO` veya `MANUEL` birim fiyat seçimi
+- **Kabul kriterleri:** `baz_fiyat(kod)` tek giriş; Katman-2 bazı ezmez; quote/order bağlama ayrı dilim (PP-9)
+- **Kanıt:** app `piyasa`; mig `0001`/`0002`; `test_hesap` + `test_piyasa_fiyat` **11 OK** (2026-11-10)
+- **Not:** Domain genişletme → `[CAP-PANO-v2]` / ADR-0022
+
+### [CAP-PANO-v2] Pano domain GoldXT hizası
+
+- **Faz:** Pricing / Pano
+- **Durum:** **UYGULANDI** · ADR-0022 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P0 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0020 çekirdek; ADR-0014; ADR-0018
+- **Amaç:** Grup/varyant; global marj modu; Darphane işçilik tablosu; birimli kesintiler; metal+ayar kar girişi; `PiyasaKarPolitikasi`
+- **Kabul kriterleri:** V2-1…16 (V2-3 ONS/KG ertelendi); HTTP yok; FE yok
+- **Kanıt:** mig `piyasa.0003_adr0022_pano_v2_domain`; `piyasa.tests` + `test_karlilik_simulasyonu` **21 OK** (2026-11-10)
+
+### [CAP-PANO-v2.1] ONS/KG çapraz pano
+
+- **Faz:** Pricing / Pano
+- **Durum:** **UYGULANDI** · ADR-0025 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P2 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0022 V2-3; döviz `resolve_doviz_kuru`
+- **Amaç:** `olcek` GRAM|ONS|KG + `cikti_pb` TRY|USD; seed `ons_usd` / `has_kg`
+- **Kanıt:** mig `piyasa.0004`; `test_hesap` + `test_piyasa_fiyat` KG/ONS **22 OK** odaklı dilim
+
+### [CAP-PANO-PP9] Pano/MANUEL → PriceQuote
+
+- **Faz:** Pricing / Pano
+- **Durum:** **UYGULANDI** · ADR-0024 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0020 PP-9; KS-6 `hedef_toplam`
+- **Amaç:** İç işlem `cozumle_islem_birim_fiyati` → immutable PriceQuote; OrderLine lock ile
+- **Kabul kriterleri:** platform `manage_piyasa`∨`manage_sozlesme`; HTTP yok; buyer yolu değişmez
+- **Kanıt:** `piyasa.services.quote_baglama`; `test_quote_baglama` **4 OK**
+
+### [CAP-RAPOR-HTTP] Rapor / anomali REST
+
+- **Faz:** Rapor / API
+- **Durum:** **UYGULANDI** · ADR-0026 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P1 · **Tip:** Backend
+- **Amaç:** `ticari_siparis_ozet` / `alici_davranis_ozet` / `ciro_esik_tara` HTTP
+- **Kanıt:** `GET /api/v1/reports/*` + `/ops/anomalies/ciro/`; `test_api_rapor_adr0026` **4 OK**
+
+### [CAP-MAHSUP-HTTP] İade mahsup REST
+
+- **Faz:** Finans / API
+- **Durum:** **UYGULANDI** · ADR-0023 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P1 · **Tip:** Backend
+- **Bağımlılıklar:** F5-023; ADR-0019 OL-8 açılımı
+- **Amaç:** `iade_mahsup` HTTP; approve `mahsup` bayrağı; ödeme iadesi yok (U-004)
+- **Kabul kriterleri:** `post_ledger`; idempotent; OpenAPI
+- **Kanıt:** `POST /api/v1/returns/{id}/mahsup/`; `test_api_b3_finance_ops` mahsup testleri
+
+### [CAP-ACTAS] Act-as + tedarikçi portal + demo seed
+
+- **Faz:** Identity / Portal
+- **Durum:** **UYGULANDI** · ADR-0021 **Kabul** (2026-11-10, Qubit) · **Öncelik:** P0 · **Tip:** Backend
+- **Bağımlılıklar:** ADR-0003; buyer UI; supplier API
+- **Amaç:** Platform `act_as_user` ile kullanıcı gözü; `/supplier/` teklif/stok/RFQ okuma; `seed_demo_portals`
+- **Kabul kriterleri:** Audit start/stop; banner; ops doğrudan /buyer|/supplier engelli; kör havuz bozulmaz
+- **Kanıt:** `firmalar.0009`; `test_act_as_adr0021` **6 OK**
 
 ### [CAP-ALERT] Live Gold Price Alert
 

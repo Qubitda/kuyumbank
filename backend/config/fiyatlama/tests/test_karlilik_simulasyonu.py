@@ -43,3 +43,21 @@ class KarlilikSimulasyonuTests(SimpleTestCase):
         self.assertEqual(s.gelir_vergisi, Decimal("2438.70"))
         self.assertEqual(s.net_kar, Decimal("9754.80"))
         self.assertEqual(s.mod, "HEDEF_TOPLAM")
+
+    def test_birimli_tl_kesinti(self):
+        s = ks.simule_marj_pct(
+            maden_fiyati=Decimal("3800"),
+            iscilik_tl=Decimal("850"),
+            agirlik_gr=Decimal("1"),
+            kar_pct=Decimal("0"),
+            banka={"tip": "TL", "deger": Decimal("100")},
+            isletme={"tip": "YUZDE", "deger": Decimal("0")},
+            gelir_vergisi={"tip": "YUZDE", "deger": Decimal("0")},
+            diger={"tip": "TL", "deger": Decimal("25")},
+        )
+        self.assertEqual(s.gr_maliyet, Decimal("4650.00"))
+        self.assertEqual(s.toplam_satis, Decimal("4650.00"))
+        self.assertEqual(s.banka_kesinti, Decimal("100.00"))
+        self.assertEqual(s.diger_kesintiler, Decimal("25.00"))
+        self.assertEqual(s.banka_tipi, "TL")
+

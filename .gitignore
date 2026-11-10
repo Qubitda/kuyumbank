@@ -21,6 +21,7 @@ db.sqlite3
 # IDE / OS
 .idea/
 .vscode/
+!.vscode/settings.json
 .DS_Store
 Thumbs.db
 

@@ -36,6 +36,12 @@
 | `LOG_LEVEL` | Hayır | `INFO` | F8-002 |
 | `LOG_JSON` | Hayır | `False` | `True` → tek satır JSON + `request_id` |
 | `DRF_THROTTLE_ANON/USER/BUYER/SUPPLIER/OPS` | Hayır | settings | F8-009; örn. `60/min` |
+| `DRF_THROTTLE_LOGIN` / `LOGIN_THROTTLE_RATE` | Hayır | `10/min` | API login + HTML login throttle |
+| `IDEMPOTENCY_TTL_SECONDS` | Hayır | `86400` | Idempotency-Key saklama; `purge_idempotency_records` |
+| `CACHE_BACKEND` / `CACHE_LOCATION` | Hayır | locmem | Prod multi-worker: db/redis + `createcachetable` |
+| `SESSION_COOKIE_AGE` | Hayır | `28800` | Saniye (8s); idle timeout yok |
+| `PAYMENT_FAKE_FORCE_FAIL` | Hayır | `False` | Fake ödeme negatif test |
+| `CARRIER_FAKE_FORCE_FAIL` | Hayır | `False` | Fake kargo negatif test |
 | `SENTRY_DSN` | Hayır | boş | F8-003; boşsa SDK no-op (`sentry-sdk==2.69.1`) |
 | `SENTRY_ENVIRONMENT` | Hayır | `development` | F8-003 |
 | `API_DOCS_PUBLIC` | Hayır | `False` | `True` → Swagger/ReDoc/schema anon (yalnız kontrollü staging) |
@@ -53,10 +59,15 @@
 
 ## 3. Yerel kurulum (geliştirme)
 
+Tek venv: **`backend/.venv`** (`config/` altında oluşturma).
+
 ```bash
-cd backend/config
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+cd backend
+python3.14 -m venv .venv
+# Windows: .\.venv\Scripts\Activate.ps1
+source .venv/bin/activate
+pip install -r config/requirements.txt
+cd config
 # .env oluşturun (§2 tablosu); PostgreSQL'de veritabanı + kullanıcı hazır olmalı
 python manage.py migrate
 python manage.py seed_role_permissions      # rol -> permission matrisi (idempotent)
@@ -91,10 +102,21 @@ python manage.py makemigrations --check --dry-run
 python manage.py test \
   firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests \
   stok.tests siparis.tests finans.tests kalite.tests lojistik.tests \
-  belgeler.tests api.tests \
+  belgeler.tests piyasa.tests api.tests \
   --verbosity=1 --keepdb
 python ../../scripts/docs_sync.py --check
 ```
+
+Idempotency TTL süpürme (cron önerisi):
+
+```bash
+python manage.py purge_idempotency_records
+# Çoklu worker throttle için paylaşımlı cache:
+# CACHE_BACKEND=django.core.cache.backends.db.DatabaseCache
+# CACHE_LOCATION=kuyumbank_cache
+# python manage.py createcachetable
+```
+
 
 Odaklı örnekler:
 
@@ -151,9 +173,15 @@ Hosting seçilince: yedek sıklığı, saklama süresi, **geri yükleme provası
 - **Stok:** `StockBalance` doğrudan düzenlenmez; yalnız ledger servisi yazar. Rezervasyon expire yolu için F4-022 durumuna bakın ([BACKLOG](BACKLOG.md)).
 - **Para:** yalnız `Decimal`; `float` yok. Quote/PriceLock/Movement değişmezdir (uygulama + DB trigger); düzeltme yeni kayıtla yapılır.
 - **Kur / CAP-PIYASA / CAP-ALERT:** Sync: §11b. Alert: `python manage.py evaluate_kur_alerts [--now=ISO]`; admin `KurAlertKurali` (`manage_kur`). Stale’de alert yok. Manuel kur + LKG/banner (`kur_servisi`). GoldXT `real_data/` kaldırıldı (ADR-0018 §GoldXT).
+- **CAP-PANO (ADR-0020/0022):** Admin → Piyasa ürünleri (`manage_piyasa`); **Piyasa marj politikası** (global TL|%); **Piyasa kar politikası**; Darphane işçilik; listede baz alış/satış; **Kar yardımcısı** (pano kodu veya metal+ayar, birimli kesinti). Seed: `python manage.py seed_piyasa`. Servis: `baz_fiyat` / `pano_ozeti` / `cozumle_islem_birim_fiyati(PANO|MANUEL)` / `darphane_iscilik_listesi`.
+- **CAP-MAHSUP-HTTP (ADR-0023):** `POST /api/v1/returns/{id}/mahsup/` (`finans.post_ledger`); approve gövde `{"mahsup": true}` (post_ledger yoksa 403). Ödeme iadesi yok (U-004).
+- **CAP-PANO-PP9 (ADR-0024):** İç işlem `quote_from_islem_fiyati(kaynak=PANO|MANUEL, …)` → PriceQuote; sonra alıcı `lock_quote`. HTTP yok.
+- **CAP-PANO-v2.1 (ADR-0025):** Ürün `olcek` GRAM|ONS|KG + `cikti_pb` TRY|USD; USD satırlar için taze USDTRY (`resolve_doviz_kuru`).
+- **CAP-RAPOR-HTTP (ADR-0026):** `GET /api/v1/reports/orders/`, `/reports/buyer-behavior/`, `/ops/anomalies/ciro/?esik_ciro=`.
+- **FE:** `cd frontend && npm run generate:api` → `lib/api/schema.d.ts`. Kapı: [API_READINESS](API_READINESS.md) **FRONTEND READY**.
+- **CAP-ACTAS (ADR-0021):** `seed_demo_portals` → `demo_alici` / `demo_tedarikci` (şifre komut çıktısı). Portallar: `/buyer/` · `/supplier/`. Act-as: Admin → Kullanıcılar → bir kullanıcı seç → aksiyon **«Seçilen kullanıcı olarak gör»**; banner’dan veya `/act-as/stop/` ile bitir. Yetki: `firmalar.act_as_user`.
 - **Kör havuz:** alıcı yüzeylerinde tedarikçi kimliği ve iç maliyet görünmez; log/export eklerken bu kuralı koruyun.
 - **request_id (F8-002):** `X-Request-ID` middleware; log satırında `request_id=…`. Secret alanları log `extra`/mesajına yazmayın (`config.logging_utils.redact_mapping`).
-- **API docs:** `/api/docs/` (Swagger), `/api/redoc/`, `/api/schema/` — `DEBUG` veya `API_DOCS_PUBLIC`; prod’da staff/platform. CI: `export_openapi.py --check` + `lint_openapi.py`.
 - **API docs:** `/api/docs/` (Swagger), `/api/redoc/`, `/api/schema/` — `DEBUG` veya `API_DOCS_PUBLIC`; prod’da staff/platform. CI: `export_openapi.py --check` + `lint_openapi.py`.
 
 ## 9. Secret yönetimi (F8-005)

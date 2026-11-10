@@ -34,6 +34,14 @@ class AuditOlay(models.Model):
         on_delete=models.SET_NULL,
         related_name="audit_olaylari",
     )
+    # ADR-0021 AA-9: act-as sırasında gerçek operatör = actor; hedef = on_behalf_of
+    on_behalf_of = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="audit_olaylari_on_behalf",
+    )
     actor_firma = models.ForeignKey(
         "firmalar.Firma",
         null=True,

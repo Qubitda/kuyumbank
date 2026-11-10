@@ -36,8 +36,8 @@ Ops order iptal HTTP: **yok**. SUPPORT tenant R: **yok**. Rapor/Mahsup HTTP: **y
 | OL-4 | **A** | Onaylayıcı commerce W yok |
 | OL-5 | **A** | SUPPORT R yok |
 | OL-6 | **A** | Supplier RFQ havuzu B6 |
-| OL-7 | **A** | Rapor HTTP bu ADR dışı |
-| OL-8 | **A** | Mahsup HTTP bu ADR dışı |
+| OL-7 | **A** | Rapor HTTP bu ADR dışı → **ADR-0026** ile açıldı (2026-11-10) |
+| OL-8 | **A** | Mahsup HTTP bu ADR dışı → **ADR-0023** ile açıldı (2026-11-10) |
 | OL-9 | **A** | Çapraz tenant 404 |
 | OL-10 | **A** | Yeni object perm yok |
 | OL-11 | **A** | Permission + Order/Cart/Quote IDOR test; yeni uç yok |

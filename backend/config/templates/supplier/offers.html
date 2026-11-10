@@ -1,0 +1,22 @@
+{% extends "supplier/base.html" %}
+{% block title %}Tekliflerim{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1 style="margin-top:0">Tekliflerim</h1>
+  <table>
+    <thead><tr><th>ID</th><th>Ürün / varyant</th><th>Durum</th><th>Versiyon</th></tr></thead>
+    <tbody>
+      {% for o in offers %}
+      <tr>
+        <td>{{ o.pk }}</td>
+        <td>{{ o.varyant }}</td>
+        <td>{{ o.durum }}</td>
+        <td>{{ o.versiyon }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="muted">Teklif yok.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

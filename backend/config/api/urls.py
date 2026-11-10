@@ -63,8 +63,12 @@ from api.views import (
     ReturnCancelView,
     ReturnDetailView,
     ReturnListCreateView,
+    ReturnMahsupView,
     ReturnRejectView,
     ReturnSubmitView,
+    AliciDavranisOzetView,
+    CiroAnomaliView,
+    TicariSiparisOzetView,
     RfqDetailView,
     RfqListCreateView,
     RfqMessageView,
@@ -166,6 +170,11 @@ api_urlpatterns = [
         name="api-return-cancel",
     ),
     path(
+        "returns/<int:pk>/mahsup/",
+        ReturnMahsupView.as_view(),
+        name="api-return-mahsup",
+    ),
+    path(
         "supplier/offers/",
         SupplierOfferListView.as_view(),
         name="api-supplier-offers",
@@ -231,6 +240,16 @@ api_urlpatterns = [
     ),
     path("finance/ledger/", BuyerLedgerListView.as_view(), name="api-finance-ledger"),
     path(
+        "reports/orders/",
+        TicariSiparisOzetView.as_view(),
+        name="api-reports-orders",
+    ),
+    path(
+        "reports/buyer-behavior/",
+        AliciDavranisOzetView.as_view(),
+        name="api-reports-buyer-behavior",
+    ),
+    path(
         "payments/intents/",
         PaymentIntentCreateView.as_view(),
         name="api-payment-intent-create",
@@ -250,6 +269,11 @@ api_urlpatterns = [
         "ops/finance/payments/",
         OpsFinancePaymentListView.as_view(),
         name="api-ops-finance-payments",
+    ),
+    path(
+        "ops/anomalies/ciro/",
+        CiroAnomaliView.as_view(),
+        name="api-ops-anomalies-ciro",
     ),
     path(
         "ops/orders/summary/",

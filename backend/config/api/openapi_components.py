@@ -397,6 +397,42 @@ SUPPLIER_STOCK = _obj(
     },
     ["varyant_id", "birim", "available"],
 )
+TICARI_SIPARIS_OZET = _obj(
+    {
+        "scope": _str(),
+        "alici_firma_id": _null_int(),
+        "siparis_adet": _int(),
+        "siparis_olusturuldu": _int(),
+        "siparis_iptal": _int(),
+        "satir_adet": _int(),
+        "ciro_vergisiz": _str(),
+        "read_model": _str(),
+    },
+    ["scope", "siparis_adet", "ciro_vergisiz", "read_model"],
+)
+ALICI_DAVRANIS_OZET = _obj(
+    {
+        "scope": _str(),
+        "alici_firma_id": _int(),
+        "siparis_adet": _int(),
+        "satir_adet": _int(),
+        "ciro_vergisiz": _str(),
+        "quote_adet": _int(),
+        "quote_toplam_sum": _str(),
+        "read_model": _str(),
+    },
+    ["scope", "alici_firma_id", "read_model"],
+)
+CIRO_ANOMALI = _obj(
+    {
+        "scope": _str(),
+        "esik_ciro": _str(),
+        "uyari_adet": _int(),
+        "uyarilar": {"type": "array", "items": {"type": "object"}},
+        "read_model": _str(),
+    },
+    ["scope", "esik_ciro", "uyari_adet", "uyarilar", "read_model"],
+)
 SUPPLIER_MOVEMENT = _obj(
     {
         "id": _int(),
@@ -504,6 +540,9 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "BuyerLedgerPage": paginated("BuyerLedger"),
     "BuyerCredit": BUYER_CREDIT,
     "BuyerPaymentIntent": BUYER_PAYMENT_INTENT,
+    "TicariSiparisOzet": TICARI_SIPARIS_OZET,
+    "AliciDavranisOzet": ALICI_DAVRANIS_OZET,
+    "CiroAnomali": CIRO_ANOMALI,
     "WebhookAck": WEBHOOK_ACK,
     "OrgUnit": ORG_UNIT,
     "OrgUnitPage": paginated("OrgUnit"),
@@ -564,6 +603,7 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/returns/{id}/approve/": {"post": ("200", "BuyerReturn")},
     "/api/v1/returns/{id}/reject/": {"post": ("200", "BuyerReturn")},
     "/api/v1/returns/{id}/cancel/": {"post": ("200", "BuyerReturn")},
+    "/api/v1/returns/{id}/mahsup/": {"post": ("200", "BuyerReturn")},
     "/api/v1/credit/me/": {"get": ("200", "BuyerCredit")},
     "/api/v1/credit/check/": {"post": ("200", "BuyerCredit")},
     "/api/v1/finance/me/": {"get": ("200", "BuyerFinanceSummary")},
@@ -576,6 +616,9 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/ops/finance/cari/": {"get": ("200", "BuyerCariPage")},
     "/api/v1/ops/finance/ledger/": {"get": ("200", "BuyerLedgerPage")},
     "/api/v1/ops/finance/payments/": {"get": ("200", "BuyerOrderPage")},
+    "/api/v1/reports/orders/": {"get": ("200", "TicariSiparisOzet")},
+    "/api/v1/reports/buyer-behavior/": {"get": ("200", "AliciDavranisOzet")},
+    "/api/v1/ops/anomalies/ciro/": {"get": ("200", "CiroAnomali")},
     "/api/v1/ops/orders/summary/": {"get": ("200", "OpsSummary")},
     "/api/v1/ops/inspections/": {
         "get": ("200", "OpsInspectionPage"),
@@ -646,6 +689,7 @@ TAG_BY_PREFIX = (
     ("/api/v1/finance/", "finance"),
     ("/api/v1/payments/", "finance"),
     ("/api/v1/ops/", "ops"),
+    ("/api/v1/reports/", "reports"),
     ("/api/v1/org-units/", "org"),
     ("/api/v1/approvals/", "approvals"),
     ("/api/v1/rfqs/", "rfq"),
@@ -686,7 +730,7 @@ def enrich_openapi_schema(schema: dict) -> dict:
         "Auth: session+CSRF (tarayıcı) veya Token (S2S). "
         "Hata: application/problem+json. "
         "Tenant: client firma_id yok sayılır. "
-        "Kapalı: rapor/mahsup HTTP (ADR-0019 OL-7/8)."
+        "Rapor HTTP: ADR-0026. Mahsup HTTP: ADR-0023."
     )
 
     components = schema.setdefault("components", {})

@@ -468,6 +468,54 @@
 - Katalog API: `q` + `buyer_katalog_servisi` detay/varyant; OpenAPI bileşen enjeksiyonu (me/catalog/quote/lock/cart).
 - ADR-0019 OL-7/8 açılmadı. Verdict: **FRONTEND NOT READY**.
 
+### 2026-11-10 — ADR-0020 Kabul + CAP-PANO UYGULANDI
+- Ürün sahibi onay: piyasa panosu (baz fiyat) + admin + kar yardımcısı + iç işlem `PANO`/`MANUEL`.
+- App `piyasa`: `PiyasaUrun` / `PiyasaFiyatKurali`; `hesap` (Django’suz); `baz_fiyat` / `cozumle_islem_birim_fiyati` / `kar_yardimcisi`.
+- Mig `piyasa.0001_adr0020_piyasa_panosu`; `seed_piyasa`; `manage_piyasa` rol matrisi.
+- Test: `piyasa.tests` **11 OK**. Quote/order bağlama PP-9 sonraki dilim.
+
+### 2026-11-10 — ADR-0021 Kabul + act-as + `/supplier/` + demo seed
+- `firmalar.act_as_user`; middleware session swap; admin aksiyon; audit start/stop; portal banner.
+- Tedarikçi HTML: `/supplier/` (teklif/stok/RFQ okuma); yazma API’de.
+- `seed_demo_portals` → `demo_alici` / `demo_tedarikci`.
+- Mig `firmalar.0009`; test **6 OK**.
+
+### 2026-11-10 — CAP-PANO marj hizası (GoldXT)
+- Ayrı `PiyasaFiyatKurali` admin/tanım kaldırıldı; marj ürün satırında (`marj_modu` TL|YUZDE, `alis_marj`/`satis_marj` ≥0).
+- Metal/ayar yalnız `tanimlar` FK; ayar seçilince metal ayardan.
+- Mig `piyasa.0002_goldxt_marj_urun_satiri`; `piyasa.tests` güncellendi.
+
+### 2026-11-10 — ADR-0022 Taslak (CAP-PANO-v2)
+- Ürün sahibi: v1 backend GoldXT beklentisinden uzak; FE değil domain eksik.
+- Taslak: grup/varyant, global marj modu, Darphane işçilik, birimli kesintiler, metal+ayar kar girişi, `PiyasaKarPolitikasi`.
+- ONS/KG çapraz → v2.1.
+
+### 2026-11-10 — ADR-0022 Kabul + CAP-PANO-v2 UYGULANDI
+- Qubit: “go onaylıyorum”.
+- Modeller: `PiyasaMarjPolitikasi`, `PiyasaKarPolitikasi`, `DarphaneIscilik`; `PiyasaUrun.grup` / `varyant_etiket`; satır `marj_modu` kaldırıldı.
+- `karlilik_simulasyonu` birimli kesinti (YUZDE|TL); `simule_metal_ayar`; admin kar formu güncellendi.
+- Mig `piyasa.0003_adr0022_pano_v2_domain`; test **21 OK**.
+
+### 2026-11-10 — ADR-0023 Kabul + Mahsup HTTP UYGULANDI
+- Qubit: “diğer fazlara geç” → §12 Mahsup HTTP (PP-9 pano bağ erteli).
+- `POST /api/v1/returns/{id}/mahsup/` (`post_ledger`); approve gövde `mahsup`; OpenAPI export.
+- Test: `test_api_b3_finance_ops` + `test_api_b7_openapi` **13 OK**. OL-7 rapor HTTP hâlâ kapalı.
+
+### 2026-11-10 — ADR-0024 Kabul + CAP-PANO-PP9 UYGULANDI
+- Qubit: “ok kalan işten devam et” → PP-9.
+- `piyasa.services.quote_baglama.quote_from_islem_fiyati` → KS-6 `hedef_toplam` + `hesap_girdisi` pano metadata.
+- HTTP yok; buyer quote yolu değişmedi. Test: `test_quote_baglama` **4 OK** (+ KS-6 regresyon).
+
+### 2026-11-10 — ADR-0025 Kabul + CAP-PANO-v2.1 UYGULANDI
+- Qubit: “kalan işten devam” → ONS/KG.
+- `PiyasaUrun.olcek` / `cikti_pb`; `hesap.hesapla_ham`; USDTRY döviz; seed `ons_usd` / `has_kg`.
+- Mig `piyasa.0004_adr0025_ons_kg`; test **22 OK**.
+
+### 2026-11-10 — “hepsini onaylıyorum” paketi
+- ADR-0026 rapor/anomali HTTP; NOTE-PENDING A seçimleri Kabul (kod kapıları kapalı).
+- API_READINESS → **FRONTEND READY**; `frontend/lib/api/schema.d.ts` + `npm run generate:api`.
+- FE v1 §4 P1/P2 **dışı** imzalı; Next portal ayrı dilim talimatı.
+
 ### 2026-11-10 — API documentation standard (Swagger/ReDoc + lint)
 - `/api/schema/` · `/api/docs/` · `/api/redoc/`; prod erişim `DEBUG` / `API_DOCS_PUBLIC` / staff|platform.
 - 81 path 2xx DTO bağları; `scripts/lint_openapi.py` CI; `drf-spectacular` UI.
@@ -477,4 +525,10 @@
 - `api/openapi_requests.py`: A payload + B Empty/Reason/TakipNo/Reorder; lint `requestBody.$ref` zorunlu.
 - API_READINESS §2/§4 güncel (response stub iddiası kaldırıldı; FE v1 imza tablosu).
 - Verdict: **FRONTEND NOT READY** (§4 imza + suite + TS).
+
+### 2026-11-10 — Ops güvenlik + doküman drift onarımı
+- Act-as AA-9: `AuditOlay.on_behalf_of` + middleware `act_as_audit_context` (gerçek aktör inkâr edilemezliği).
+- HTML login throttle (`LoginThrottleMiddleware`); `CACHES` ayarı; `purge_idempotency_records`; CI’ya `piyasa.tests`.
+- API_CONTRACT ↔ API_READINESS READY hizası; FE-SUITE kanıtı KISMİ işaretlendi; RUNBOOK çift API docs satırı silindi.
+- **Secret:** `.env` gitignore’da; zip sızıntısı varsa DB şifresi + SECRET_KEY rotasyonu ürün sahibi.
 

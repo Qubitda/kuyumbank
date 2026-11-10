@@ -25,6 +25,7 @@ DOMAIN_APPS = (
     "kalite",
     "lojistik",
     "belgeler",
+    "piyasa",
     "siparis",
     "stok",
     "tanimlar",

@@ -80,5 +80,6 @@ jobs:
         run: >
           python manage.py test
           firmalar.tests urunler.tests fiyatlama.tests tanimlar.tests
-          stok.tests siparis.tests finans.tests kalite.tests lojistik.tests belgeler.tests api.tests
+          stok.tests siparis.tests finans.tests kalite.tests lojistik.tests belgeler.tests
+          piyasa.tests api.tests
           --verbosity=1 --keepdb

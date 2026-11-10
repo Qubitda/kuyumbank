@@ -104,14 +104,14 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 1. **CORS erteli** — aynı-origin reverse proxy (ADR-0017).
 2. **RFQ eşleştirme HTTP yok** — servis F10-021 var; supplier B6 ters kör havuz (bilinçli). Platform eşleştirme REST: [API_READINESS](API_READINESS.md).
 3. **Teklif create HTTP yok** — yalnız yaşam döngüsü (`submit` / `deactivate` / `versions`); create admin/servis dışı.
-4. **Mahsup HTTP** — ADR-0019 OL-8 kapalı; iade SM HTTP var.
-5. **Rapor/anomali HTTP** — ADR-0019 OL-7 kapalı.
-6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (81 path); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.
+4. **Mahsup HTTP** — **UYGULANDI** (ADR-0023): `POST /api/v1/returns/{id}/mahsup/` + approve `mahsup`; ödeme iadesi yok (U-004).
+5. **Rapor/anomali HTTP** — **UYGULANDI** (ADR-0026): `GET /reports/orders/`, `/reports/buyer-behavior/`, `/ops/anomalies/ciro/`.
+6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (path sayısı: `openapi-v1.json`; docs_sync AUTO); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.
 7. **NX-1…12** madde **Kabul**; ADR-0017 bütünü **Taslak**.
-8. **`frontend/`** — NX-FE iskelet; ürün portalı **FRONTEND NOT READY** ([API_READINESS](API_READINESS.md)).
+8. **`frontend/`** — NX-FE iskelet; API kapısı **FRONTEND READY** ([API_READINESS](API_READINESS.md)); Next ürün dilimleri ayrı talimat.
 9. **F9 Django HTML miras** (`/buyer/`) korunur; API yüzeyi bağımsız.
 10. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook`.
-11. **TS client üretimi** — `openapi-typescript` / generated client **erteli** (FE başlamadan önce; manuel `lib/api/types` ile çakışmayı önlemek için tek kaynak OpenAPI olacak).
+11. **TS client üretimi** — **UYGULANDI** (`frontend/lib/api/schema.d.ts`, `npm run generate:api`); tek kaynak OpenAPI.
 
 ---
 
@@ -133,4 +133,4 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 ## 6. Frontend-ready kapısı
 
 Tek kaynak: **[API_READINESS](API_READINESS.md)**.  
-Canlı karar (2026-11-10): **FRONTEND NOT READY**.
+Canlı karar (2026-11-10): **FRONTEND READY** (ürün sahibi override; FE-SUITE tam yeşil kanıtı MASTER §2.7’de izlenir).
