@@ -168,5 +168,24 @@ class BuyerCommerceApiTests(CheckoutFixtureMixin, TestCase):
             reverse("api-buyer-catalog-detail", kwargs={"pk": urun.pk})
         )
         self.assertEqual(det.status_code, 200)
-        assert_masked(det.json())
-        self.assertIn("quote", det.json()["allowed_actions"])
+        body = det.json()
+        assert_masked(body)
+        self.assertIn("quote", body["allowed_actions"])
+        self.assertIn("varyantlar", body)
+        self.assertTrue(any(v["id"] == self.varyant.pk for v in body["varyantlar"]))
+
+    def test_catalog_search_q(self):
+        urun = self.varyant.urun
+        urun.yayin_durumu = "aktif"
+        urun.onay_durumu = "onayli"
+        urun.save(update_fields=["yayin_durumu", "onay_durumu"])
+        hit = self.api.get(reverse("api-buyer-catalog"), {"q": urun.ad[:4]})
+        self.assertEqual(hit.status_code, 200)
+        ids = [r["id"] for r in hit.json()["results"]]
+        self.assertIn(urun.pk, ids)
+        self.assertIn("kategori", hit.json()["results"][0])
+        miss = self.api.get(
+            reverse("api-buyer-catalog"), {"q": "zzz-no-match-xxx"}
+        )
+        self.assertEqual(miss.status_code, 200)
+        self.assertEqual(miss.json()["count"], 0)

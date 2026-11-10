@@ -2,9 +2,8 @@
 
 **Durum:** **Kabul** (2026-11-10, ürün sahibi — açık uygulama talimatı)
 **Bağımlılık:** ADR-0008 (kur/quote; B-04 yeniden tanım bu ADR ile), ADR-0010 (PriceLock), ADR-0003 (RBAC)
-**Kapsam ID:** CAP-PIYASA — [BACKLOG](../BACKLOG.md) · [MASTER](../MASTER.md) §12.3
-**Geçici referans:** kök `real_data/` (GoldXT örnek; **toptan port yok**; ürün sahibi sonra silebilir)
-
+**Kapsam ID:** CAP-PIYASA — [BACKLOG](../BACKLOG.md) · [MASTER](../MASTER.md) §12.2
+**Geçici referans:** kök `real_data/` (GoldXT) — **kaldırıldı** (2026-11-10); kalıcı feed kuralları CP-2 + §“GoldXT özet”
 ## Amaç
 
 Kuyumculukta saniyelik kur + yüksek tutar + binlerce SKU için:
@@ -48,7 +47,7 @@ Bu ADR B-04’ü şu kontrollü modele çeker (**Kabul** — yürürlükte):
 | CP-14 | **Immutability:** batch / kur politikası mevcut `PriceQuote` / `PriceLock` / `OrderLine` UPDATE etmez (trigger + app). |
 | CP-15 | **Yetki:** `manage_kur`; `is_superuser` iş kısa yolu yok; kritik geçişler audit (+ fail durable). |
 | CP-16 | **Celery yok;** sync management command + cron (RUNBOOK). |
-| CP-17 | **`real_data/`:** yalnız geçici ürün/UX/feed referansı; Django’ya toptan kopyalanmaz; silinebilir. |
+| CP-17 | **`real_data/` (GoldXT):** geçici UX/feed örneğiydi; Django’ya toptan port yok. **2026-11-10 kaldırıldı**; normatif davranış CP-2 + `feed_adapters`. |
 
 ## Uygulama sırası (Kabul + açık talimat sonrası)
 
@@ -66,8 +65,22 @@ Bu ADR B-04’ü şu kontrollü modele çeker (**Kabul** — yürürlükte):
 | Kod | Uygulama bu oturum |
 | B-04 yürürlük güncellemesi | decisions README + ADR-0008 not |
 
+## GoldXT özet (tarihsel — klasör yok)
+
+Eski `real_data/` Vanilla HTML/proxy örneğiydi; **runtime bağımlılık değildi**. Kuyumbank’a taşınan fikirler:
+
+| Konu | GoldXT | Kuyumbank (kod) |
+|------|--------|-----------------|
+| Anlık metal | Binance fiyat (ör. futures/spot script) | Spot `XAUUSDT` + `USDTTRY` → gram TRY (`feed_adapters.sync_binance_metal`) |
+| Resmi katman | Yok / manuel | TCMB EOD `kaynak=tcmb` |
+| Proxy/TTL UI | `server.py` 2s cache | Celery yok; cron + management command |
+| Marj dashboard UI | `margin_calc.html` | Port **yok**; karlılık sim ADR-0014 / guardrail ayrı |
+
+**Port edilmedi:** GoldXT HTML UI, localStorage marjlar, Darphane işçilik tabloları, TradingView grafik, fapi futures ticker yolu.
+
+Kanıt: `tanimlar/services/feed_adapters.py`; komutlar `sync_binance_kur` / `sync_tcmb_kur`.
+
 ## İlişkili
 
 - [ADR-0008](ADR-0008-faz3b-kur-fiyatlama-quote.md) · [ADR-0010](ADR-0010-pricelock.md) · [ADR-0014](ADR-0014-karlilik-simulasyonu.md) (karlılık; quote gerçeği değil)
-- BACKLOG `[CAP-PIYASA]` · MASTER §12.3
-- Geçici: `real_data/README.md` (GoldXT)
+- BACKLOG `[CAP-PIYASA]` · MASTER §12.2

@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-"""API-B1 — OpenAPI şemasını üret / drift kontrol et.
-
-TECH-OPENAPI-01: SchemaGenerator relative `api.urls` patterns + url=/api/v1/
-kullanır (ROOT_URLCONF ile çift önek oluşmaz). Canlı URL'ler değişmez.
+"""OpenAPI şemasını üret / drift kontrol et (DRF generator + DTO enrich).
 
 Kullanım:
   python scripts/export_openapi.py           # docs/api/openapi-v1.json yazar
-  python scripts/export_openapi.py --check   # commit'li dosya ile karşılaştır (CI)
+  python scripts/export_openapi.py --check   # commit'li dosya ile karşılaştır
 """
 
 from __future__ import annotations
@@ -33,6 +30,7 @@ def _setup_django() -> None:
 def generate_schema() -> dict:
     from rest_framework.schemas.openapi import SchemaGenerator
 
+    from api.openapi_components import enrich_openapi_schema
     from api.urls import api_urlpatterns
 
     generator = SchemaGenerator(
@@ -45,7 +43,7 @@ def generate_schema() -> dict:
     schema = generator.get_schema(request=None, public=True)
     if schema is None:
         raise SystemExit("OpenAPI şeması üretilemedi.")
-    return schema
+    return enrich_openapi_schema(schema)
 
 
 def main() -> int:

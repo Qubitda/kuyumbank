@@ -1,7 +1,6 @@
 from django.urls import path
-from rest_framework.permissions import AllowAny
-from rest_framework.schemas import get_schema_view
 
+from api.schema_views import EnrichedOpenAPISchemaView
 from api.views import (
     ApprovalApproveView,
     ApprovalDetailView,
@@ -389,16 +388,7 @@ api_urlpatterns = [
     ),
 ]
 
-schema_view = get_schema_view(
-    title="Kuyumbank API",
-    description="API v1 — ADR-0017 (B1–B4 Kabul; B5 uygulandı, ürün sahibi incelemesi bekliyor).",
-    version="1.0.0",
-    public=True,
-    permission_classes=[AllowAny],
-    patterns=api_urlpatterns,
-    url="/api/v1/",
-)
-
+# Geriye uyum: /api/v1/schema/ → enrich JSON (/api/schema/ tercih)
 urlpatterns = api_urlpatterns + [
-    path("schema/", schema_view, name="api-schema"),
+    path("schema/", EnrichedOpenAPISchemaView.as_view(), name="api-schema"),
 ]

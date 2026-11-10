@@ -38,6 +38,7 @@
 | `DRF_THROTTLE_ANON/USER/BUYER/SUPPLIER/OPS` | Hayır | settings | F8-009; örn. `60/min` |
 | `SENTRY_DSN` | Hayır | boş | F8-003; boşsa SDK no-op (`sentry-sdk==2.69.1`) |
 | `SENTRY_ENVIRONMENT` | Hayır | `development` | F8-003 |
+| `API_DOCS_PUBLIC` | Hayır | `False` | `True` → Swagger/ReDoc/schema anon (yalnız kontrollü staging) |
 | `SENTRY_TRACES_SAMPLE_RATE` | Hayır | `0.0` | F8-003; düşük başla |
 | `PAYMENT_PROVIDER` | Hayır | `fake` | Canlı banka yok |
 | `PAYMENT_WEBHOOK_SECRET` | Prod webhook için | boş | Boşsa webhook 401 (fail-closed) |
@@ -100,7 +101,7 @@ Odaklı örnekler:
 ```bash
 python manage.py test api.tests.test_security_f8_007 --keepdb
 python manage.py test siparis.tests.test_buyer_ui_f4_062 --keepdb
-# F9-010/011 testleri yalnız Kova B WIP diskteyse: test_buyer_dashboard_f9_010 (HEAD’te yok)
+# F9-010/011 Django HTML miras: test_buyer_dashboard_f9_010 / test_buyer_catalog_f9_011
 ```
 
 - **Yalnız `fiyatlama` (bare) çalıştırmayın** — `admin`/`models` import hatası riski; `fiyatlama.tests` kullanın (AGENTS).
@@ -149,9 +150,11 @@ Hosting seçilince: yedek sıklığı, saklama süresi, **geri yükleme provası
   `domain_atomic()` içinde çağrılırsa `RuntimeError` verir — çağrı yazım bloğunun **dışında** olmalı.
 - **Stok:** `StockBalance` doğrudan düzenlenmez; yalnız ledger servisi yazar. Rezervasyon expire yolu için F4-022 durumuna bakın ([BACKLOG](BACKLOG.md)).
 - **Para:** yalnız `Decimal`; `float` yok. Quote/PriceLock/Movement değişmezdir (uygulama + DB trigger); düzeltme yeni kayıtla yapılır.
-- **Kur / CAP-PIYASA / CAP-ALERT:** Sync: §11b. Alert: `python manage.py evaluate_kur_alerts [--now=ISO]`; admin `KurAlertKurali` (`manage_kur`). Stale’de alert yok. Manuel kur + LKG/banner (`kur_servisi`). Geçici örnek: kök `real_data/` (silinebilir).
+- **Kur / CAP-PIYASA / CAP-ALERT:** Sync: §11b. Alert: `python manage.py evaluate_kur_alerts [--now=ISO]`; admin `KurAlertKurali` (`manage_kur`). Stale’de alert yok. Manuel kur + LKG/banner (`kur_servisi`). GoldXT `real_data/` kaldırıldı (ADR-0018 §GoldXT).
 - **Kör havuz:** alıcı yüzeylerinde tedarikçi kimliği ve iç maliyet görünmez; log/export eklerken bu kuralı koruyun.
 - **request_id (F8-002):** `X-Request-ID` middleware; log satırında `request_id=…`. Secret alanları log `extra`/mesajına yazmayın (`config.logging_utils.redact_mapping`).
+- **API docs:** `/api/docs/` (Swagger), `/api/redoc/`, `/api/schema/` — `DEBUG` veya `API_DOCS_PUBLIC`; prod’da staff/platform. CI: `export_openapi.py --check` + `lint_openapi.py`.
+- **API docs:** `/api/docs/` (Swagger), `/api/redoc/`, `/api/schema/` — `DEBUG` veya `API_DOCS_PUBLIC`; prod’da staff/platform. CI: `export_openapi.py --check` + `lint_openapi.py`.
 
 ## 9. Secret yönetimi (F8-005)
 

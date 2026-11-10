@@ -61,7 +61,8 @@
 - 2026-11-09 (Qubit): API-B7 **Kabul**; Next.js `frontend/` ayrı talimat.
 - 2026-11-09 (Qubit): NX-3…12 madde **Kabul**; NX-1…12 tamamı madde Kabul; ADR-0017 **Taslak** kalır; sıradaki NX-FE açık talimat.
 - 2026-11-09 (Qubit talimatı): **NX-FE** `frontend/` iskelet UYGULANDI; sıradaki NX-SHELL; ADR-0017 **Taslak** kalır.
-- 2026-11-09 (Qubit): **ADR-0018 Taslak** — CAP-PIYASA (kaynak merdiveni, LKG, batch, guardrail, çapraz kur sanity, atomik publish). B-04 yeniden tanım Kabul’e bağlı. Geçici ref: `real_data/`. Kod yok.
+- 2026-11-09 (Qubit): **ADR-0018 Taslak** — CAP-PIYASA (kaynak merdiveni, LKG, batch, guardrail, çapraz kur sanity, atomik publish). B-04 yeniden tanım Kabul’e bağlı. Geçici ref: `real_data/` *(sonra kaldırıldı)*. Kod yok.
 - 2026-11-10 (ürün sahibi): **ADR-0018 Kabul** + uygulama talimatı; CAP-PIYASA kod UYGULANDI.
 - 2026-11-10: **ADR-0019 Taslak** netleştirildi — OL-1…11 karar kartları (mevcut/öneri/güvenlik/seçim); matris OL-2 ile hizalandı; FXQ/DYN/I18N/AI [NOTE-PENDING](NOTE-PENDING-PRODUCT-DECISIONS.md)’de ayrı. Hiçbir OL Kabul varsayılmadı.
 - 2026-11-10 (ürün sahibi): **ADR-0019 Kabul** — OL-1…11 tümü Öneri **A**; OL-11 kod: `api.permissions` + commerce SoD; `test_object_level_adr0019`.
+- 2026-11-10: `real_data/` (GoldXT) kaldırıldı; ADR-0018 CP-17 + §GoldXT güncel.

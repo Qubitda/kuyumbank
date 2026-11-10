@@ -64,6 +64,9 @@ jobs:
       - name: OpenAPI schema drift
         run: python scripts/export_openapi.py --check
 
+      - name: OpenAPI quality lint
+        run: python scripts/lint_openapi.py
+
       - name: Django system check
         working-directory: backend/config
         run: python manage.py check

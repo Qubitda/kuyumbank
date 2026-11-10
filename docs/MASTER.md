@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-10 — CAP-ALERT + F11-011/012/020 UYGULANDI; CAP-PIYASA tamam
+**Güncelleme:** 2026-11-10 — API readiness gate: **FRONTEND NOT READY**; katalog API hizası + OpenAPI DTO dilimi
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -76,7 +76,7 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | PostgreSQL + psycopg | varsayılan DB | UYGULANDI |
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis | requirements’ta yok (bilinçli) | PLANLANDI |
-| Next.js `frontend/` | **NX-FE UYGULANDI** (iskelet; App Router + session/CSRF rewrite) | ADR-0017 **Taslak** |
+| Next.js `frontend/` | **NX-FE UYGULANDI** (iskelet; App Router + session/CSRF rewrite); uyum denetimi [FRONTEND_ARCHITECTURE §9](../frontend/docs/FRONTEND_ARCHITECTURE.md) | ADR-0017 **Taslak** |
 | HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B7 Kabul**) + `/buyer/` + `/ops/finance/` | KISMİ (Prosperer portal yok) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
@@ -87,7 +87,7 @@ Domain app’ler: ADR-0004 `models/` / `services/` / `selectors/` / `admin/` / `
 **HTTP:** `admin/` + `/api/v1/` + `/buyer/` + `/ops/finance/` (DOĞRULANDI).
 
 <!-- AUTO:apps -->
-`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `lojistik`, `belgeler`, `api`
+`INSTALLED_APPS` (koddan): `django.contrib.*` (7), `import_export`, `rest_framework`, `rest_framework.authtoken`, `drf_spectacular`, `tanimlar`, `firmalar`, `fiyatlama`, `urunler`, `stok`, `siparis`, `finans`, `kalite`, `lojistik`, `belgeler`, `api`
 <!-- /AUTO:apps -->
 
 ### 2.3 Modül uygulama durumu (kod gerçeği)
@@ -153,7 +153,7 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **603** — `api` 86 · `firmalar` 72 · `fiyatlama` 148 · `finans` 61 · `kalite` 16 · `lojistik` 20 · `belgeler` 6 · `siparis` 48 · `stok` 31 · `tanimlar` 20 · `urunler` 95
+Statik test sayısı (`def test_`): **670** — `api` 101 · `firmalar` 72 · `fiyatlama` 151 · `finans` 61 · `kalite` 19 · `lojistik` 20 · `belgeler` 6 · `siparis` 76 · `stok` 37 · `tanimlar` 32 · `urunler` 95
 _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son suite aşağıda elle._
 <!-- /AUTO:tests -->
 
@@ -464,7 +464,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F8-003 | Sentry SDK | `sentry-sdk==2.69.1` + `sentry_init`; DSN boş no-op; `test_sentry_f8_003` **3 OK**; staging event DOĞRULANAMADI |
 | F8-006 | Perf smoke | `api.services.perf_smoke` + `test_perf_smoke_f8_006` **1 OK** (quote/lock/checkout baseline) |
 | F11-013 | Bildirim outbox kuralları | `qc.passed`/`qc.failed`/`return.approved` (+ `order.created`); `test_notify_f11_013` **3 OK** |
-| CAP-PIYASA | Kur dayanıklılık (ADR-0018) | `fiyat_kaynagi` + LKG/banner + batch + guardrail + Binance/TCMB; mig `tanimlar.0004`/`urunler.0011`/`fiyatlama.0019`; odaklı **37 OK** |
+| CAP-PIYASA | Kur dayanıklılık (ADR-0018) | `fiyat_kaynagi` + LKG/banner + batch + guardrail + Binance/TCMB; mig `tanimlar.0004`/`urunler.0011`/`fiyatlama.0019`; `test_cap_piyasa_adr0018` **8 OK** (+ kur/quote regresyon tarihsel) |
 | CAP-ALERT | Canlı kur eşik alert | `KurAlertKurali` + admin + `evaluate_kur_alerts` + outbox; stale’de yok; `test_kur_alert_cap` **4 OK** |
 | F11-011 | Quote/Lock analitik | `fiyat_analitik_servisi`; **3 OK** |
 | F11-012 | ATP görünümü | `atp_servisi` formül; **4 OK** |
@@ -476,7 +476,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | ADR-0019 | Object-level DRF | OL-1…11 **Kabul**; `api.permissions` commerce SoD + object access; `test_object_level_adr0019` **6 OK** |
 | F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** (NX-1…12 madde Kabul) |
 | F9-010 | Buyer dashboard (Django HTML miras) | `/buyer/` home + `buyer_dashboard_servisi`; Next portal değil |
-| F9-011 | Katalog browse (Django HTML miras) | `/buyer/catalog/` + `buyer_katalog_servisi`; Next portal değil |
+| F9-011 | Katalog browse (Django HTML miras) | `/buyer/catalog/` + `urunler.services.buyer_katalog_servisi`; Next portal değil |
 | API-B0 | Next.js API boşluk analizi | **Tamamlandı** |
 | API-B1 | Çekirdek API standartları | **Kabul** (Qubit 2026-11-09); odaklı **28 OK**; CORS erteli |
 | API-B2 | Buyer commerce HTTP | **Kabul** (Qubit 2026-11-09); odaklı **11 OK** |
@@ -497,8 +497,10 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| — | Mahsup HTTP | `mahsup_servisi` için REST | **Ayrı takip** — ADR-0019 OL-8; API_CONTRACT §4 |
-| — | NX-* / F9 / FE | Frontend dilimleri | **Ayrı takip** — backend first; erteli |
+| P0 | FE v1 imza + suite + TS client | [API_READINESS](API_READINESS.md) §4 — **FRONTEND NOT READY** |
+| — | Mahsup HTTP | `mahsup_servisi` için REST | ADR-0019 OL-8 kapalı |
+| — | Rapor HTTP | OL-7 | ADR-0019 kapalı |
+| — | NX-* / F9 / FE | Frontend dilimleri | Kapı READY + ürün sahibi onayı |
 | — | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
 | — | F12 / DYN / AI | Product kapıları | [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md) |
 
@@ -517,4 +519,4 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 3. Odaklı teslimat doğrulama (2026-11-10): permission/IDOR/F8/F9/F10-021/F11/CAP-ALERT odaklı **55 OK** (+ CAP-PIYASA ayrı). Tam suite: **§2.7**.
 4. ADR-0018/0019 **Kabul**; rapor/mahsup HTTP kapalı (OL-7/8); Next FE portal ayrı takip; NOTE-PENDING (FXQ/DYN/I18N/AI) açık.
 
-*Son güncelleme: 2026-11-10 — teslimat sabitleme (ADR-0019 + CAP + F11 + F9 HTML miras).*
+*Son güncelleme: 2026-11-10 — API readiness: **FRONTEND NOT READY** ([API_READINESS](API_READINESS.md)).*

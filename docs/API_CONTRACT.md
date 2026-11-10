@@ -10,7 +10,18 @@
 ```text
 python scripts/export_openapi.py
 python scripts/export_openapi.py --check
+python scripts/lint_openapi.py
 ```
+
+Canlı dokümantasyon (aynı şema kaynağı):
+
+| Yüzey | URL | Not |
+|-------|-----|-----|
+| OpenAPI JSON | `/api/schema/` (alias `/api/v1/schema/`) | DRF generator + DTO enrich |
+| Swagger UI | `/api/docs/` | drf-spectacular UI |
+| ReDoc | `/api/redoc/` | drf-spectacular UI |
+
+Erişim: `DEBUG=True` veya `API_DOCS_PUBLIC=True`; aksi halde kimlikli staff/platform. Try it out gerçek RBAC uygular.
 
 ---
 
@@ -28,8 +39,9 @@ python scripts/export_openapi.py --check
 | 8 | Idempotency | Yazma `POST`’larda `Idempotency-Key` (actor-scoped storage); 409 conflict |
 | 9 | Maske | Buyer’da tedarikçi kimlik/maliyet yok; supplier RFQ’da alıcı firma/şube yok |
 | 10 | Throttle | buyer / supplier / ops / login scope’ları |
-| 11 | OpenAPI drift | CI/yerel: `export_openapi.py --check` |
-| 12 | Bilinen sınır | Aşağı §4; CORS erteli (aynı-origin) |
+| 11 | OpenAPI drift + lint | CI: `export_openapi.py --check` + `lint_openapi.py` |
+| 12 | Docs UI | `/api/docs/` + `/api/redoc/` (erişim politikası §üst) |
+| 13 | Bilinen sınır | Aşağı §4; CORS erteli (aynı-origin) |
 
 ---
 
@@ -90,14 +102,16 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 ## 4. Bilinen sınırlamalar (v1)
 
 1. **CORS erteli** — aynı-origin reverse proxy (ADR-0017).
-2. **RFQ eşleştirme yok** — supplier tüm `GONDERILDI` havuzunu görür (ters kör; B6 bilinçli v1).
+2. **RFQ eşleştirme HTTP yok** — servis F10-021 var; supplier B6 ters kör havuz (bilinçli). Platform eşleştirme REST: [API_READINESS](API_READINESS.md).
 3. **Teklif create HTTP yok** — yalnız yaşam döngüsü (`submit` / `deactivate` / `versions`); create admin/servis dışı.
-4. **Mahsup HTTP** — servis var; B3 HTTP yüzeyi iade SM odaklı (mahsup uç uydurulmaz). Object-level / mahsup açılımı: [ADR-0019](decisions/ADR-0019-object-level-drf.md) **Taslak** (OL-8).
-5. **OpenAPI alan şemaları** — DRF AutoSchema; bazı body alanları generic olabilir → runtime presenter + test esas.
-6. **NX-1…12** ADR **maddeleri Kabul** (Qubit, 2026-11-09); **kod** kanıt matrisi ADR-0017’de; ADR bütünü **Taslak**.
-7. **`frontend/`** — NX-FE iskelet **UYGULANDI** (App Router; aynı-origin `/api/v1` rewrite; session/CSRF). Ürün portalı (katalog/sepet) sonraki dilim.
-8. **F9 Django HTML WIP** commit dışı; API yüzeyi bundan bağımsız.
-9. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook` (olay kimliği).
+4. **Mahsup HTTP** — ADR-0019 OL-8 kapalı; iade SM HTTP var.
+5. **Rapor/anomali HTTP** — ADR-0019 OL-7 kapalı.
+6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (81 path); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.
+7. **NX-1…12** madde **Kabul**; ADR-0017 bütünü **Taslak**.
+8. **`frontend/`** — NX-FE iskelet; ürün portalı **FRONTEND NOT READY** ([API_READINESS](API_READINESS.md)).
+9. **F9 Django HTML miras** (`/buyer/`) korunur; API yüzeyi bağımsız.
+10. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook`.
+11. **TS client üretimi** — `openapi-typescript` / generated client **erteli** (FE başlamadan önce; manuel `lib/api/types` ile çakışmayı önlemek için tek kaynak OpenAPI olacak).
 
 ---
 
@@ -113,3 +127,10 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 | B6 | `test_api_b6_supplier` | 3 |
 | B7 | `test_api_b7_openapi` | OpenAPI freeze smoke |
 | NX-3…12 smoke | `test_api_nx_contract` | **4 OK** (madde **Kabul**) |
+
+---
+
+## 6. Frontend-ready kapısı
+
+Tek kaynak: **[API_READINESS](API_READINESS.md)**.  
+Canlı karar (2026-11-10): **FRONTEND NOT READY**.

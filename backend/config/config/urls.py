@@ -19,6 +19,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("api.docs_urls")),  # schema / docs / redoc (OpenAPI)
     path("api/v1/", include("api.urls")),
     path("buyer/", include("siparis.urls_buyer")),  # F4-062 minimal alıcı UI
     path("ops/", include("finans.urls_ops")),  # F5-032 finans ops UI

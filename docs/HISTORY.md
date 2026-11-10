@@ -452,3 +452,29 @@
 - `real_data/` gitignore; NOTE-PENDING (FXQ/DYN/I18N/AI) ayrı kaldı.
 - Odaklı regresyon: **55 OK**; `manage.py check` OK; `docs_sync --check` OK; makemigrations --check OK.
 
+### 2026-11-10 — Kod–doküman uyumluluk: `real_data/` kaldırma
+- GoldXT özet → ADR-0018 §GoldXT (feed zaten `feed_adapters`; UI/port yok).
+- Kök `real_data/` silindi; kod/test/CI/script/frontend referansı **0** (yalnız tarihsel docs + `.gitignore`).
+- ROADMAP/RUNBOOK F9 “WIP commit dışı” → Django HTML miras (BACKLOG/MASTER ile hizalı).
+- BACKLOG CAP-PIYASA geçici-ref satırı “kaldırıldı”.
+
+### 2026-11-10 — Frontend ↔ Backend mimari uyum denetimi
+- Envanter: Django domain app’ler + `frontend/src/features|app|lib`; canlı Next akışı yalnız auth/health.
+- Domain feature’lar iskelet (`export {}`); ürün UI hâlâ `/buyer/` `/ops/` HTML.
+- Rapor: [FRONTEND_ARCHITECTURE §9](../frontend/docs/FRONTEND_ARCHITECTURE.md); `HealthResponse.service?` hizası.
+
+### 2026-11-10 — Backend API readiness gate (FRONTEND NOT READY)
+- Envanter + matris: [API_READINESS](API_READINESS.md).
+- Katalog API: `q` + `buyer_katalog_servisi` detay/varyant; OpenAPI bileşen enjeksiyonu (me/catalog/quote/lock/cart).
+- ADR-0019 OL-7/8 açılmadı. Verdict: **FRONTEND NOT READY**.
+
+### 2026-11-10 — API documentation standard (Swagger/ReDoc + lint)
+- `/api/schema/` · `/api/docs/` · `/api/redoc/`; prod erişim `DEBUG` / `API_DOCS_PUBLIC` / staff|platform.
+- 81 path 2xx DTO bağları; `scripts/lint_openapi.py` CI; `drf-spectacular` UI.
+- TS client erteli. Verdict hâlâ **FRONTEND NOT READY**.
+
+### 2026-11-10 — OpenAPI request body kapanışı (47 write op)
+- `api/openapi_requests.py`: A payload + B Empty/Reason/TakipNo/Reorder; lint `requestBody.$ref` zorunlu.
+- API_READINESS §2/§4 güncel (response stub iddiası kaldırıldı; FE v1 imza tablosu).
+- Verdict: **FRONTEND NOT READY** (§4 imza + suite + TS).
+

@@ -176,8 +176,8 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Bağımlılıklar:** ADR-0008/0010; `manage_kur`
 - **Amaç:** Binance anlık + TCMB EOD; ürün→ayar→politika `fiyat_kaynagi`; LKG+banner; batch canlı senkron + manuel freeze (dry-run, atomik publish); negatif marj guardrail; çapraz kur sanity; Decimal yuvarlama net
 - **Kabul kriterleri:** Soft uydurma/`0` yok; PriceQuote/Lock/OrderLine dokunulmaz; partial batch yasak; kör havuz maliyet sızıntısı yok
-- **Geçici ref:** kök `real_data/` (GoldXT) — toptan port yok; sonra silinebilir
-- **Kanıt:** mig `tanimlar.0004` / `urunler.0011` / `fiyatlama.0019`; `kaynak_resolve` / `resolve_metal_kuru_detay` / `feed_adapters` / `fiyat_batch_servisi` / `guardrail_servisi`; `test_cap_piyasa_adr0018` + kur/quote regresyon **37 OK**
+- **Geçici ref:** `real_data/` (GoldXT) — **kaldırıldı** (2026-11-10); özet ADR-0018 §GoldXT
+- **Kanıt:** mig `tanimlar.0004` / `urunler.0011` / `fiyatlama.0019`; `kaynak_resolve` / `feed_adapters` / `fiyat_batch_servisi` / `guardrail_servisi`; `test_cap_piyasa_adr0018` (**8 OK** odaklı, 2026-11-10)
 
 ### [CAP-ALERT] Live Gold Price Alert
 
@@ -1020,7 +1020,7 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 - **Bağımlılıklar:** F9-010, search API
 - **Gizlilik:** kör
 - **Kabul kriterleri:** Maliyet sızıntısı yok
-- **Kanıt:** `buyer_katalog_servisi` / catalog views; `test_buyer_catalog_f9_011`
+- **Kanıt:** `urunler.services.buyer_katalog_servisi` / `siparis.views.buyer_catalog_ui`; `test_buyer_catalog_f9_011`
 
 ### [F9-012] Sepet/sipariş portal akışı
 

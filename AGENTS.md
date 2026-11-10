@@ -29,6 +29,7 @@ Kurulum komutları: `docs/RUNBOOK.md` + kök `README.md` → `backend/README.md`
 | Kurulum / işletim | **`docs/RUNBOOK.md`** + `README.md` |
 | Veri sözlüğü (otomatik) | **`docs/DATA_DICTIONARY.md`** |
 | API insan özeti (B7; OpenAPI normatif) | **`docs/API_CONTRACT.md`** + **`docs/api/openapi-v1.json`** |
+| Frontend-ready kapısı | **`docs/API_READINESS.md`** |
 | Framework API | Django 6.1 docs / kaynak |
 | İş/mimari skill | `.cursor/skills/*` (Django resmi skill değil) |
 

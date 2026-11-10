@@ -51,6 +51,8 @@ export type MeResponse = {
 export type HealthResponse = {
   status: string;
   api?: string;
+  /** Django HealthView: `service: "kuyumbank"` */
+  service?: string;
 };
 
 export type CsrfResponse = {

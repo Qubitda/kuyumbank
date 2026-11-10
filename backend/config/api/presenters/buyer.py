@@ -121,12 +121,36 @@ def BuyerOrderPresenter(order: Order, *, include_lines: bool = True) -> dict:
 
 
 def BuyerCatalogItemPresenter(urun) -> dict:
+    """Liste satırı — `buyer_katalog_servisi.liste` alanlarıyla hizalı (+ allowed_actions)."""
+    varyant_count = getattr(urun, "varyant_count", None)
+    if varyant_count is None:
+        varyant_count = urun.varyantlar.filter(aktif=True).count()
     data = {
         "id": urun.pk,
         "ad": urun.ad,
-        "platform_kodu": urun.platform_kodu,
+        "platform_kodu": urun.platform_kodu or "",
+        "kategori": getattr(getattr(urun, "kategori", None), "ad", "") or "",
+        "ayar": getattr(getattr(urun, "ayar", None), "ayar_kodu", "") or "",
+        "fiyat_tipi": urun.fiyat_tipi,
         "yayin_durumu": urun.yayin_durumu,
+        "varyant_count": int(varyant_count),
         "allowed_actions": ["quote"],
     }
+    assert_masked(data)
+    return data
+
+
+def BuyerCatalogDetailPresenter(urun_id: int) -> dict:
+    """Detay — domain `buyer_katalog_servisi.detay` (varyantlar; kör)."""
+    from urunler.services.buyer_katalog_servisi import (
+        BuyerCatalogNotFound,
+        detay,
+    )
+
+    try:
+        data = detay(urun_id=urun_id)
+    except BuyerCatalogNotFound as exc:
+        raise LookupError("Ürün bulunamadı.") from exc
+    data["allowed_actions"] = ["quote"]
     assert_masked(data)
     return data

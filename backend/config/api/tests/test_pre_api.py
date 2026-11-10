@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -30,7 +30,9 @@ class PreApiHealthTests(TestCase):
         res = self.api.get(reverse("api-me"))
         self.assertEqual(res.status_code, 401)
 
+    @override_settings(DEBUG=True)
     def test_schema_endpoint(self):
+        # Prod’da docs kapalı; DEBUG’ta /api/v1/schema/ açık (Spectacular JSON).
         res = self.api.get(reverse("api-schema"))
         self.assertEqual(res.status_code, 200)
         body = res.content.decode("utf-8")

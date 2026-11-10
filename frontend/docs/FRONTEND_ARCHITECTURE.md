@@ -2,11 +2,13 @@
 
 **Durum:** NX-FE iskelet + feature/domain katman iskeleti (2026-11-09)  
 **Politika:** [ADR-0017](../../docs/decisions/ADR-0017-nextjs-api-sozlesmesi.md) · API: [API_CONTRACT](../../docs/API_CONTRACT.md)  
+**Frontend-ready kapısı:** [API_READINESS](../../docs/API_READINESS.md) — **FRONTEND NOT READY** (2026-11-10)  
 **Backend paralel:** ADR-0004 (`models` / `services` / `selectors`) → FE `types` / `services` / `hooks` + `components`
-
 ## 1. Amaç
 
-Django modular monolith’teki **domain app** sınırlarını Next.js tarafında **feature klasörleri** olarak korumak:
+Django modular monolith’teki **domain app** sınırlarını Next.js tarafında **feature klasörleri** olarak korumak.
+
+> **Uyarı (2026-11-10 denetim):** Aşağıdaki tablo **hedef isimlendirme**dir. Klasör varlığı API entegrasyonu veya ürün ekranı anlamına gelmez; canlı durum → **§9**.
 
 | Backend app | Frontend feature | Tipik portal yüzeyi |
 |-------------|------------------|---------------------|
@@ -126,3 +128,129 @@ Rol bazlı URL önekleri (`/buyer`, `/supplier`) sonraki NX-SHELL diliminde ekle
 - **NX-SHELL:** shadcn primitives + `(portal)/layout` nav
 - **NX-BUYER:** katalog / sepet / sipariş sayfa doldurma
 - Django `/buyer/` `/ops/` HTML **silinmez**
+
+---
+
+## 9. Mimari uyum denetimi (2026-11-10)
+
+**Kapsam:** Kod envanteri + canlı veri akışı; yeni özellik / büyük refactor yok.  
+**Kaynaklar:** `backend/config/*` domain app’ler · `frontend/src/{app,features,lib}` · `api/urls.py` · ADR-0017 · API_CONTRACT · OpenAPI.
+
+### 9.1 Özet cevaplar
+
+| # | Soru | Cevap (kanıtlı) |
+|---|------|-----------------|
+| 1 | İki mimari gerçekten uyumlu mu? | **Hedef isimlendirme uyumlu; işlevsel entegrasyon KISMİ.** Klasör ↔ Django app paralel iskelet var; canlı FE↔API yalnız auth/health. |
+| 2 | FE karşılığı olmayan domain’ler? | `integrations` (BE paket; FE feature yok — bilinçli). `api` HTTP yüzeyi FE feature değildir (`lib/api`). Canlı ürün UI hâlâ Django HTML (`/buyer/`, `/ops/`). |
+| 3 | Yanlış domain’e bağlı feature? | **Yok** (domain feature’lar henüz API’ye bağlanmamış; yanlış wiring yok). |
+| 4 | API sözleşmeleri tutarlı mı? | Auth/`/me`/`capabilities`: FE tipleri ↔ `present_me` **uyumlu**. Commerce DTO’ları FE’de **yok**. OpenAPI birçok response şeması zayıf (`array` stub) — normatif kod + presenter. |
+| 5 | Yetki/tenant doğru yerde mi? | **Evet (backend).** FE `firma_id` göndermez; `capabilities` keşif. Portal route’larda auth gate yok (placeholder; veri yok). |
+| 6 | Kritik mimari sorunlar? | (A) İsim izomorfizmi ≠ entegrasyon. (B) Çift yüzey: HTML canlı / Next iskelet. (C) Feature `services/types` boş → NX-BUYER öncesi sözleşme doldurulmalı. |
+| 7 | Gerekli düzeltmeler? | Doküman netliği (bu §). Küçük: `HealthResponse.service?`. Büyük refactor **yok**. Sonraki ürün dilimi: feature service ↔ OpenAPI path eşlemesi (NX-BUYER/SHELL). |
+
+### 9.2 Backend envanter (DOĞRULANDI)
+
+| App | Rol | Not |
+|-----|-----|-----|
+| `tanimlar`…`belgeler` | Domain (ADR-0004) | `services/` dolu; iş kuralı burada |
+| `api` | HTTP / presenter / permission | FE feature değil |
+| `integrations` | ERP/CRM/EDI stub | FE yok |
+| `config` | settings/urls | `/api/v1/`, `/buyer/`, `/ops/` |
+
+Canlı HTML: `siparis.urls_buyer` → `/buyer/*` (katalog, cart, checkout, order, RFQ, approvals, finance); `finans.urls_ops` → `/ops/`.
+
+### 9.3 Frontend envanter (DOĞRULANDI)
+
+| Yol | Gerçek durum |
+|-----|----------------|
+| `features/auth` | **Canlı:** LoginForm, SessionPanel, Zod `loginSchema` (form henüz şemayı bağlamıyor) |
+| `features/{firmalar…belgeler}` | **İskelet:** `services/types/hooks/components` çoğunlukla `export {}`; schemas’ta `_stub` Zod |
+| `app/(portal)/<domain>` | Placeholder (`DomainPlaceholder`); API çağrısı yok |
+| `lib/api/client.ts` | Merkezi `apiFetch` + CSRF + session; rewrite `next.config.ts` → Django |
+| FE test | **Yok** (`*.test.*` / `*.spec.*` 0) |
+
+§1 tablosu = **hedef isimlendirme** (NX-FE iskeleti). Bu tablo “API bağlı ürün ekranı” iddiası değildir.
+
+### 9.4 Domain eşleşme matrisi
+
+| Backend | FE feature | Durum | Kanıt |
+|---------|------------|-------|-------|
+| `firmalar` | `features/firmalar` | Kısmi eşleşme (iskelet) | route + boş service; org/approval API path’leri `/org-units/`, `/approvals/` |
+| `tanimlar` | `features/tanimlar` | Kısmi (iskelet) | CAP-PIYASA/kur çoğunlukla ops/admin; FE API yok |
+| `urunler` | `features/urunler` | Kısmi (iskelet) | Buyer katalog API: `/api/v1/catalog/` (view `api`, servis `urunler`) |
+| `fiyatlama` | `features/fiyatlama` | Kısmi (iskelet) | HTTP: `/quotes/`, `/price-locks/` |
+| `stok` | `features/stok` | Kısmi (iskelet) | Supplier `/supplier/stock/`; ATP servis BE’de; FE yok |
+| `siparis` | `features/siparis` | Kısmi (iskelet) | HTTP: carts/checkouts/orders/rfqs/bulk; HTML `/buyer/` canlı |
+| `finans` | `features/finans` | Kısmi (iskelet) | HTTP: `/finance/*`, `/credit/*`, `/payments` |
+| `kalite` | `features/kalite` | Kısmi (iskelet) | HTTP: `/ops/inspections/*` |
+| `lojistik` | `features/lojistik` | Kısmi (iskelet) | HTTP: `/shipments/`, `/returns/`, ops shipment |
+| `belgeler` | `features/belgeler` | Kısmi (iskelet) | Domain servis var; B7’de ayrı belgeler REST yüzeyi sınırlı |
+| — | `features/auth` | Tam eşleşme (çapraz) | `api/views/auth.py` + `me.py` |
+| `integrations` | — | Frontend karşılığı yok | Bilinçli |
+| `api` | `lib/api` | Katman eşleşmesi (feature değil) | Doğru |
+
+**Backend karşılığı yok (FE-only):** yok (auth çapraz kesit).
+
+### 9.5 Canlı veri akışları
+
+**A — Auth (tek tam Next akışı)**
+
+```text
+app/(auth)/login/page.tsx
+  → features/auth/LoginForm
+  → lib/api/client.login
+  → POST /api/v1/auth/login/  (rewrite → Django)
+  → api.views.auth.AuthLoginView
+  → authenticate + login + present_me (capabilities_servisi)
+  → MeResponse (session cookie)
+
+app/page.tsx SessionPanel
+  → GET /health/ + GET /me/ + POST /auth/logout/
+```
+
+Kanıt: `frontend/src/lib/api/client.ts`; `backend/config/api/views/auth.py`; `api/services/capabilities_servisi.py`.
+
+**B — Portal domain sayfaları**
+
+```text
+app/(portal)/siparis/page.tsx → DomainPlaceholder
+  (feature service çağrısı yok; Django /api/v1/orders|carts… kullanılmıyor)
+```
+
+**C — Canlı alıcı ürün UI (Next değil)**
+
+```text
+/buyer/* → siparis.views.buyer_* + urunler.services.buyer_katalog_servisi
+  (session HTML; REST zorunlu değil)
+```
+
+### 9.6 Sözleşme notları (auth)
+
+| Alan | Backend `present_me` | FE `MeResponse` |
+|------|----------------------|-----------------|
+| `id`, `username`, `rol`, `firma_id` | var | var |
+| `firma.{id,ad,alici_mi,tedarikci_mi,platform_mu,aktif}` | var | var |
+| `capabilities.*` (18 bayrak) | var | birebir |
+| Health `service` | `"kuyumbank"` | FE tipinde opsiyonel eksik (runtime OK) |
+
+OpenAPI `GET /me/` response şeması jenerik `array` — **FE için yetersiz**; kod/presenter otorite.
+
+### 9.7 Mimari sınırlar
+
+| Kontrol | Sonuç |
+|---------|-------|
+| FE’de fiyat/milyem hesabı | Yok (grep boş) |
+| Feature → feature import | Yok (yalnız `app` → `auth`) |
+| API client merkezi mi? | Evet `lib/api` |
+| RBAC/tenant | Backend (`IsAuthenticatedWithFirma`, object-level ADR-0019); FE gizleme yok (henüz UI yok) |
+| Ortak katman şişmesi | `route-states` ince; `components/ui` README (NX-SHELL) |
+
+### 9.8 Hedef vs mevcut
+
+| Hedef | Mevcut |
+|-------|--------|
+| BE: app → service → API | **Sağlanıyor** (B1–B7) |
+| FE: route → feature → API client | **Yalnız auth** |
+| Domain sınırları FE’de | Klasör düzeyinde **evet**; veri/DTO düzeyinde **hayır (henüz)** |
+
+**Sonraki güvenli dilim (ürün talimatı ile):** NX-SHELL + bir buyer dikey (ör. `urunler` ← `/catalog/` + `siparis` ← carts/orders); tip/service’leri OpenAPI+presenter’dan doldur; HTML silinmez.

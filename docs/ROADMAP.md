@@ -51,7 +51,7 @@
 
 | # | Yetenek | Mevcut | Hedef eksik (özet) | Öncelik |
 |---|---------|--------|--------------------|---------|
-| 1 | B2B katalog | KISMİ | Search API; F9-011 browse **WIP commit dışı** | P1 |
+| 1 | B2B katalog | KISMİ | Search API; F9-011 Django `/buyer/catalog/` miras | P1 |
 | 2 | Firma/şube org | **UYGULANDI** çekirdek | Zengin org UI | P2 |
 | 3 | Fiyat listesi/koşul | UYGULANDI | Liste UI | P2 |
 | 4 | Teklif/RFQ | **UYGULANDI** SM+buyer UI | Eşleştirme motoru; supplier UI | P1 |
@@ -62,11 +62,11 @@
 | 9 | Ödeme/cari/kredi | **KISMİ** iskelet | Gerçek provider; oran | P1 |
 | 10 | Sevkiyat | **UYGULANDI** fake carrier | Canlı carrier | P2 |
 | 11 | İade | **UYGULANDI** stok-only | Ödeme iadesi yok (U-004); F6-032 UI | P2 |
-| 12 | Portallar | **KISMİ** `/buyer` F4-062 (+ F9-010 WIP) | F9-011…015 erteli; `/supplier` Next | **P1** |
+| 12 | Portallar | **KISMİ** `/buyer` F4-062 + F9-010/011 HTML miras | F9-012…015 / Next portal; `/supplier` | **P1** |
 | 13 | Onay workflow | **UYGULANDI** + minimal UI | Escalation zinciri | P2 |
 | 14 | Raporlama | **KISMİ** F11-001/010/011/014/021 | HTTP/FE Product | P2 |
 | 15 | Entegrasyon/EDI | **KISMİ** stub | Canlı ERP/SAP | P2 |
-| 16 | API/headless | **UYGULANDI** ince PRE (+POST) | Object-level DRF; Prosperer | P1 |
+| 16 | API/headless | **UYGULANDI** B0–B7 + ADR-0019 OL-11 | Mahsup/rapor HTTP; Prosperer | P1 |
 | 17 | i18n/FX | KISMİ | F12 / U-009 | P3 |
 | 18 | Bildirim/outbox | **UYGULANDI** + F11-013 olaylar | Worker ölçek; push/email; S3 | P2 |
 | 19 | Güvenlik/audit | **UYGULANDI** + F8-007 + F8-003 | Staging Sentry event | P2 |
@@ -82,7 +82,7 @@
 | Domain | Durum | Eksik (kısa) |
 |--------|-------|--------------|
 | Identity & RBAC | UYGULANDI | — |
-| Product Catalog | KISMİ | Search; F9-011 WIP commit dışı |
+| Product Catalog | KISMİ | Search; F9-011 Django HTML miras |
 | Supplier Mgmt | UYGULANDI | Supplier portal |
 | Pricing Engine | UYGULANDI | B-01/B-06 kapalı; CAP-PIYASA / ADR-0018 **Kabul+UYGULANDI** |
 | PriceLock | UYGULANDI (L-11) | — |
@@ -99,9 +99,9 @@
 | Documents | KISMİ | K-014 storage |
 | Workflow | **UYGULANDI** onay SM | Escalation |
 | Audit | UYGULANDI (+ AUD-001b) | — |
-| Reporting | PLANLANDI | F11 |
+| Reporting | **KISMİ** | F11-001/010/011/014/021 servis; HTTP/FE Product kapalı |
 | Integration Hub | **KISMİ** stub | Canlı bağ |
-| Search | PLANLANDI | F9-011 WIP / Next.js sonrası |
+| Search | **KISMİ** | F9-011 Django HTML `q=`; Next arama ayrı |
 
 ## 3. B2B capability alanları
 
@@ -116,7 +116,7 @@
 | Notification Outbox | **UYGULANDI** iskelet | F4-090 |
 | EDI / Punchout | **UYGULANDI** stub | F7-024 |
 | Live Gold / Compare / Dynamic Pricing | PLANLANDI / kilitli | F9+ / U-015 |
-| Smart Replenishment / Buyer Analytics | PLANLANDI | F11 |
+| Smart Replenishment / Buyer Analytics | **KISMİ UYGULANDI** (F11-020/021 servis) | HTTP/FE Product |
 
 ---
 
@@ -149,13 +149,13 @@ G0–G4 kapandı (3.7 + ADR-0010/0011 + U-002 + ince PRE).
 **KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env, Sentry SDK, perf baseline). **Açık:** staging Sentry event kanıtı, Celery/Redis, hosting/yedek prova.
 
 ### Faz 9 — Portal / API readiness
-**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1…12 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI; F9-010/011 WIP commit dışı). **API-B1…B7 Kabul.** **NX-FE UYGULANDI.** **Sırada:** NX-SHELL — [MASTER](MASTER.md) §12.3.
+**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1…12 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI + F9-010/011). **API-B1…B7 Kabul.** **NX-FE iskelet UYGULANDI.** **Sırada:** Mahsup HTTP / Next portal / NOTE-PENDING — [MASTER](MASTER.md) §12.3.
 
 ### Faz 10 — Kurumsal & RFQ
 **UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI + F10-021 eşleştirme). **Açık:** F10-023 supplier UI.
 
 ### Faz 11 — Analitik · Faz 12 — i18n
-PLANLANDI.
+F11: **KISMİ UYGULANDI** (NOTE-F11-001 + 010/011/012/013/014/020/021 servis; HTTP/FE Product kapalı). F12/i18n: [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md).
 
 ### Stratejik öncelik (ürün sahibi 2026-11-08 — tarihsel; güncel sıra MASTER §12.3)
 

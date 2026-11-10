@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'import_export',
     'rest_framework',
     'rest_framework.authtoken',  # SEC-001: TokenAuthentication
+    'drf_spectacular',  # OpenAPI 3 + Swagger/ReDoc (TECH-OPENAPI-02)
     'tanimlar.apps.TanimlarConfig',
     'firmalar.apps.FirmalarConfig',
     'fiyatlama.apps.FiyatlamaConfig',
@@ -113,8 +114,20 @@ REST_FRAMEWORK = {
         "login": env("DRF_THROTTLE_LOGIN", default="10/min"),
     },
     "EXCEPTION_HANDLER": "api.exception_handler.problem_exception_handler",
+    # Path keşfi: DRF AutoSchema (APIView). DTO: api.openapi_components.enrich.
+    # Swagger/ReDoc UI: drf-spectacular views (/api/docs/, /api/redoc/).
     "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.openapi.AutoSchema",
 }
+
+# TECH-OPENAPI-02 — Swagger/ReDoc UI (şema üretimi DRF+enrich; bkz. schema_views)
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Kuyumbank API",
+    "DESCRIPTION": "API v1 — ADR-0017 / API_CONTRACT",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+# Prod’da docs kapalı (!DEBUG && !API_DOCS_PUBLIC).
+API_DOCS_PUBLIC = env.bool("API_DOCS_PUBLIC", default=False)
 
 # F7-015: API major sürüm yolu sabit /api/v1/ (breaking change → yeni major).
 API_VERSION = "v1"
