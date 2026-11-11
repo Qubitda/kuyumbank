@@ -6,6 +6,7 @@ from rest_framework.views import APIView
 
 from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import IsAuthenticatedWithFirma
+from api.throttles import OpsRateThrottle
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from finans.models import CariHesap, LedgerEntry, PaymentIntent
 from finans.services import ops_finans_servisi
@@ -19,6 +20,7 @@ class OpsFinanceSummaryView(APIView):
     """GET /api/v1/ops/finance/ — özet + son hareketler. Client firma_id yok sayılır."""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [OpsRateThrottle]
 
     def get(self, request):
         request.query_params.get("firma_id")  # ignore
@@ -33,6 +35,7 @@ class OpsFinanceCariListView(APIView):
     """GET /api/v1/ops/finance/cari/"""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [OpsRateThrottle]
 
     def get(self, request):
         request.query_params.get("firma_id")  # ignore
@@ -58,6 +61,7 @@ class OpsFinanceLedgerListView(APIView):
     """GET /api/v1/ops/finance/ledger/"""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [OpsRateThrottle]
 
     def get(self, request):
         request.query_params.get("firma_id")  # ignore
@@ -83,6 +87,7 @@ class OpsFinancePaymentListView(APIView):
     """GET /api/v1/ops/finance/payments/"""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [OpsRateThrottle]
 
     def get(self, request):
         request.query_params.get("firma_id")  # ignore

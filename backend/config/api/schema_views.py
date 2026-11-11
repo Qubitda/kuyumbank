@@ -10,14 +10,19 @@ from rest_framework.response import Response
 from rest_framework.schemas.openapi import SchemaGenerator
 from rest_framework.views import APIView
 
+from api.authentication import ExpiringTokenAuthentication, SessionAuthentication
 from api.docs_access import docs_permission_classes
 from api.openapi_components import enrich_openapi_schema
 
 
 class EnrichedOpenAPISchemaView(APIView):
-    """GET — OpenAPI 3.x JSON (enrich edilmiş)."""
+    """GET — OpenAPI 3.x JSON (enrich edilmiş).
 
-    authentication_classes = []  # docs_access kendi kararını verir
+    HTTP erişim: Session/Token + docs_permission_classes (prod’da staff/platform).
+    SchemaGenerator public=True — şema içeriği auth’tan bağımsız üretilir.
+    """
+
+    authentication_classes = [SessionAuthentication, ExpiringTokenAuthentication]
 
     def get_permissions(self):
         # override_settings(DEBUG=…) testte sınıf attribute’unu dondurmaz

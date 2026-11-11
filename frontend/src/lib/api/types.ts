@@ -55,6 +55,14 @@ export type HealthResponse = {
   service?: string;
 };
 
+/** GET /api/v1/ready/ — DB readiness */
+export type ReadyResponse = {
+  status: "ready" | "not_ready" | string;
+  service?: string;
+  api?: string;
+  checks: { database: string; [key: string]: string };
+};
+
 export type CsrfResponse = {
   csrf_token: string;
 };

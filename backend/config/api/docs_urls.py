@@ -7,19 +7,22 @@ UI: drf-spectacular Swagger/ReDoc (aynı schema URL).
 from django.urls import path
 from drf_spectacular.views import SpectacularRedocView, SpectacularSwaggerView
 
+from api.authentication import ExpiringTokenAuthentication, SessionAuthentication
 from api.docs_access import docs_permission_classes
 from api.schema_views import EnrichedOpenAPISchemaView
 
+_DOCS_AUTH = [SessionAuthentication, ExpiringTokenAuthentication]
+
 
 class _DocsSwaggerView(SpectacularSwaggerView):
-    authentication_classes = []
+    authentication_classes = _DOCS_AUTH
 
     def get_permissions(self):
         return [perm() for perm in docs_permission_classes()]
 
 
 class _DocsRedocView(SpectacularRedocView):
-    authentication_classes = []
+    authentication_classes = _DOCS_AUTH
 
     def get_permissions(self):
         return [perm() for perm in docs_permission_classes()]

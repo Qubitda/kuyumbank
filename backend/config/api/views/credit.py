@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from api.mixins import IdempotencyMixin
 from api.permissions import IsAuthenticatedWithFirma
+from api.throttles import BuyerRateThrottle
 from django.core.exceptions import (
     PermissionDenied as DjangoPermissionDenied,
     ValidationError as DjangoValidationError,
@@ -29,6 +30,7 @@ class CreditMineView(APIView):
     """GET /api/v1/credit/me/?para_birimi=TRY"""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [BuyerRateThrottle]
 
     def get(self, request):
         pb = request.query_params.get("para_birimi") or "TRY"
@@ -51,6 +53,7 @@ class CreditCheckView(IdempotencyMixin, APIView):
     """POST /api/v1/credit/check/ — {tutar, para_birimi?}; Idempotency-Key zorunlu."""
 
     permission_classes = [IsAuthenticatedWithFirma]
+    throttle_classes = [BuyerRateThrottle]
 
     def post(self, request):
         cached = self.idempotency_begin(request)

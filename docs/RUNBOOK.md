@@ -221,7 +221,8 @@ Hosting henüz yok (**DOĞRULANAMADI**). Hedef sıra:
 3. Kod deploy (immutable artifact tercihen).
 4. **`migrate` yalnız ürün sahibi onayı ile** (AGENTS); rollback planı (önceki dump).
 5. `seed_role_permissions` (idempotent) gerekirse.
-6. Smoke: `/api/v1/health/`, alıcı login, kritik quote→order yolu.
+6. Smoke: `/api/v1/health/` (liveness), `/api/v1/ready/` (DB), alıcı login, kritik quote→order yolu.
+7. NX-FE handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md).
 7. `X-Request-ID` + hata oranı izleme (Sentry planı §11).
 
 ## 11. Hata izleme (F8-003)

@@ -9,6 +9,7 @@ from config.logging_utils import request_id_var
 _NO_STORE_PREFIX = "/api/v1/"
 _NO_STORE_SKIP = (
     "/api/v1/health/",
+    "/api/v1/ready/",
     "/api/v1/schema/",
 )
 

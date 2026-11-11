@@ -41,6 +41,7 @@ from api.views import (
     CreditCheckView,
     CreditMineView,
     HealthView,
+    ReadyView,
     MeView,
     OpsFinanceCariListView,
     OpsFinanceLedgerListView,
@@ -112,6 +113,7 @@ from api.views import (
 # Relative patterns (ROOT mounts under /api/v1/) — TECH-OPENAPI-01 çift önek önleme
 api_urlpatterns = [
     path("health/", HealthView.as_view(), name="api-health"),
+    path("ready/", ReadyView.as_view(), name="api-ready"),
     path("auth/csrf/", AuthCsrfView.as_view(), name="api-auth-csrf"),
     path("auth/login/", AuthLoginView.as_view(), name="api-auth-login"),
     path("auth/logout/", AuthLogoutView.as_view(), name="api-auth-logout"),

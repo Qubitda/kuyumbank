@@ -4,9 +4,11 @@
 **Karar:** **FRONTEND READY** (ürün sahibi Qubit — “go hepsini onaylıyorum”)  
 **Bağlam:** API-B1…B7 **Kabul** · ADR-0019 **Kabul** · ADR-0023 mahsup · ADR-0026 rapor · ADR-0017 NX madde Kabul  
 **Normatif teknik sözleşme:** [API_CONTRACT](API_CONTRACT.md) · [openapi-v1.json](api/openapi-v1.json)  
+**Handoff:** [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md)  
 **Kanıt ilkesi:** kod + test; doküman “UYGULANDI” tek başına yeterli değil.
 
-> Next.js ürün dilimleri ürün sahibi talimatıyla başlar; bu kapı **FRONTEND READY**.
+> Next.js ürün dilimleri ürün sahibi talimatıyla başlar; bu kapı **FRONTEND READY**.  
+> 2026-11-11 hardening: docs auth, MFA problem+json, `/ready/`, logout Token revoke, supplier ops `tedarikci_id`, scoped throttles — OpenAPI **106**/ **120**.
 
 ---
 

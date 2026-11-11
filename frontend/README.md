@@ -19,6 +19,7 @@ Feature/domain rehberi: [`docs/FRONTEND_ARCHITECTURE.md`](docs/FRONTEND_ARCHITEC
 | Session + CSRF istemci (`lib/api`) | Tarayıcıda Token |
 | Domain route iskeleti (10 app) | Dolu katalog/sepet UI |
 | OKLCH grayscale token’lar | Celery / GraphQL |
+| Handoff: [`docs/FRONTEND_HANDOFF.md`](../docs/FRONTEND_HANDOFF.md) | — |
 
 Django ürün HTML portal yok (ADR-0029). Backend: `/admin/` + `/api/v1/`.
 
@@ -43,6 +44,7 @@ Django ürün HTML portal yok (ADR-0029). Backend: `/admin/` + `/api/v1/`.
 ## Komutlar
 
 ```bash
+npm run generate:api   # OpenAPI → lib/api/schema.d.ts
 npm run lint
 npm run build
 ```

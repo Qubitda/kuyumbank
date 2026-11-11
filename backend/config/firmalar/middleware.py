@@ -163,7 +163,8 @@ class SessionIdleTimeoutMiddleware:
 class MfaEnforceMiddleware:
     """Platform kullanıcılarında MFA_ENFORCE_PLATFORM → session mfa_ok zorunlu.
 
-    İzinli yollar: MFA verify/resend, logout, csrf, password reset, health, static/admin login.
+    İzinli yollar: MFA verify/resend, logout, csrf, password reset, health/ready, static/admin login.
+    API engeli: application/problem+json (NX-3).
     """
 
     _ALLOW_PREFIXES = (
@@ -174,6 +175,7 @@ class MfaEnforceMiddleware:
         "/api/v1/auth/invites/accept/",
         "/api/v1/auth/email-verify/",
         "/api/v1/health/",
+        "/api/v1/ready/",
         "/admin/login/",
         "/static/",
     )
@@ -192,10 +194,14 @@ class MfaEnforceMiddleware:
         ):
             path = request.path or ""
             if not any(path.startswith(p) for p in self._ALLOW_PREFIXES):
-                return HttpResponse(
-                    "MFA doğrulaması gerekli.",
+                from api.problem import problem_response
+
+                return problem_response(
                     status=403,
-                    content_type="text/plain; charset=utf-8",
+                    detail="MFA doğrulaması gerekli.",
+                    code="mfa_required",
+                    title="MfaRequired",
+                    request_id=getattr(request, "request_id", None),
                 )
         return self.get_response(request)
 

@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-11 — F9-017 profil/adres HTTP; OpenAPI **105** path / **119** op; HTML miras ADR-0029
+**Güncelleme:** 2026-11-11 — NX-FE hardening (docs auth, MFA problem+json, `/ready/`, Token revoke); OpenAPI **106** path / **120** op; [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md)
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -153,13 +153,13 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
 <!-- AUTO:tests -->
-Statik test sayısı (`def test_`): **703** — `api` 126 · `firmalar` 93 · `fiyatlama` 152 · `finans` 58 · `kalite` 19 · `lojistik` 20 · `belgeler` 6 · `siparis` 63 · `stok` 39 · `tanimlar` 32 · `urunler` 95
+Statik test sayısı (`def test_`): **709** — `api` 132 · `firmalar` 93 · `fiyatlama` 152 · `finans` 58 · `kalite` 19 · `lojistik` 20 · `belgeler` 6 · `siparis` 63 · `stok` 39 · `tanimlar` 32 · `urunler` 95
 _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son suite aşağıda elle._
 <!-- /AUTO:tests -->
 
 **Statik sayım ≠ suite sonucu:** üstteki AUTO blok koşulmuş test değildir.  
-**Son kaydedilen suite (elle):** **594 OK** (2026-11-11, PG `--keepdb`) — kanıt `docs/_audit/full-suite-log.txt`.  
-**Tarihsel:** 597 OK (2026-11-09). Ara kayıt 713/4 migration ERROR **geçersiz** (bu koşuda ERROR yok).  
+**Son kaydedilen suite (elle):** **742 OK** (2026-11-11, PG `--keepdb`; NX-HARDEN sonrası; login-throttle flake `cache.clear` ile giderildi).  
+**Tarihsel:** 594 OK (2026-11-11 sabah) · 597 OK (2026-11-09).  
 `makemigrations --check` temiz (2026-11-11). Üretim migrate onaysız yok.
 
 <!-- AUTO:migrations -->
@@ -186,6 +186,7 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | Yol | Ad |
 |-----|----|
 | `/api/v1/health/` | `api-health` |
+| `/api/v1/ready/` | `api-ready` |
 | `/api/v1/auth/csrf/` | `api-auth-csrf` |
 | `/api/v1/auth/login/` | `api-auth-login` |
 | `/api/v1/auth/logout/` | `api-auth-logout` |
@@ -201,6 +202,9 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `/api/v1/auth/email-verify/confirm/` | `api-auth-email-verify-confirm` |
 | `/api/v1/me/` | `api-me` |
 | `/api/v1/me/dashboard/` | `api-me-dashboard` |
+| `/api/v1/me/profile/` | `api-me-profile` |
+| `/api/v1/me/addresses/` | `api-me-addresses` |
+| `/api/v1/me/addresses/<int:pk>/` | `api-me-address-detail` |
 | `/api/v1/act-as/start/` | `api-act-as-start` |
 | `/api/v1/act-as/stop/` | `api-act-as-stop` |
 | `/api/v1/catalog/` | `api-buyer-catalog` |
@@ -269,6 +273,10 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 | `/api/v1/ops/shipments/<int:pk>/deliver/` | `api-ops-shipment-deliver` |
 | `/api/v1/ops/shipments/<int:pk>/cancel/` | `api-ops-shipment-cancel` |
 | `/api/v1/ops/shipments/<int:pk>/pod/` | `api-ops-shipment-pod` |
+| `/api/v1/ops/rfq-lines/<int:line_id>/match-candidates/` | `api-ops-rfq-match-candidates` |
+| `/api/v1/ops/rfq-lines/<int:line_id>/matches/` | `api-ops-rfq-matches` |
+| `/api/v1/ops/rfq-matches/<int:pk>/approve/` | `api-ops-rfq-match-approve` |
+| `/api/v1/ops/rfq-matches/<int:pk>/reject/` | `api-ops-rfq-match-reject` |
 | `/api/v1/payments/webhook/` | `api-payment-webhook` |
 | `/api/v1/org-units/` | `api-org-list` |
 | `/api/v1/org-units/<int:pk>/` | `api-org-detail` |
@@ -533,10 +541,11 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | CAP-OFFER-CREATE | Supplier teklif create HTTP | `POST /supplier/offers/` · **UYGULANDI** 2026-11-11 |
 | CAP-RFQ-MATCH-HTTP | RFQ eşleştirme HTTP (F10-021) | `/ops/rfq-lines|rfq-matches/` · **UYGULANDI** 2026-11-11 |
 | F9-017 | Profil/adres self-service HTTP | `/me/profile/` + `/me/addresses/` · `test_profile_address_f9_017` **3 OK** · **UYGULANDI** 2026-11-11 |
+| NX-HARDEN | Docs auth · MFA problem+json · `/ready/` · logout Token revoke · supplier ops `tedarikci_id` · throttles | `test_hardening_nx_fe` · OpenAPI **106**/ **120** · [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md) · **UYGULANDI** 2026-11-11 |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
-> **FRONTEND READY** (2026-11-10). Next dilimleri ayrı açık talimatla.
+> **FRONTEND READY** (2026-11-10; hardening 2026-11-11). Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md). Next dilimleri ayrı açık talimatla.
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
@@ -559,7 +568,7 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 3. Ops: createcachetable + cron outbox/email; secret rotasyon; yedek §7; INVITE_TTL_HOURS / EMAIL_VERIFY_REQUIRED_FOR_WRITE.
 4. Bilinçli erteli: tam suite kilidi, gerçek ödeme/kargo (yol B), K-014 PDF, MOQ.
 5. Auth: API login/MFA/reset/invite/verify; Admin login; HTML portal yok (ADR-0029).
-6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **594 OK**); fake provider check E002/E003.
+6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **742 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
 *Son güncelleme: 2026-11-11 — F9-017 profil/adres API UYGULANDI; sıradaki NX-BUYER.*

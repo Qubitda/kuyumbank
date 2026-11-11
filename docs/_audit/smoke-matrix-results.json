@@ -1,8 +1,8 @@
 {
-  "total_checks": 309,
-  "passed": 309,
+  "total_checks": 311,
+  "passed": 311,
   "failed": 0,
-  "openapi_ops": 119,
+  "openapi_ops": 120,
   "ok": true,
   "failures": [],
   "results": [
@@ -1687,6 +1687,20 @@
       "check": "success_or_reachable",
       "method": "GET",
       "path": "/api/v1/quotes/{id}/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ready/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ready/",
       "status": 200,
       "ok": true
     },

@@ -77,6 +77,10 @@ class AuthGateLoginTests(TestCase):
 )
 class PasswordResetChangeTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+
+        # Full-suite: login-scope LocMem throttle kovası diğer testlerden dolabilir → 429
+        cache.clear()
         self.api = APIClient(enforce_csrf_checks=False)
         self.firma = Firma.objects.create(
             ad="Alıcı QA2",
@@ -205,9 +209,11 @@ class MfaPlatformTests(TestCase):
         m = re.search(r"kodunuz:\s*(\d{6})", mail.outbox[0].body)
         self.assertIsNotNone(m)
         code = m.group(1)
-        # me blocked until MFA
+        # me blocked until MFA (problem+json)
         me = self.api.get(reverse("api-me"))
         self.assertEqual(me.status_code, 403)
+        self.assertIn("application/problem+json", me.get("Content-Type", ""))
+        self.assertEqual(me.json().get("code"), "mfa_required")
         ver = self.api.post(
             reverse("api-auth-mfa-verify"),
             {"code": code},

@@ -111,6 +111,7 @@ def _load_ops():
 def _is_allow_any(path: str, method: str) -> bool:
     allow = {
         ("GET", "/api/v1/health/"),
+        ("GET", "/api/v1/ready/"),
         ("GET", "/api/v1/auth/csrf/"),
         ("POST", "/api/v1/auth/login/"),
         ("POST", "/api/v1/auth/password-reset/"),
@@ -160,6 +161,7 @@ def _role_gated(path: str, method: str = "GET") -> bool:
         "/api/v1/me/dashboard/",
         "/api/v1/me/profile/",
         "/api/v1/health/",
+        "/api/v1/ready/",
     ):
         return False
     # Adres okuma her authenticated; yazma manage_users (role_gated aşağıda)

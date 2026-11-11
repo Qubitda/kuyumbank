@@ -90,14 +90,23 @@ class AuthLoginView(APIView):
 
 
 class AuthLogoutView(APIView):
-    """POST /api/v1/auth/logout/ — oturumu kapat."""
+    """POST /api/v1/auth/logout/ — oturumu kapat; kullanıcının DRF Token kayıtlarını sil.
+
+    Tarayıcı session + S2S Token aynı kullanıcıya bağlıysa logout Token’ı da düşürür
+    (S2S istemciler ayrı service hesabı kullanmalı).
+    """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         enforce_csrf(request)
         mfa_servisi.clear_mfa(request.session)
+        user_id = getattr(request.user, "pk", None)
         logout(request)
+        if user_id is not None:
+            from rest_framework.authtoken.models import Token
+
+            Token.objects.filter(user_id=user_id).delete()
         return Response({"ok": True}, status=status.HTTP_200_OK)
 
 

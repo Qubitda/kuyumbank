@@ -299,7 +299,10 @@ export interface paths {
         put?: never;
         /**
          * POST /api/v1/auth/logout/
-         * @description POST /api/v1/auth/logout/ — oturumu kapat.
+         * @description POST /api/v1/auth/logout/ — oturumu kapat; kullanıcının DRF Token kayıtlarını sil.
+         *
+         *     Tarayıcı session + S2S Token aynı kullanıcıya bağlıysa logout Token’ı da düşürür
+         *     (S2S istemciler ayrı service hesabı kullanmalı).
          */
         post: operations["createAuthLogout"];
         delete?: never;
@@ -701,7 +704,7 @@ export interface paths {
         };
         /**
          * GET /api/v1/health/
-         * @description `GET /api/v1/health/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.
+         * @description GET /api/v1/health/ — process liveness (DB yok).
          */
         get: operations["listHealths"];
         put?: never;
@@ -1613,6 +1616,26 @@ export interface paths {
          * @description GET /api/v1/quotes/<pk>/.
          */
         get: operations["retrieveQuoteDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ready/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /api/v1/ready/
+         * @description GET /api/v1/ready/ — DB bağlantı readiness (load balancer / deploy gate).
+         */
+        get: operations["listReadies"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2862,6 +2885,14 @@ export interface components {
             para_birimi: string;
             satis_kanali_id: number;
             varyant_id: number;
+        };
+        Ready: {
+            api?: string;
+            checks: {
+                [key: string]: string;
+            };
+            service?: string;
+            status: string;
         };
         ReasonRequest: {
             /** @description Red/fail gerekçesi */
@@ -9860,6 +9891,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BuyerQuote"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    listReadies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ready */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ready"];
                 };
             };
             /** @description Problem+JSON */

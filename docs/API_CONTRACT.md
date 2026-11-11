@@ -60,7 +60,7 @@ Kanıt etiketi: **DOĞRULANDI** = dosya/test; aksi belirtilmez.
 | `/org`, `/approvals`, `/rfqs` (buyer) | R/W `manage_*` | 403 buyer RFQ | Ops `view_all` / `manage_rfq` | — |
 | `/ops/inspections/*` | 403 | 403 | `view_qc` / `manage_qc` | — |
 | `/ops/shipments/*` | 403 | 403 | `manage_shipment` | — |
-| `/supplier/offers|stock|rfqs` | 403 | R + create/submit/versions/deactivate + stok/RFQ yazma | `view_all` kapıdan geçer; teklif/stok kendi firma filtresi | — |
+| `/supplier/offers|stock|rfqs` | 403 | R + create/submit/versions/deactivate + stok/RFQ yazma | `view_all` kapıdan geçer (ops ayrıcalığı: tüm tedarikçi kayıtları; isteğe bağlı `?tedarikci_id=`); supplier yalnız kendi firma | — |
 | `/ops/rfq-lines|rfq-matches` | 403 | 403 | F10-021 eşleştirme HTTP | — |
 | `/me/profile`, `/me/addresses` | R/W (adres yazma: `manage_users`) | R/W aynı | — | — |
 
@@ -88,11 +88,11 @@ Presenter’lar durum + yetkiye göre aksiyon listesi döner (RFQ, QC, shipment,
 
 ## 3. Endpoint grupları (B1–B6)
 
-Tam liste: OpenAPI `paths` (**105** path / **119** op, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-11).
+Tam liste: OpenAPI `paths` (**106** path / **120** op, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-11 hardening).
 
 | Dilim | Örnek path’ler |
 |-------|----------------|
-| B1 | `/health`, `/auth/*`, `/me`, `/me/profile`, `/me/addresses`, schema |
+| B1 | `/health`, `/ready`, `/auth/*`, `/me`, `/me/profile`, `/me/addresses`, schema |
 | B2 | `/catalog`, `/quotes`, `/price-locks`, `/carts`, `/checkouts`, `/orders` |
 | B3 | `/finance/*`, `/credit/*`, `/payments`, `/shipments`, `/returns` |
 | B4 | `/org/*`, `/approvals/*`, `/rfqs/*` |
@@ -113,8 +113,11 @@ Tam liste: OpenAPI `paths` (**105** path / **119** op, çift `/api/v1` önek **0
 7. **NX-1…12** madde **Kabul**; ADR-0017 bütünü **Taslak**.
 8. **`frontend/`** — NX-FE iskelet; API kapısı **FRONTEND READY** ([API_READINESS](API_READINESS.md)); Next ürün dilimleri ayrı talimat.
 9. **Django HTML ürün portalı yok** (ADR-0029 **Kabul**): `/buyer|/supplier|/ops` kaldırıldı; karşılık `/api/v1/` (+ `/me/dashboard/`, act-as, invite). Admin + OpenAPI docs UI korunur. **Deprecated:** eski F9 HTML miras iddiası.
-10. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook`.
+10. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook` (ayrıca invite create / MFA / act-as / profile PATCH IK istemez).
 11. **TS client üretimi** — **UYGULANDI** (`frontend/lib/api/schema.d.ts`, `npm run generate:api`); tek kaynak OpenAPI.
+12. **Ready** — `GET /api/v1/ready/` DB readiness (503 on failure); `/health/` yalnız liveness.
+13. **Logout** — session kapanır ve kullanıcının DRF Token kayıtları silinir (S2S ayrı hesap önerilir).
+14. **Handoff** — [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md).
 
 ---
 

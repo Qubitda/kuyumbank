@@ -1,6 +1,6 @@
 # Endpoint readiness (ADIM 5 — smoke matrix)
 
-Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=119 · checks=309/309
+Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=120 · checks=311/311
 
 | Metot | Path | anon | wrong_role | invalid_body | success |
 |-------|------|------|------------|--------------|---------|
@@ -44,6 +44,7 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=119 · checks=309/309
 | GET | `/api/v1/org-units/{id}/members/` | ✅ | — | — | ✅ |
 | GET | `/api/v1/price-locks/{id}/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/quotes/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ready/` | ✅ | — | — | ✅ |
 | GET | `/api/v1/reports/buyer-behavior/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/reports/orders/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/returns/` | ✅ | ✅ | — | ✅ |
@@ -124,4 +125,4 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=119 · checks=309/309
 | POST | `/api/v1/supplier/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/supplier/stock/adjustments/` | ✅ | ✅ | ✅ | — |
 
-**Özet:** hazır_satır=119 sorunlu_satır=0 (op satırı; check bazlı JSON ayrı)
+**Özet:** hazır_satır=120 sorunlu_satır=0 (op satırı; check bazlı JSON ayrı)

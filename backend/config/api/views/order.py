@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from api.pagination import apply_ordering, paginate_queryset
 from api.permissions import HasOrderObjectAccess, IsBuyerCommerceRead
 from api.presenters.buyer import BuyerOrderPresenter
+from api.throttles import BuyerRateThrottle
 from siparis.models import Order
 from siparis.selectors.tenant import (
     OrderNotFound,
@@ -18,6 +19,7 @@ from siparis.selectors.tenant import (
 
 class OrderDetailView(APIView):
     permission_classes = [HasOrderObjectAccess]
+    throttle_classes = [BuyerRateThrottle]
 
     def get(self, request, pk: int):
         try:
@@ -32,6 +34,7 @@ class OrderListView(APIView):
     """GET /api/v1/orders/ — alıcı kendi; view_all / QC / lojistik tümü. Client firma_id yok."""
 
     permission_classes = [IsBuyerCommerceRead]
+    throttle_classes = [BuyerRateThrottle]
 
     def get(self, request):
         request.query_params.get("firma_id")  # ignore

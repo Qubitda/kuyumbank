@@ -2,7 +2,7 @@
 
 **Durum:** NX-FE + NX-ARCH + **NX-SHELL** (2026-11-11)  
 **Politika:** [ADR-0017](../../docs/decisions/ADR-0017-nextjs-api-sozlesmesi.md) · API: [API_CONTRACT](../../docs/API_CONTRACT.md)  
-**Frontend-ready kapısı:** [API_READINESS](../../docs/API_READINESS.md) — **FRONTEND READY**  
+**Frontend-ready kapısı:** [API_READINESS](../../docs/API_READINESS.md) — **FRONTEND READY** · Handoff: [FRONTEND_HANDOFF](../../docs/FRONTEND_HANDOFF.md)  
 **Backend paralel:** ADR-0004 (`models` / `services` / `selectors`) → FE `types` / `services` / `hooks` + `components`
 ## 1. Amaç
 

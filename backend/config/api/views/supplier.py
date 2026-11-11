@@ -53,9 +53,23 @@ def _can_manage_offers(user) -> bool:
     return has_perm(user, P["manage_own_teklif"]) or can_view_all_tenants(user)
 
 
-def _own_offers_qs(user):
+def _parse_ops_tedarikci_id(request) -> int | None:
+    """view_all ops: isteğe bağlı ?tedarikci_id= daraltması. Supplier client firma_id yok sayılır."""
+    raw = (request.query_params.get("tedarikci_id") or "").strip()
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        raise ValidationError(detail={"tedarikci_id": "Geçersiz."}) from None
+
+
+def _own_offers_qs(user, *, tedarikci_id: int | None = None):
+    """Supplier: yalnız kendi firma. Ops view_all: tümü veya ?tedarikci_id= (bilinçli ops ayrıcalığı)."""
     qs = TedarikciTeklif.objects.all()
     if can_view_all_tenants(user):
+        if tedarikci_id is not None:
+            return qs.filter(tedarikci_id=tedarikci_id)
         return qs
     return qs.filter(tedarikci_id=user.firma_id)
 
@@ -67,9 +81,11 @@ def _get_own_offer(user, pk: int) -> TedarikciTeklif:
     return teklif
 
 
-def _own_stock_qs(user):
+def _own_stock_qs(user, *, tedarikci_id: int | None = None):
     qs = StockBalance.objects.select_related("warehouse")
     if can_view_all_tenants(user):
+        if tedarikci_id is not None:
+            return qs.filter(warehouse__sahip_firma_id=tedarikci_id)
         return qs
     return qs.filter(warehouse__sahip_firma_id=user.firma_id)
 
@@ -83,7 +99,12 @@ class SupplierOfferListView(IdempotencyMixin, APIView):
     def get(self, request):
         _require_supplier(request.user)
         request.query_params.get("firma_id")  # ignore
-        qs = _own_offers_qs(request.user)
+        ops_ted = (
+            _parse_ops_tedarikci_id(request)
+            if can_view_all_tenants(request.user)
+            else None
+        )
+        qs = _own_offers_qs(request.user, tedarikci_id=ops_ted)
         durum = (request.query_params.get("durum") or "").strip()
         if durum and durum in {c.value for c in TedarikciTeklif.Durum}:
             qs = qs.filter(durum=durum)
@@ -292,7 +313,12 @@ class SupplierStockSummaryView(APIView):
     def get(self, request):
         _require_supplier(request.user)
         request.query_params.get("firma_id")  # ignore
-        qs = _own_stock_qs(request.user)
+        ops_ted = (
+            _parse_ops_tedarikci_id(request)
+            if can_view_all_tenants(request.user)
+            else None
+        )
+        qs = _own_stock_qs(request.user, tedarikci_id=ops_ted)
         qs = apply_ordering(qs, request, whitelist=("pk",), default="pk")
         return paginate_queryset(request, qs, present=present_balance)
 

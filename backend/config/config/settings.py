@@ -318,6 +318,12 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"  # collectstatic için (canlı)
 
+# --- Medya (ImageField; belge HTTP FE v1 dışı) --------------------------------
+# Prod’da MEDIA_* reverse proxy / object storage ile korunmalı; Django URL ile
+# public serve varsayılan değildir. Belge private storage_key modeli ayrıdır.
+MEDIA_URL = env("MEDIA_URL", default="/media/")
+MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))
+
 # --- Varsayılan PK tipi -----------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

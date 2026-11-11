@@ -112,6 +112,18 @@ HEALTH = _obj(
     {"status": _str(), "service": _str(), "api": _str()},
     ["status"],
 )
+READY = _obj(
+    {
+        "status": _str(),
+        "service": _str(),
+        "api": _str(),
+        "checks": {
+            "type": "object",
+            "additionalProperties": {"type": "string"},
+        },
+    },
+    ["status", "checks"],
+)
 CSRF = _obj({"csrf_token": _str()}, ["csrf_token"])
 LOGOUT_OK = _obj({"ok": _bool()}, ["ok"])
 
@@ -675,6 +687,7 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "FirmaAdresi": FIRMA_ADRESI,
     "FirmaAdresiPage": paginated("FirmaAdresi"),
     "Health": HEALTH,
+    "Ready": READY,
     "CsrfResponse": CSRF,
     "LogoutOk": LOGOUT_OK,
     "InviteList": INVITE_LIST,
@@ -742,6 +755,7 @@ _R = dict[str, tuple[str, str]]
 
 RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/health/": {"get": ("200", "Health")},
+    "/api/v1/ready/": {"get": ("200", "Ready")},
     "/api/v1/auth/csrf/": {"get": ("200", "CsrfResponse")},
     "/api/v1/auth/login/": {"post": ("200", "MeResponse")},
     "/api/v1/auth/logout/": {"post": ("200", "LogoutOk")},
@@ -885,6 +899,7 @@ TAG_BY_PREFIX = (
     ("/api/v1/auth/", "auth"),
     ("/api/v1/me/", "me"),
     ("/api/v1/health/", "health"),
+    ("/api/v1/ready/", "health"),
     ("/api/v1/catalog/", "catalog"),
     ("/api/v1/quotes/", "pricing"),
     ("/api/v1/price-locks/", "pricing"),

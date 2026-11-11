@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from api.mixins import IdempotencyMixin
 from api.permissions import IsBuyerCommerceWrite
+from api.throttles import BuyerRateThrottle
 from siparis.services import bulk_servisi
 from tanimlar.models import SatisKanali
 
@@ -18,6 +19,7 @@ class BulkOrderCreateView(IdempotencyMixin, APIView):
     """POST /api/v1/bulk-orders/ — CSV veya rows → Order; key zorunlu."""
 
     permission_classes = [IsBuyerCommerceWrite]
+    throttle_classes = [BuyerRateThrottle]
 
     def post(self, request):
         cached = self.idempotency_begin(request)
