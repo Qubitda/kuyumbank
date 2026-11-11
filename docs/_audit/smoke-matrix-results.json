@@ -451,7 +451,7 @@
       "check": "success_or_reachable",
       "method": "GET",
       "path": "/api/v1/carts/{id}/",
-      "status": 200,
+      "status": 404,
       "ok": true
     },
     {
