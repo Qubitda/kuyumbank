@@ -1,2 +1,1 @@
-/** Domain UI — `features/fiyatlama/components`. */
-export {};
+export { SupplierOffersPanel } from "./supplier-offers-panel";
