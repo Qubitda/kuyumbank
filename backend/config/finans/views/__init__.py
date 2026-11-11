@@ -1,7 +1,3 @@
-from .buyer_finance_ui import BuyerFinanceView
-from .ops_finance_ui import OpsFinanceView
+"""finans HTTP views — ürün HTML yok (ADR-0029); API `api.views` kullanır."""
 
-__all__ = [
-    "BuyerFinanceView",
-    "OpsFinanceView",
-]
+__all__: list[str] = []

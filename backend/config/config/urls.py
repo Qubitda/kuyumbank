@@ -21,8 +21,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.docs_urls")),  # schema / docs / redoc (OpenAPI)
     path("api/v1/", include("api.urls")),
-    path("buyer/", include("siparis.urls_buyer")),  # F4-062 minimal alıcı UI
-    path("supplier/", include("siparis.urls_supplier")),  # ADR-0021 tedarikçi HTML
-    path("act-as/", include("firmalar.urls_act_as")),  # ADR-0021
-    path("ops/", include("finans.urls_ops")),  # F5-032 finans ops UI
+    path("act-as/", include("firmalar.urls_act_as")),  # ADR-0021 redirect (Admin)
 ]

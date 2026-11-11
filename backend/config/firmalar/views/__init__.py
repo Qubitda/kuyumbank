@@ -1,6 +1,3 @@
-from .buyer_approval_ui import BuyerApprovalActionView, BuyerApprovalListView
+"""firmalar HTTP views — act-as redirect (`urls_act_as`); ürün UI yok (ADR-0029)."""
 
-__all__ = [
-    "BuyerApprovalActionView",
-    "BuyerApprovalListView",
-]
+__all__: list[str] = []

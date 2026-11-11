@@ -20,7 +20,7 @@ Feature/domain rehberi: [`docs/FRONTEND_ARCHITECTURE.md`](docs/FRONTEND_ARCHITEC
 | Domain route iskeleti (10 app) | Dolu katalog/sepet UI |
 | OKLCH grayscale token’lar | Celery / GraphQL |
 
-Django `/buyer/` ve `/ops/` HTML **silinmez**.
+Django ürün HTML portal yok (ADR-0029). Backend: `/admin/` + `/api/v1/`.
 
 ## Yerel çalıştırma
 

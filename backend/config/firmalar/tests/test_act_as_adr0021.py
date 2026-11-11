@@ -1,9 +1,10 @@
-"""ADR-0021 — act-as + supplier portal erişim."""
+"""ADR-0021 — act-as çekirdek + ADR-0029 API (HTML portal yok)."""
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.test import Client, TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 from firmalar import roles
 from firmalar.models import Firma
@@ -84,26 +85,38 @@ class ActAsTests(TestCase):
                 actor=self.buyer, target=self.supplier, session=session
             )
 
-    def test_middleware_swap_buyer_home(self):
-        c = Client()
-        self.assertTrue(c.login(username="actas_admin", password="x"))
-        r = c.post(reverse("act-as-start", args=[self.buyer.pk]))
-        self.assertEqual(r.status_code, 302)
-        self.assertTrue(r.url.startswith("/buyer/"))
-        home = c.get("/buyer/")
-        self.assertEqual(home.status_code, 200)
-        self.assertContains(home, "Act-as aktif")
-        self.assertContains(home, "actas_buyer")
+    def test_api_start_stop_and_me_as_target(self):
+        api = APIClient(enforce_csrf_checks=False)
+        self.assertTrue(api.login(username="actas_admin", password="x"))
+        start = api.post(
+            reverse("api-act-as-start"),
+            {"user_id": self.buyer.pk},
+            format="json",
+        )
+        self.assertEqual(start.status_code, 200, start.data)
+        self.assertTrue(start.data["act_as"])
+        self.assertEqual(start.data["target_id"], self.buyer.pk)
+        self.assertEqual(start.data["redirect_url"], "/admin/")
 
-    def test_supplier_portal_login(self):
+        me = api.get(reverse("api-me"))
+        self.assertEqual(me.status_code, 200)
+        self.assertEqual(me.data["username"], "actas_buyer")
+
+        stop = api.post(reverse("api-act-as-stop"), {}, format="json")
+        self.assertEqual(stop.status_code, 200)
+        self.assertFalse(stop.data["act_as"])
+
+    @override_settings(FRONTEND_PORTAL_BASE_URL="https://app.example.test")
+    def test_portal_hedef_uses_frontend_base(self):
+        self.assertEqual(
+            act_as_servisi.portal_hedef_url(self.buyer),
+            "https://app.example.test/",
+        )
+
+    def test_html_portals_gone(self):
+        from django.test import Client
+
         c = Client()
         self.assertTrue(c.login(username="actas_sup", password="x"))
-        r = c.get("/supplier/")
-        self.assertEqual(r.status_code, 200)
-        self.assertContains(r, "Tedarikçi paneli")
-
-    def test_ops_supplier_blocked_without_act_as(self):
-        c = Client()
-        self.assertTrue(c.login(username="actas_admin", password="x"))
-        r = c.get("/supplier/")
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(c.get("/supplier/").status_code, 404)
+        self.assertEqual(c.get("/buyer/").status_code, 404)

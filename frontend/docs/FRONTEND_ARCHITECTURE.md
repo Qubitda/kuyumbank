@@ -127,7 +127,7 @@ Rol bazlı URL önekleri (`/buyer`, `/supplier`) sonraki NX-SHELL diliminde ekle
 
 - **NX-SHELL:** shadcn primitives + `(portal)/layout` nav
 - **NX-BUYER:** katalog / sepet / sipariş sayfa doldurma
-- Django `/buyer/` `/ops/` HTML **silinmez**
+- Django ürün HTML portal **yok** (ADR-0029); yalnız `/admin/` + `/api/v1/` — Next portal dilimleri
 
 ---
 
@@ -141,11 +141,11 @@ Rol bazlı URL önekleri (`/buyer`, `/supplier`) sonraki NX-SHELL diliminde ekle
 | # | Soru | Cevap (kanıtlı) |
 |---|------|-----------------|
 | 1 | İki mimari gerçekten uyumlu mu? | **Hedef isimlendirme uyumlu; işlevsel entegrasyon KISMİ.** Klasör ↔ Django app paralel iskelet var; canlı FE↔API yalnız auth/health. |
-| 2 | FE karşılığı olmayan domain’ler? | `integrations` (BE paket; FE feature yok — bilinçli). `api` HTTP yüzeyi FE feature değildir (`lib/api`). Canlı ürün UI hâlâ Django HTML (`/buyer/`, `/ops/`). |
+| 2 | FE karşılığı olmayan domain’ler? | `integrations` (BE paket; FE feature yok — bilinçli). `api` HTTP yüzeyi FE feature değildir (`lib/api`). Canlı ürün UI: Next iskelet + API (ADR-0029; Django HTML portal kaldırıldı). |
 | 3 | Yanlış domain’e bağlı feature? | **Yok** (domain feature’lar henüz API’ye bağlanmamış; yanlış wiring yok). |
 | 4 | API sözleşmeleri tutarlı mı? | Auth/`/me`/`capabilities`: FE tipleri ↔ `present_me` **uyumlu**. Commerce DTO’ları FE’de **yok**. OpenAPI birçok response şeması zayıf (`array` stub) — normatif kod + presenter. |
 | 5 | Yetki/tenant doğru yerde mi? | **Evet (backend).** FE `firma_id` göndermez; `capabilities` keşif. Portal route’larda auth gate yok (placeholder; veri yok). |
-| 6 | Kritik mimari sorunlar? | (A) İsim izomorfizmi ≠ entegrasyon. (B) Çift yüzey: HTML canlı / Next iskelet. (C) Feature `services/types` boş → NX-BUYER öncesi sözleşme doldurulmalı. |
+| 6 | Kritik mimari sorunlar? | (A) İsim izomorfizmi ≠ entegrasyon. (B) Next iskelet henüz commerce doldurulmamış (ADR-0029 API-only BE). (C) Feature `services/types` boş → NX-BUYER öncesi sözleşme doldurulmalı. |
 | 7 | Gerekli düzeltmeler? | Doküman netliği (bu §). Küçük: `HealthResponse.service?`. Büyük refactor **yok**. Sonraki ürün dilimi: feature service ↔ OpenAPI path eşlemesi (NX-BUYER/SHELL). |
 
 ### 9.2 Backend envanter (DOĞRULANDI)
@@ -155,9 +155,9 @@ Rol bazlı URL önekleri (`/buyer`, `/supplier`) sonraki NX-SHELL diliminde ekle
 | `tanimlar`…`belgeler` | Domain (ADR-0004) | `services/` dolu; iş kuralı burada |
 | `api` | HTTP / presenter / permission | FE feature değil |
 | `integrations` | ERP/CRM/EDI stub | FE yok |
-| `config` | settings/urls | `/api/v1/`, `/buyer/`, `/ops/` |
+| `config` | settings/urls | `/admin/`, `/api/v1/`, `/act-as/` (redirect) |
 
-Canlı HTML: `siparis.urls_buyer` → `/buyer/*` (katalog, cart, checkout, order, RFQ, approvals, finance); `finans.urls_ops` → `/ops/`.
+Canlı ürün HTTP: `/api/v1/*` (B1–B7 + act-as + invite); Admin. Django `/buyer|/supplier|/ops` HTML **kaldırıldı** (ADR-0029).
 
 ### 9.3 Frontend envanter (DOĞRULANDI)
 
@@ -180,7 +180,7 @@ Canlı HTML: `siparis.urls_buyer` → `/buyer/*` (katalog, cart, checkout, order
 | `urunler` | `features/urunler` | Kısmi (iskelet) | Buyer katalog API: `/api/v1/catalog/` (view `api`, servis `urunler`) |
 | `fiyatlama` | `features/fiyatlama` | Kısmi (iskelet) | HTTP: `/quotes/`, `/price-locks/` |
 | `stok` | `features/stok` | Kısmi (iskelet) | Supplier `/supplier/stock/`; ATP servis BE’de; FE yok |
-| `siparis` | `features/siparis` | Kısmi (iskelet) | HTTP: carts/checkouts/orders/rfqs/bulk; HTML `/buyer/` canlı |
+| `siparis` | `features/siparis` | Kısmi (iskelet) | HTTP: carts/checkouts/orders/rfqs/bulk (API) |
 | `finans` | `features/finans` | Kısmi (iskelet) | HTTP: `/finance/*`, `/credit/*`, `/payments` |
 | `kalite` | `features/kalite` | Kısmi (iskelet) | HTTP: `/ops/inspections/*` |
 | `lojistik` | `features/lojistik` | Kısmi (iskelet) | HTTP: `/shipments/`, `/returns/`, ops shipment |
@@ -217,11 +217,10 @@ app/(portal)/siparis/page.tsx → DomainPlaceholder
   (feature service çağrısı yok; Django /api/v1/orders|carts… kullanılmıyor)
 ```
 
-**C — Canlı alıcı ürün UI (Next değil)**
+**C — Canlı ürün UI**
 
 ```text
-/buyer/* → siparis.views.buyer_* + urunler.services.buyer_katalog_servisi
-  (session HTML; REST zorunlu değil)
+Next `app/(portal)/*` → `/api/v1/*` (ADR-0029; Django HTML portal yok)
 ```
 
 ### 9.6 Sözleşme notları (auth)
