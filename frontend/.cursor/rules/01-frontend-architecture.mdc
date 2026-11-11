@@ -9,6 +9,7 @@ alwaysApply: false
 
 Normative guide: `docs/FRONTEND_ARCHITECTURE.md`.
 API contract: repo `docs/API_CONTRACT.md` + OpenAPI (do not invent fields).
+Dilim kapanış: `.cursor/rules/06-integration-gates.mdc` + `npm run smoke` (rewrite; Django doğrudan yetmez).
 
 ## Layout
 

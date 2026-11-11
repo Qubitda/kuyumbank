@@ -185,8 +185,9 @@ npm install
 npm run dev
 ```
 
-Smoke: login UI → CSRF → login → `/me/` (session panel).  
-Doğrulama komutları: `npm run lint`, `npm run build`.
+Smoke (bağlayıcı): `cd frontend && npm run smoke` — **Next origin** üzerinden CSRF → login → `/me/` → health.  
+Django’ya doğrudan istek bu kapıyı geçirmez. Auth/proxy/`next.config` değişince zorunlu.  
+Ek: `npm run lint`, `npm run build`. Kural: `frontend/.cursor/rules/06-integration-gates.mdc`.
 
 ## 20. Production integration requirements
 

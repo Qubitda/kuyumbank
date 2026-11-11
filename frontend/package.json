@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "smoke": "node scripts/fe_smoke.mjs",
     "generate:api": "openapi-typescript ../docs/api/openapi-v1.json -o lib/api/schema.d.ts"
   },
   "dependencies": {

@@ -26,6 +26,16 @@ Django modular monolith’teki **domain app** sınırlarını Next.js tarafında
 
 `api` Django paketi FE’de feature değildir; HTTP istemcisi `src/lib/api` altındadır.
 
+### 1.1 Dilim kapanış (entegrasyon)
+
+| Kapı | Komut / kural |
+|------|----------------|
+| Derleme | `npm run build` |
+| Same-origin smoke | **`npm run smoke`** (CSRF→login→`/me`→health via `:3000` rewrite) |
+| Agent kuralı | `.cursor/rules/06-integration-gates.mdc` · `frontend/AGENTS.md` |
+
+Django `127.0.0.1:8000` doğrudan yeşil → entegrasyon OK **sayılmaz**.
+
 ## 2. Klasör ağacı
 
 ```text
