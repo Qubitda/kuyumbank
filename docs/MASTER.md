@@ -571,4 +571,4 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **742 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-11 — F9-017 profil/adres API UYGULANDI; sıradaki NX-BUYER.*
+*Son güncelleme: 2026-11-11 — NX portal dilimleri (`/buyer|/supplier|/admin`); BACKEND_MAP + `GET /sales-channels/`; sıradaki: MFA UI, ürün CRUD API.*
