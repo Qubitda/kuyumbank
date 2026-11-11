@@ -1,2 +1,1 @@
-/** Domain UI — `features/urunler/components`. */
-export {};
+export { CatalogList } from "./catalog-list";

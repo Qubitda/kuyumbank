@@ -97,8 +97,9 @@
 
 | Method | Path | Rol | Request | Response |
 |--------|------|-----|---------|----------|
-| GET | `/catalog/` | B/O | `page` | `BuyerCatalogPage` — item: `id,ad,platform_kodu,kategori,ayar,fiyat_tipi,varyant_count,yayin_durumu,allowed_actions` |
+| GET | `/catalog/` | B/O | `page`, `q` | `BuyerCatalogPage` — item: `id,ad,platform_kodu,kategori,ayar,fiyat_tipi,varyant_count,yayin_durumu,allowed_actions` |
 | GET | `/catalog/{id}/` | B/O | — | `BuyerCatalogDetail` + `varyantlar` (**tedarikçi yok**) |
+| GET | `/sales-channels/` | firma | — | `{count,results[{id,kod,ad,quote_ttl_saniye}]}` — quote `satis_kanali_id` keşfi |
 | POST | `/quotes/` | B yazma | `{varyant_id,satis_kanali_id?,para_birimi?}` | `BuyerQuote` |
 | GET | `/quotes/{id}/` | B/O | — | `BuyerQuote` |
 | POST | `/price-locks/` | B + lock | `{quote_id}` | `BuyerPriceLock` |
@@ -206,7 +207,7 @@ QualityInspection ; Shipment / ReturnRequest
 1. **Kritik — Sipariş→tedarikçi yönlendirme HTTP yok:** Sipariş alıcıya aittir; admin’in “siparişi tedarikçiye ata” ayrı uç yok. Operasyon yolu: **RFQ eşleştirme** (`/ops/rfq-matches/*`) + teklif/stok. Dilim 4’te bu API’ye map et; eksik iş kuralı varsa küçük backend ekle.
 2. **Kritik — Platform ürün CRUD API yok:** Katalog yazma çoğunlukla Django Admin (`submit_urun`/`approve_urun`/`publish_urun`). Dilim 6 ürün girişi Admin veya yeni API ister.
 3. **Kullanıcı/izin yönetimi API sınırlı:** Invite + profile; tam RBAC UI için Admin veya genişletme gerekir.
-4. **Karşılaştırma endpoint’i yok:** Aynı özellik (gram/çeşit) karşılaştırması FE’de `/catalog` + detay ile yapılır; sunucu-side compare yok.
+4. **Karşılaştırma endpoint’i yok:** Aynı özellik (gram/çeşit) karşılaştırması FE’de `/catalog` + detay ile yapılır; sunucu-side compare yok. (`GET /sales-channels/` eklendi — quote kanal keşfi.)
 5. **Tek portal iskeleti:** Next’te buyer/supplier/admin ayrımı henüz yoktu (bu dilimde eklenecek); domain stub menü yanlış yönlendiriyordu.
 6. **Refresh token yok:** Session süresi Django ayarına bağlı; FE re-login akışı gerekir (bilinçli).
 7. **Redis/Celery yok:** Kullanıcı yığınında Redis 7 geçse de runtime’da yok (MASTER); kuyruk/cache varsayma.

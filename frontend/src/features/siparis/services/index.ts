@@ -34,6 +34,17 @@ export function checkout(idempotencyKey: string): Promise<
   });
 }
 
+export function orderFromCheckout(
+  checkoutId: number,
+  idempotencyKey: string,
+): Promise<Order> {
+  return apiFetch<Order>("/orders/from-checkout/", {
+    method: "POST",
+    body: { checkout_id: checkoutId },
+    idempotencyKey,
+  });
+}
+
 export function listOrders(): Promise<OrderPage> {
   return apiFetch<OrderPage>("/orders/");
 }

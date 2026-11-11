@@ -97,6 +97,7 @@ from .rfq_eslestirme import (
     OpsRfqMatchListCreateView,
     OpsRfqMatchRejectView,
 )
+from .sales_channels import SalesChannelListView
 from .shipment import ShipmentDetailView, ShipmentListView
 from .supplier import (
     SupplierOfferDeactivateView,
@@ -153,6 +154,7 @@ __all__ = [
     "CreditMineView",
     "HealthView",
     "ReadyView",
+    "SalesChannelListView",
     "MeView",
     "OpsFinanceCariListView",
     "OpsFinanceLedgerListView",
