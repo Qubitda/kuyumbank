@@ -1,0 +1,2114 @@
+{
+  "total_checks": 276,
+  "passed": 276,
+  "failed": 0,
+  "openapi_ops": 106,
+  "ok": true,
+  "failures": [],
+  "results": [
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/act-as/start/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/act-as/stop/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/approvals/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/approvals/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/approvals/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/approvals/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/approvals/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/approvals/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/approvals/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/approvals/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/approvals/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/approve/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/approve/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/reject/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/reject/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/reject/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/submit/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/approvals/{id}/submit/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/auth/csrf/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/auth/csrf/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/email-verify/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/email-verify/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/email-verify/confirm/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/email-verify/confirm/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/auth/invites/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/auth/invites/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/auth/invites/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/invites/accept/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/invites/accept/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/invites/create/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/auth/invites/create/",
+      "status": 400,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/auth/invites/create/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/login/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/login/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/logout/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/mfa/resend/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/mfa/verify/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/password-change/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/auth/password-change/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset/confirm/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/auth/password-reset/confirm/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/bulk-orders/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/bulk-orders/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/bulk-orders/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/carts/me/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/carts/me/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/carts/me/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/carts/me/lines/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/carts/me/lines/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/carts/me/lines/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "DELETE",
+      "path": "/api/v1/carts/me/lines/{line_id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "DELETE",
+      "path": "/api/v1/carts/me/lines/{line_id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "PATCH",
+      "path": "/api/v1/carts/me/lines/{line_id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "PATCH",
+      "path": "/api/v1/carts/me/lines/{line_id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "PATCH",
+      "path": "/api/v1/carts/me/lines/{line_id}/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/carts/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/carts/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/carts/{id}/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/catalog/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/catalog/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/catalog/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/catalog/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/catalog/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/catalog/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/checkouts/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/checkouts/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/credit/check/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/credit/check/",
+      "status": 400,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/credit/check/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/credit/me/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/credit/me/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/credit/me/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/finance/cari/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/finance/ledger/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/finance/ledger/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/finance/ledger/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/finance/me/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/finance/me/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/finance/me/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/health/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/health/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/me/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/me/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/me/dashboard/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/me/dashboard/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/anomalies/ciro/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/anomalies/ciro/",
+      "status": 400,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/anomalies/ciro/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "finance_ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/cari/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/cari/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "finance_ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/cari/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/ledger/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/ledger/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "finance_ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/ledger/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/payments/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/payments/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "finance_ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/finance/payments/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/inspections/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/cancel/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/cancel/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/fail/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/fail/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/measurements/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/measurements/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/measurements/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/pass/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/pass/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/start/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/inspections/{id}/start/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "ops"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/orders/summary/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/orders/summary/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "finance_ops"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/orders/summary/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/shipments/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/cancel/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/cancel/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/deliver/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/deliver/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/dispatch/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/dispatch/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/pod/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/pod/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/pod/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/prepare/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/shipments/{id}/prepare/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "logistics"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/orders/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/orders/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/orders/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/orders/from-checkout/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/orders/from-checkout/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/orders/from-checkout/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/orders/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/orders/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/orders/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/orders/{id}/cancel/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/orders/{id}/cancel/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/orders/{id}/reorder/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/orders/{id}/reorder/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/org-units/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/org-units/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/org-units/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/org-units/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/org-units/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/org-units/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/org-units/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/org-units/{id}/members/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/org-units/{id}/members/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/org-units/{id}/members/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/org-units/{id}/members/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/org-units/{id}/members/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/payments/intents/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/payments/intents/",
+      "status": 400,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/payments/intents/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/payments/webhook/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "POST",
+      "path": "/api/v1/payments/webhook/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/price-locks/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/price-locks/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/price-locks/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/price-locks/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/price-locks/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/price-locks/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/quotes/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/quotes/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/quotes/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/quotes/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/quotes/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/quotes/{id}/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/reports/buyer-behavior/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/reports/buyer-behavior/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/reports/buyer-behavior/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/reports/orders/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/reports/orders/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/reports/orders/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/returns/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/returns/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/returns/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/returns/",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/returns/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/returns/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/returns/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/approve/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/approve/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/cancel/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/cancel/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/mahsup/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/mahsup/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/reject/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/reject/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/reject/",
+      "status": 403,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/submit/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/returns/{id}/submit/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/rfqs/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/rfqs/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/rfqs/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/rfqs/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/rfqs/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/rfqs/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/rfqs/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/rfqs/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/rfqs/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/messages/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/messages/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/messages/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/revisions/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/revisions/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/revisions/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/send/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/rfqs/{id}/send/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/shipments/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/shipments/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/shipments/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/shipments/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/shipments/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "supplier",
+      "expected_role": "buyer"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/shipments/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/supplier/offers/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/deactivate/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/deactivate/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/submit/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/submit/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/versions/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/versions/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/{id}/versions/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/supplier/rfqs/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/messages/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/messages/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/messages/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/revisions/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/revisions/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/supplier/rfqs/{id}/revisions/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/supplier/stock/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/supplier/stock/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/supplier/stock/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/stock/adjustments/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/stock/adjustments/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/supplier/stock/adjustments/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "csrf",
+      "method": "GET",
+      "path": "/api/v1/auth/csrf/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "csrf_login",
+      "method": "POST",
+      "path": "/api/v1/auth/login/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "csrf_me",
+      "method": "GET",
+      "path": "/api/v1/me/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "csrf_logout",
+      "method": "POST",
+      "path": "/api/v1/auth/logout/",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

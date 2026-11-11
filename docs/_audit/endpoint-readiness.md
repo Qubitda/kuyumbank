@@ -1,136 +1,114 @@
-# Endpoint readiness (ADIM 5)
+# Endpoint readiness (ADIM 5 — smoke matrix)
 
-**Tarih:** 2026-11-11
-**OpenAPI ops:** 106
-**Smoke:** ok=True passed=15/15 mode=django.test.Client
+Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
 
-Checklist sütunları: R=route · H=handler gerçek · V=validasyon · A=auth · S=status · Sch=şema · E=hata formatı · P=pagination(gerekirse) · M=migration N/A tur · T=test kanıtı · O=OpenAPI
+| Metot | Path | anon | wrong_role | invalid_body | success |
+|-------|------|------|------------|--------------|---------|
+| DELETE | `/api/v1/carts/me/lines/{line_id}/` | ✅ | ✅ | — | — |
+| GET | `/api/v1/approvals/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/approvals/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/auth/csrf/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/auth/invites/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/carts/me/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/carts/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/catalog/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/catalog/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/credit/me/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/finance/cari/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/finance/cari/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/finance/ledger/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/finance/me/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/health/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/me/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/me/dashboard/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/ops/anomalies/ciro/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/finance/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/finance/cari/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/finance/ledger/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/finance/payments/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/inspections/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/inspections/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/orders/summary/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/shipments/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/shipments/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/orders/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/orders/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/org-units/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/org-units/{id}/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/org-units/{id}/members/` | ✅ | — | — | ✅ |
+| GET | `/api/v1/price-locks/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/quotes/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/reports/buyer-behavior/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/reports/orders/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/returns/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/returns/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/rfqs/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/rfqs/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/shipments/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/shipments/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/supplier/offers/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/supplier/offers/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/supplier/rfqs/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/supplier/rfqs/{id}/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/supplier/stock/` | ✅ | ✅ | — | ✅ |
+| PATCH | `/api/v1/carts/me/lines/{line_id}/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/act-as/start/` | ✅ | — | — | — |
+| POST | `/api/v1/act-as/stop/` | ✅ | — | — | — |
+| POST | `/api/v1/approvals/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/approvals/{id}/approve/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/approvals/{id}/reject/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/approvals/{id}/submit/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/auth/email-verify/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/auth/email-verify/confirm/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/auth/invites/accept/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/auth/invites/create/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/auth/login/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/auth/logout/` | ✅ | — | — | — |
+| POST | `/api/v1/auth/mfa/resend/` | ✅ | — | — | — |
+| POST | `/api/v1/auth/mfa/verify/` | ✅ | — | — | — |
+| POST | `/api/v1/auth/password-change/` | ✅ | — | ✅ | — |
+| POST | `/api/v1/auth/password-reset/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/auth/password-reset/confirm/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/bulk-orders/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/carts/me/lines/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/checkouts/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/credit/check/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/inspections/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/inspections/{id}/cancel/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/inspections/{id}/fail/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/inspections/{id}/measurements/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/inspections/{id}/pass/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/inspections/{id}/start/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/shipments/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/shipments/{id}/cancel/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/shipments/{id}/deliver/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/shipments/{id}/dispatch/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/shipments/{id}/pod/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/shipments/{id}/prepare/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/orders/from-checkout/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/orders/{id}/cancel/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/orders/{id}/reorder/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/org-units/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/org-units/{id}/members/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/payments/intents/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/payments/webhook/` | ✅ | — | — | ✅ |
+| POST | `/api/v1/price-locks/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/quotes/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/returns/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/returns/{id}/approve/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/returns/{id}/cancel/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/returns/{id}/mahsup/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/returns/{id}/reject/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/returns/{id}/submit/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/rfqs/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/rfqs/{id}/messages/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/rfqs/{id}/send/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/supplier/offers/{id}/deactivate/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/supplier/offers/{id}/submit/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/supplier/offers/{id}/versions/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/supplier/rfqs/{id}/messages/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/supplier/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/supplier/stock/adjustments/` | ✅ | ✅ | ✅ | — |
 
-| Grup | Metot | Path | R | H | V | A | S | Sch | E | P | T | O | Not |
-|------|-------|------|---|---|---|---|---|-----|---|---|---|---|-----|
-| CAP | POST | `/api/v1/act-as/start/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_act_as_adr0021 |
-| CAP | POST | `/api/v1/act-as/stop/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_act_as_adr0021 |
-| B4 | GET | `/api/v1/approvals/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/approvals/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | GET | `/api/v1/approvals/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/approvals/{id}/approve/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/approvals/{id}/reject/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/approvals/{id}/submit/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B1 | GET | `/api/v1/auth/csrf/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/email-verify/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/email-verify/confirm/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | GET | `/api/v1/auth/invites/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/invites/accept/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/invites/create/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/login/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/logout/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/mfa/resend/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/mfa/verify/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/password-change/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/password-reset/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B1 | POST | `/api/v1/auth/password-reset/confirm/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + test_auth_qa_gates + invite tests |
-| B2 | POST | `/api/v1/bulk-orders/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_bulk_f4_081 |
-| B1 | GET | `/api/v1/carts/me/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency |
-| B2 | POST | `/api/v1/carts/me/lines/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency |
-| B2 | DELETE | `/api/v1/carts/me/lines/{line_id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency |
-| B2 | PATCH | `/api/v1/carts/me/lines/{line_id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency |
-| B2 | GET | `/api/v1/carts/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency |
-| B2 | GET | `/api/v1/catalog/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b2_buyer_commerce |
-| B2 | GET | `/api/v1/catalog/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2_buyer_commerce |
-| B2 | POST | `/api/v1/checkouts/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + concurrency + pre_005 |
-| B3 | POST | `/api/v1/credit/check/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + credit_f5 |
-| B1 | GET | `/api/v1/credit/me/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + credit_f5 |
-| B3 | GET | `/api/v1/finance/cari/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b3_finance_ops |
-| B3 | GET | `/api/v1/finance/cari/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3_finance_ops |
-| B3 | GET | `/api/v1/finance/ledger/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b3_finance_ops |
-| B1 | GET | `/api/v1/finance/me/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3_finance_ops |
-| B1 | GET | `/api/v1/health/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 / smoke |
-| B1 | GET | `/api/v1/me/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + nx + act_as |
-| CAP | GET | `/api/v1/me/dashboard/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1 + nx + act_as |
-| B3+ | GET | `/api/v1/ops/anomalies/ciro/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_rapor_adr0026 |
-| B3+ | GET | `/api/v1/ops/finance/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_ops_finans_f5_031 / b3 |
-| B3+ | GET | `/api/v1/ops/finance/cari/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_ops_finans_f5_031 / b3 |
-| B3+ | GET | `/api/v1/ops/finance/ledger/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_ops_finans_f5_031 / b3 |
-| B3+ | GET | `/api/v1/ops/finance/payments/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_ops_finans_f5_031 / b3 |
-| B5 | GET | `/api/v1/ops/inspections/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | GET | `/api/v1/ops/inspections/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/{id}/cancel/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/{id}/fail/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/{id}/measurements/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/{id}/pass/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/inspections/{id}/start/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B2 | GET | `/api/v1/ops/orders/summary/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b1/ops |
-| B5 | GET | `/api/v1/ops/shipments/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | GET | `/api/v1/ops/shipments/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/{id}/cancel/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/{id}/deliver/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/{id}/dispatch/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/{id}/pod/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B5 | POST | `/api/v1/ops/shipments/{id}/prepare/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b5_ops |
-| B2 | GET | `/api/v1/orders/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b2 + order_api_f4_060 |
-| B2 | POST | `/api/v1/orders/from-checkout/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + order_api_f4_060 |
-| B2 | GET | `/api/v1/orders/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + order_api_f4_060 |
-| B2 | POST | `/api/v1/orders/{id}/cancel/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + order_api_f4_060 |
-| B2 | POST | `/api/v1/orders/{id}/reorder/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + order_api_f4_060 |
-| B4 | GET | `/api/v1/org-units/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/org-units/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | GET | `/api/v1/org-units/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | GET | `/api/v1/org-units/{id}/members/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/org-units/{id}/members/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B3 | POST | `/api/v1/payments/intents/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + webhook |
-| B3 | POST | `/api/v1/payments/webhook/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + webhook |
-| B2 | POST | `/api/v1/price-locks/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + nx |
-| B2 | GET | `/api/v1/price-locks/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2 + nx |
-| B2 | POST | `/api/v1/quotes/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2_buyer_commerce |
-| B2 | GET | `/api/v1/quotes/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b2_buyer_commerce |
-| B3+ | GET | `/api/v1/reports/buyer-behavior/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_rapor_adr0026 |
-| B2 | GET | `/api/v1/reports/orders/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_rapor_adr0026 |
-| B3 | GET | `/api/v1/returns/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | GET | `/api/v1/returns/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/{id}/approve/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/{id}/cancel/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/{id}/mahsup/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/{id}/reject/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B3 | POST | `/api/v1/returns/{id}/submit/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 + mahsup adr0023 |
-| B4 | GET | `/api/v1/rfqs/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/rfqs/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | GET | `/api/v1/rfqs/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/rfqs/{id}/messages/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B4 | POST | `/api/v1/rfqs/{id}/send/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b4_enterprise |
-| B3 | GET | `/api/v1/shipments/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b3 |
-| B3 | GET | `/api/v1/shipments/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b3 |
-| B6 | GET | `/api/v1/supplier/offers/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b6_supplier |
-| B6 | GET | `/api/v1/supplier/offers/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/offers/{id}/deactivate/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/offers/{id}/submit/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/offers/{id}/versions/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | GET | `/api/v1/supplier/rfqs/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | test_api_b6_supplier |
-| B6 | GET | `/api/v1/supplier/rfqs/{id}/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/rfqs/{id}/messages/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | GET | `/api/v1/supplier/stock/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-| B6 | POST | `/api/v1/supplier/stock/adjustments/` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ | ✅ | test_api_b6_supplier |
-
-## Özet
-
-| Toplam OpenAPI op | Hazır (test kanıtlı) | Sorunlu/kanıt zayıf |
-|-------------------|----------------------|---------------------|
-| 106 | 106 | 0 |
-
-Not: R/H/A/S/Sch/E/O sütunları OpenAPI lint OK + urls.py + DRF view envanterine dayanır (2026-11-11). T sütunu odaklı suite adına göre; tam suite **DOĞRULANAMADI**.
-
-## Frontend → backend çapraz
-
-| FE çağrı | Backend |
-|----------|---------|
-| `GET /api/v1/auth/csrf/` | ✅ |
-| `POST /api/v1/auth/login/` | ✅ |
-| `POST /api/v1/auth/logout/` | ✅ |
-| `GET /api/v1/me/` | ✅ |
-| `GET /api/v1/health/` | ✅ |
-
-Diğer feature `services/index.ts` dosyaları boş iskelet — ek FE path yok (DOĞRULANDI `frontend/src`).
+**Özet:** hazır_satır=106 sorunlu_satır=0 (op satırı; check bazlı JSON ayrı)
