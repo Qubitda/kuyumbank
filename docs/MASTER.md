@@ -549,7 +549,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş doldurma; [API_READINESS](API_READINESS.md) **READY** |
+| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş; FE harita: [BACKEND_MAP](BACKEND_MAP.md); portal kökleri `/buyer` `/supplier` `/admin` |
 | P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
 | — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
 

@@ -1,62 +1,67 @@
+"use client";
+
 import Link from "next/link";
-import { Suspense } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-import { SessionPanel } from "@/features/auth";
+import { SessionProvider, useSession } from "@/features/auth/components/session-provider";
+import { portalHomeForMe } from "@/lib/auth/portal";
 
-const DOMAINS = [
-  "/firmalar",
-  "/urunler",
-  "/fiyatlama",
-  "/stok",
-  "/siparis",
-  "/finans",
-  "/kalite",
-  "/lojistik",
-  "/tanimlar",
-  "/belgeler",
-] as const;
+function HomeRedirect() {
+  const { state } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state.status === "ready") {
+      router.replace(portalHomeForMe(state.me));
+    }
+  }, [state, router]);
+
+  if (state.status === "loading") {
+    return (
+      <p className="text-sm text-muted-foreground">Oturum kontrol ediliyor…</p>
+    );
+  }
+
+  if (state.status === "ready") {
+    return (
+      <p className="text-sm text-muted-foreground">Portala yönlendiriliyor…</p>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <p className="text-sm text-destructive" role="alert">
+        {state.message}
+      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-muted-foreground">Oturum yok.</p>
+      <Link
+        href="/login"
+        className="inline-flex h-10 w-fit items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+      >
+        Giriş yap
+      </Link>
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-10 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-8 px-6 py-16">
       <header className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">NX-FE · feature mimari</p>
         <h1 className="text-2xl font-semibold tracking-tight">Kuyumbank</h1>
-        <p className="max-w-prose text-sm text-muted-foreground">
-          Session + CSRF ile <code className="font-mono text-xs">/api/v1/</code>{" "}
-          (aynı-origin rewrite). Domain iskeleti:{" "}
-          <code className="font-mono text-xs">features/*</code> ↔ Django apps.
+        <p className="text-sm text-muted-foreground">
+          B2B portal — rolünüze göre müşteri, tedarikçi veya admin alanı.
         </p>
       </header>
-      <Suspense
-        fallback={
-          <p className="text-sm text-muted-foreground">Oturum kontrol ediliyor…</p>
-        }
-      >
-        <SessionPanel />
-      </Suspense>
-      <section className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">Portal domain route’ları</p>
-        <ul className="flex flex-wrap gap-2">
-          {DOMAINS.map((href) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="inline-flex rounded-md border border-border px-2 py-1 font-mono text-xs hover:bg-muted"
-              >
-                {href}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <footer className="border-t border-border pt-6 text-xs text-muted-foreground">
-        <Link href="/login" className="hover:underline">
-          /login
-        </Link>
-        {" · "}
-        <code className="font-mono">docs/FRONTEND_ARCHITECTURE.md</code>
-      </footer>
+      <SessionProvider>
+        <HomeRedirect />
+      </SessionProvider>
     </div>
   );
 }

@@ -37,15 +37,20 @@ export type Capabilities = {
   can_manage_qc: boolean;
   can_manage_shipment: boolean;
   can_manage_return: boolean;
+  can_manage_users: boolean;
+  can_manage_addresses: boolean;
 };
 
 export type MeResponse = {
   id: number;
   username: string;
   rol: string;
+  email_verified?: boolean;
   firma: FirmaMasked | null;
   firma_id: number | null;
   capabilities: Capabilities;
+  mfa_required?: boolean;
+  mfa_ok?: boolean;
 };
 
 export type HealthResponse = {

@@ -1,15 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, login } from "@/lib/api/client";
+import { portalHomeForMe } from "@/lib/auth/portal";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -19,8 +21,16 @@ export function LoginForm() {
     setError(null);
     startTransition(async () => {
       try {
-        await login(username, password);
-        router.replace("/");
+        const me = await login(username, password);
+        if (me.mfa_required && !me.mfa_ok) {
+          setError("MFA gerekli — e-posta kodunu doğrulayın (yakında UI).");
+          return;
+        }
+        const next = searchParams.get("next");
+        const home = portalHomeForMe(me);
+        const target =
+          next && next.startsWith("/") && !next.startsWith("//") ? next : home;
+        router.replace(target);
         router.refresh();
       } catch (err) {
         if (err instanceof ApiError) {
