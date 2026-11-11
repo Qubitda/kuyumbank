@@ -591,6 +591,13 @@
 - OpenAPI 102 path / 112 op; API_CONTRACT §4.2–4.3 + FE-P1-RFQ **UYGULANDI**.
 - FE feature `services/` tipli client (UI yok); FINAL-REPORT + crud-matrix.
 
+### 2026-11-11 — Frontend-öncesi backend kapanış
+- Bayat iddialar temizlendi (API_CONTRACT §2.1 create yok; ROADMAP eşleştirme yok; READINESS 588/KISMİ).
+- `smoke_api.py --matrix` → 119 op · 309/309; `endpoint-readiness.md` yeniden üretildi.
+- Teklif geçersiz SM → 409; OpsFinance OpenAPI DTO hizası; DEBUG CSRF_TRUSTED Next origins.
+- Full suite **594 OK**; live `--base` DOĞRULANAMADI (runserver kapalı).
+- `_audit` ephemeral envanter silindi; kanıt dosyaları kaldı.
+
 ### 2026-11-11 — F9-017 profil/adres self-service HTTP
 - `GET/PATCH /me/profile/` (first_name/last_name; email verify akışı ayrı).
 - `GET/POST /me/addresses/` + `GET/PATCH/DELETE /me/addresses/{id}/` — tenant = actor.firma; yazma `manage_users`; IDOR 404.

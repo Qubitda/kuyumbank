@@ -12,7 +12,7 @@
 |--------|--------------------|----------------|
 | OpenAPI paths | 98 / 102 (dağınık) | **105** |
 | OpenAPI ops | 106 / 112 | **119** |
-| Full suite | 588 vs 590 çelişkisi | **kanıt log:** `full-suite-log.txt` (590; F9-017+409 sonrası yeniden koşuluyor) |
+| Full suite | 588 vs 590 çelişkisi | **594 OK** (`full-suite-log.txt`) |
 | Smoke | anon-only `smoke_api.py` | **`--matrix`** → 119 op · **309/309** check |
 | API_READINESS §7.3 | KISMİ | **TAMAM** (log + matrix) |
 | ROADMAP #4 | «Eşleştirme HTTP yok» | **UYGULANDI** (create + match) |
@@ -72,7 +72,7 @@ Teklif SM geçersiz geçiş (deactivate on TASLAK) → **409** (`raise_drf(..., 
 | `export_openapi --check` / `lint_openapi` | OK 105/119 |
 | FE `tsc` / `eslint` | önceki tur OK; generate:api güncel |
 | FE birim test | **KARAR GEREKTİ** — `FRONTEND_ARCHITECTURE.md:170` «FE test Yok»; vitest eklenmedi |
-| Full PG suite | koşu devam / log `full-suite-log.txt` |
+| Full PG suite | **594 OK** (`full-suite-log.txt`, ~16.4 dk) |
 
 ---
 

@@ -158,7 +158,7 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 <!-- /AUTO:tests -->
 
 **Statik sayım ≠ suite sonucu:** üstteki AUTO blok koşulmuş test değildir.  
-**Son kaydedilen suite (elle):** **590 OK** (2026-11-11, PG `--keepdb`) — kanıt `docs/_audit/full-suite-log.txt`.  
+**Son kaydedilen suite (elle):** **594 OK** (2026-11-11, PG `--keepdb`) — kanıt `docs/_audit/full-suite-log.txt`.  
 **Tarihsel:** 597 OK (2026-11-09). Ara kayıt 713/4 migration ERROR **geçersiz** (bu koşuda ERROR yok).  
 `makemigrations --check` temiz (2026-11-11). Üretim migrate onaysız yok.
 
@@ -559,7 +559,7 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 3. Ops: createcachetable + cron outbox/email; secret rotasyon; yedek §7; INVITE_TTL_HOURS / EMAIL_VERIFY_REQUIRED_FOR_WRITE.
 4. Bilinçli erteli: tam suite kilidi, gerçek ödeme/kargo (yol B), K-014 PDF, MOQ.
 5. Auth: API login/MFA/reset/invite/verify; Admin login; HTML portal yok (ADR-0029).
-6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **588 OK**); fake provider check E002/E003.
+6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **594 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
 *Son güncelleme: 2026-11-11 — F9-017 profil/adres API UYGULANDI; sıradaki NX-BUYER.*
