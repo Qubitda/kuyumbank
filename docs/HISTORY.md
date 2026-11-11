@@ -585,3 +585,11 @@
 - FE→BE: Next yalnız `csrf/login/logout/me/health` çağırıyor; hepsi backend’de var.
 - Smoke: `scripts/smoke_api.py` (+ sonuç FINAL-REPORT).
 
+### 2026-11-11 — Audit kapanış (ADIM 1–8)
+- WIP dilimli commit (ADR-0027/28/29 + integrity/ops); `makemigrations --check` OK.
+- PG full suite **588 OK**; OpenAPI lint OK (98 path / 106 op).
+- Smoke matrix: `api.tests.test_openapi_smoke_matrix` **276/276**; readiness yeniden üretildi.
+- FE CSRF: `api.tests.test_fe_session_csrf_flow` (same-origin rewrite; CORS yok).
+- Kapsam dışı (implement yok): teklif create + RFQ eşleştirme HTTP (`API_CONTRACT:106`, `API_READINESS:57`).
+- Rapor: `docs/_audit/FINAL-REPORT.md`.
+

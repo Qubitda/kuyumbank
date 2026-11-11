@@ -1,6 +1,6 @@
 # BACKEND API READINESS
 
-**Tarih:** 2026-11-10  
+**Tarih:** 2026-11-11  
 **Karar:** **FRONTEND READY** (ürün sahibi Qubit — “go hepsini onaylıyorum”)  
 **Bağlam:** API-B1…B7 **Kabul** · ADR-0019 **Kabul** · ADR-0023 mahsup · ADR-0026 rapor · ADR-0017 NX madde Kabul  
 **Normatif teknik sözleşme:** [API_CONTRACT](API_CONTRACT.md) · [openapi-v1.json](api/openapi-v1.json)  
@@ -19,7 +19,7 @@
 | Yetki + tenant test | **KISMİ TAMAM** — B1–B6 + ADR-0019 + rapor/mahsup odaklı |
 | OpenAPI + docs UI | **TAMAM** |
 | TS client üretimi | **UYGULANDI** — `frontend/lib/api/schema.d.ts` (`npm run generate:api`) |
-| Backend test paketi | Odaklı yeşil; **tam suite kanıtı eksik** (MASTER §2.7: 4 migration ERROR / son yeşil 597) — ürün sahibi override ile READY |
+| Backend test paketi | **TAMAM** — PG full suite **588 OK** (2026-11-11; `docs/_audit/full-suite-log.txt`) |
 | FE geliştirme borcu | Next portal dilimleri ayrı talimat |
 
 ### Verdict
@@ -60,7 +60,7 @@ Diğer satırlar önceki gibi (RFQ eşleştirme / belge / limit / release HTTP �
 | FE-P2-REL | Contract release HTTP | **FE v1 dışı** ✓ |
 | FE-P2-ORG | Org update/deactivate HTTP | **FE v1 dışı** ✓ |
 | FE-TS | openapi-typescript | **UYGULANDI** ✓ |
-| FE-SUITE | Tam suite | **KISMİ** — ürün sahibi onayladı; PG tam suite yeşil kanıtı henüz yok (MASTER §2.7) |
+| FE-SUITE | Tam suite | **UYGULANDI** ✓ — PG **588 OK** (2026-11-11; MASTER §2.7) |
 
 ---
 

@@ -1,65 +1,45 @@
-# FINAL REPORT — Docs ↔ Kod API Audit
+# FINAL REPORT — Docs ↔ Kod API Audit (kapanış)
 
 **Tarih:** 2026-11-11  
 **Dal:** `adim-1-ilerleme`  
-**Yöntem:** ADIM 0→5; kanıt = dosya/satır veya komut çıktısı. Tahmin yok.
+**Yöntem:** ADIM 1–8 kapanış; kanıt = dosya/satır veya komut çıktısı. Tahmin yok.
 
 ---
 
-## 1. Yapılan değişiklikler (dosya bazlı)
+## 1. Yapılan değişiklikler (bu kapanış)
 
-| Dosya | Sorumluluk |
-|-------|------------|
-| `docs/_audit/endpoint-inventory.md` | ADIM 0: doküman git tarihleri + Django/OpenAPI endpoint tablosu |
-| `docs/_audit/drift-report.md` | ADIM 1: a/b/c drift listeleri |
-| `docs/_audit/open-work.md` | ADIM 4: açık iş / stub / P0–P2 |
-| `docs/_audit/endpoint-readiness.md` | ADIM 5: op bazlı hazırlık tablosu |
-| `docs/_audit/smoke-results.json` | Smoke çıktısı |
-| `docs/_audit/FINAL-REPORT.md` | Bu rapor |
-| `docs/API_CONTRACT.md` | Path sayısı 98; HTML miras → ADR-0029 Deprecated |
-| `docs/MASTER.md` | §12 HTML kartları Deprecated; güncelleme notu |
-| `docs/BACKLOG.md` | F4-062 / F5-032 / F10-014/023 / F9-010/011/012 HTML Deprecated |
-| `docs/ROADMAP.md` | Experience katmanı + gap/portal HTML iddiaları |
-| `docs/RUNBOOK.md` | Silinmiş HTML test komutları → B2 API test |
-| `docs/HISTORY.md` | Append: 2026-11-11 audit |
-| `docs/decisions/ADR-0017-*.md` | `/buyer|/ops` → ADR-0029 supersede |
-| `docs/api/openapi-v1.json` | Export (auth DTO enrich sonrası) |
-| `backend/config/api/openapi_requests.py` | Password/MFA request şema + REQUEST_BINDINGS |
-| `backend/config/api/openapi_components.py` | DetailOk / MfaVerifyOk + RESPONSE_BINDINGS |
-| `scripts/smoke_api.py` | ADIM 5 smoke (Django Client / HTTP) |
-| `scripts/_audit_*.py` | Envanter/rapor yardımcıları (tekrar üretilebilir) |
-| `frontend/lib/api/schema.d.ts` | `npm run generate:api` yenileme |
+| Dilim | Commit / dosya | Sorumluluk |
+|-------|----------------|------------|
+| ADR-0029 HTML | `9a2b79e` | Django HTML buyer/supplier/ops portal kaldırma |
+| ADR-0028 auth | `13306e9` | Invite / email-verify / MFA / password / act-as API |
+| ADR-0027 | `d98ef34` | `bildirim` email outbox |
+| ADR docs | `85edc18` | ADR-0027/28/29 + supersede notları |
+| Integrity | `40778c6` | Ledger/stok DB rules + idempotency |
+| Ops | `19a1c67` | soft_launch, webhook HMAC, pagination, rapor dates |
+| Test fix | `b2b89a8` | RFQ/payment/`fiyat_kaynagi` hizası |
+| ADIM 5 matrix | `f41d39c` | `test_openapi_smoke_matrix` + readiness/JSON |
+| ADIM 6 FE CSRF | `38a8c79` | `test_fe_session_csrf_flow` |
 
-**Kod davranışı (iş kuralı) değiştirilmedi.** Yalnız OpenAPI sözleşme zenginleştirme + döküman hizalama + smoke.
-
-**Commit’ler (bu audit):**
-- `ad2ee36` — `fix(api): OpenAPI password/MFA request and response DTO bindings`
-- `59b6f5c` — `docs: API audit inventory, drift report, and HTML portal Deprecated sync`
+Önceki audit envanter/drift: `docs/_audit/*` (ADIM 0–5 ilk tur).
 
 ---
 
-## 2. Döküman ↔ kod uyum durumu (önce / sonra)
+## 2. Döküman ↔ kod uyum (önce / sonra)
 
 | Konu | Önce | Sonra |
 |------|------|-------|
-| OpenAPI path ↔ Django `/api/v1` ops | Uyumlu (only_oa=0) | Aynı; lint **OK** |
-| Meta `/api/schema|docs|redoc` | Kodda var, OpenAPI paths’te yok | Bilinçli; drift-report’ta |
-| API_CONTRACT path sayısı | **81** (bayat) | **98** |
-| HTML `/buyer` “korunur” | API_CONTRACT / ROADMAP / BACKLOG / MASTER | **Deprecated** + API eşlenikleri |
-| `lint_openapi` password/MFA | unbound / weak schema | **Kapatıldı** |
-| FE → BE çağrıları | csrf/login/logout/me/health | Hepsi backend’de ✅ |
+| Uncommitted WIP (~130) | Kirli tree | **Temiz** (dilimli commit) |
+| Full PG suite | Kanıtsız / tarihsel 597 | **588 OK** (`docs/_audit/full-suite-log.txt`) |
+| OpenAPI smoke | 15 anonim / şablon readiness | **106 op · 276/276 check** matrix |
+| FE CSRF same-origin | Yalnız B1 | + `test_fe_session_csrf_flow` |
+| `makemigrations --check` | — | **OK** |
+| `export_openapi --check` / `lint_openapi` | — | **OK** (paths=98, ops=106) |
 
 ---
 
-## 3. Hâlâ açık olan işler (öncelikli)
+## 3. ADIM 7 — bilinçli kapsam dışı (implement yok)
 
-1. **P0/P1** Working tree’de ~130 dosya hâlâ uncommitted: ADR-0029 HTML silme, ADR-0028 invite/verify, `bildirim/`, migration’lar (bu audit commit’lerine **bilinçli dahil edilmedi**)  
-2. **P1** Next portal dilimleri (MASTER §12.3) — ürün sahibi talimatı  
-3. **P2** FE-SUITE tam PG suite yeşil kanıtı (bu oturumda full suite **çalıştırılmadı**)  
-4. **P2** F6-032 uyuşmazlık ops UI; gerçek ödeme/kargo; staging Sentry event  
-5. Bilinçli kapalı: CORS, RFQ eşleştirme HTTP, teklif create HTTP, Celery  
-
-Detay: [`open-work.md`](open-work.md).
+Teklif create HTTP + RFQ eşleştirme HTTP: **kapsam dışı**, gerekçe: `docs/API_CONTRACT.md:106` · `docs/API_READINESS.md:57` (`FE-P1-RFQ`).
 
 ---
 
@@ -67,26 +47,32 @@ Detay: [`open-work.md`](open-work.md).
 
 | Metrik | Değer | Kanıt |
 |--------|-------|-------|
-| Django API/act-as route kaydı | 104 | `endpoint-inventory.md` |
-| OpenAPI paths / ops | 98 / 106 | `openapi-v1.json`; `lint_openapi` OK |
-| Hazırlık tablosu (test kanıtlı op) | 106 / 106 | `endpoint-readiness.md` |
-| Smoke | **15/15 OK** | `smoke-results.json` (`django.test.Client` + ALLOWED_HOSTS override) |
-| Live HTTP server smoke | **Çalıştırılmadı** | Ayrı `runserver` ayağa kaldırılmadı; Client yeterli route/auth gate için |
-
-Odaklı test (bu oturum):  
-`api.tests.test_api_b7_openapi` + `test_auth_qa_gates` + `test_api_nx_contract` → **13 OK**.
+| OpenAPI paths / ops | 98 / 106 | `lint_openapi` OK |
+| Smoke matrix checks | **276/276** | `smoke-matrix-results.json` |
+| Op satır readiness | hazır (matrix) | `endpoint-readiness.md` |
+| CSRF flow (matrix + FE) | OK | matrix `csrf_*` + `test_fe_session_csrf_flow` |
+| Live HTTP `runserver` smoke | **DOĞRULANAMADI** | Ayrı runserver başlatılmadı; Django Client matrix yeterli |
 
 ---
 
-## 5. Doğrulanamayan maddeler ve nedenleri
+## 5. Doğrulanamayan / kalan P2
 
 | Madde | Neden |
 |-------|-------|
-| Tam Django test suite (MASTER §2.7 sayı) | Bu oturumda full suite koşulmadı; süre/ürün kilidi |
-| Canlı `runserver` + HTTP `--base` smoke | Sunucu başlatılmadı; Client smoke kullanıldı |
-| Prod DB migrate uygulanabilirliği | Üretim migrate yasak / onay yok |
-| Staging Sentry event | Ortam yok (MASTER’da da DOĞRULANAMADI) |
-| Prosperer runtime eşdeğerliği | Ürün hedefi; runtime DOĞRULANAMADI (MASTER §1.5) |
+| Canlı HTTP `--base` smoke | runserver yok (Client kullanıldı) |
+| Prod migrate | Onaysız yasak |
+| Staging Sentry event | Ortam yok |
+| Celery/Redis, gerçek ödeme/kargo | Bilinçli erteli |
+| Next portal dilimleri | MASTER §12.3; ürün sahibi talimatı |
+
+Detay: [`open-work.md`](open-work.md).
+
+---
+
+## 6. Integrity / ops özeti (1e)
+
+- Ledger/stok DB constraint migration’ları + onay/return idempotency.
+- Soft-launch check, webhook HMAC, pagination/rapor date guards.
 
 ---
 
@@ -94,9 +80,22 @@ Odaklı test (bu oturum):
 
 | ADIM | Durum |
 |------|--------|
-| 0 Envanter | ✅ `endpoint-inventory.md` |
-| 1 Drift | ✅ `drift-report.md` |
-| 2 Bayat blok | ✅ dökümanlar koda hizalandı |
-| 3 Eksik implement | ✅ eksik endpoint yok; OpenAPI auth DTO tamamlandı |
-| 4 Open work | ✅ `open-work.md` |
-| 5 Readiness + smoke | ✅ `endpoint-readiness.md` + `smoke_api.py` |
+| 1 Commit dilimleri | ✅ temiz tree dilimleri |
+| 2 Migrate check | ✅ `makemigrations --check` |
+| 3 Full suite | ✅ **588 OK** PG |
+| 4 Open work | ✅ P0/P1 yok; P2 listeli |
+| 5 Smoke 106 | ✅ 276/276 |
+| 6 FE CSRF | ✅ |
+| 7 Kapsam dışı | ✅ tek satır (yukarı) |
+| 8 Docs + FINAL | ✅ bu dosya |
+
+---
+
+## Durma koşulları
+
+- [x] `git status` temiz (FINAL commit sonrası)
+- [x] `makemigrations --check` temiz
+- [x] full suite yeşil — **588**
+- [x] `export_openapi.py --check` + `lint_openapi.py` OK
+- [x] smoke matrix 106 op / 276 check (Client)
+- [x] HTTP mode: DOĞRULANAMADI + neden (yukarı)
