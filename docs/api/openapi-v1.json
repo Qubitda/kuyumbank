@@ -1,6 +1,66 @@
 {
   "components": {
     "schemas": {
+      "ActAsStartOk": {
+        "properties": {
+          "act_as": {
+            "type": "boolean"
+          },
+          "redirect_url": {
+            "type": "string"
+          },
+          "target_id": {
+            "type": "integer"
+          },
+          "target_username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "act_as",
+          "target_id",
+          "target_username",
+          "redirect_url"
+        ],
+        "type": "object"
+      },
+      "ActAsStartRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "user_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "type": "object"
+      },
+      "ActAsStopOk": {
+        "properties": {
+          "act_as": {
+            "type": "boolean"
+          },
+          "actor_id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "redirect_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "act_as",
+          "redirect_url"
+        ],
+        "type": "object"
+      },
       "AliciDavranisOzet": {
         "properties": {
           "alici_firma_id": {
@@ -1217,6 +1277,9 @@
           "can_manage_shipment": {
             "type": "boolean"
           },
+          "can_manage_users": {
+            "type": "boolean"
+          },
           "can_view_cart": {
             "type": "boolean"
           },
@@ -1359,6 +1422,73 @@
         ],
         "type": "object"
       },
+      "DetailOk": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "type": "object"
+      },
+      "EmailVerifyConfirmOk": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "email_verified": {
+            "type": "boolean"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "username",
+          "email_verified"
+        ],
+        "type": "object"
+      },
+      "EmailVerifyConfirmRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "token"
+        ],
+        "type": "object"
+      },
+      "EmailVerifyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "description": "Anonim istekte zorunlu; oturumda yok sayılır",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EmailVerifyRequestOk": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "type": "object"
+      },
       "EmptyRequest": {
         "additionalProperties": false,
         "properties": {},
@@ -1412,6 +1542,128 @@
         ],
         "type": "object"
       },
+      "InviteAcceptRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "format": "password",
+            "type": "string"
+          },
+          "password_confirm": {
+            "format": "password",
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "username",
+          "password",
+          "password_confirm"
+        ],
+        "type": "object"
+      },
+      "InviteAccepted": {
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "username"
+        ],
+        "type": "object"
+      },
+      "InviteCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "firma_id": {
+            "description": "Yalnız manage_all_users",
+            "type": "integer"
+          },
+          "rol": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "rol"
+        ],
+        "type": "object"
+      },
+      "InviteCreated": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string"
+          },
+          "firma_id": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "rol": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "rol",
+          "firma_id",
+          "expires_at"
+        ],
+        "type": "object"
+      },
+      "InviteList": {
+        "properties": {
+          "results": {
+            "items": {
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "expired": {
+                  "type": "boolean"
+                },
+                "expires_at": {
+                  "type": "string"
+                },
+                "firma_id": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "rol": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "type": "object"
+      },
       "LoginRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1438,6 +1690,48 @@
         "required": [
           "ok"
         ],
+        "type": "object"
+      },
+      "MeDashboard": {
+        "properties": {
+          "cart_id": {
+            "type": "integer"
+          },
+          "cart_line_count": {
+            "type": "integer"
+          },
+          "firma_ad": {
+            "type": "string"
+          },
+          "firma_id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "firma_kodu": {
+            "type": "string"
+          },
+          "order_count": {
+            "type": "integer"
+          },
+          "rfq_count": {
+            "type": "integer"
+          },
+          "rfq_ozel_count": {
+            "type": "integer"
+          },
+          "rol": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "MeResponse": {
@@ -1474,6 +1768,9 @@
               "can_manage_shipment": {
                 "type": "boolean"
               },
+              "can_manage_users": {
+                "type": "boolean"
+              },
               "can_view_cart": {
                 "type": "boolean"
               },
@@ -1503,6 +1800,9 @@
               }
             },
             "type": "object"
+          },
+          "email_verified": {
+            "type": "boolean"
           },
           "firma": {
             "oneOf": [
@@ -1566,9 +1866,42 @@
           "id",
           "username",
           "rol",
+          "email_verified",
           "firma",
           "firma_id",
           "capabilities"
+        ],
+        "type": "object"
+      },
+      "MfaResendRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "MfaVerifyOk": {
+        "properties": {
+          "detail": {
+            "description": "MFA gerekli değilken",
+            "type": "string"
+          },
+          "mfa_ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mfa_ok"
+        ],
+        "type": "object"
+      },
+      "MfaVerifyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
         ],
         "type": "object"
       },
@@ -2013,6 +2346,67 @@
           "page",
           "page_size",
           "results"
+        ],
+        "type": "object"
+      },
+      "PasswordChangeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "current_password": {
+            "format": "password",
+            "type": "string"
+          },
+          "new_password": {
+            "format": "password",
+            "type": "string"
+          },
+          "new_password_confirm": {
+            "format": "password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password",
+          "new_password_confirm"
+        ],
+        "type": "object"
+      },
+      "PasswordResetConfirmRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "new_password": {
+            "format": "password",
+            "type": "string"
+          },
+          "new_password_confirm": {
+            "format": "password",
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "token",
+          "new_password",
+          "new_password_confirm"
+        ],
+        "type": "object"
+      },
+      "PasswordResetRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
         ],
         "type": "object"
       },
@@ -2722,6 +3116,192 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/act-as/start/": {
+      "post": {
+        "description": "POST {user_id} — session act-as başlat.",
+        "operationId": "createActAsStart",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActAsStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActAsStartOk"
+                }
+              }
+            },
+            "description": "ActAsStartOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/act-as/start/",
+        "tags": [
+          "act-as"
+        ]
+      }
+    },
+    "/api/v1/act-as/stop/": {
+      "post": {
+        "description": "POST — act-as bitir.",
+        "operationId": "createActAsStop",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActAsStopOk"
+                }
+              }
+            },
+            "description": "ActAsStopOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/act-as/stop/",
+        "tags": [
+          "act-as"
+        ]
+      }
+    },
     "/api/v1/approvals/": {
       "get": {
         "description": "GET liste; POST oluştur — {tutar, para_birimi?, org_birimi_id?, order_id?, gerekce?}.",
@@ -3381,6 +3961,461 @@
         ]
       }
     },
+    "/api/v1/auth/email-verify/": {
+      "post": {
+        "description": "POST {email?} — girişliyse kendi hesabı; anonim email.",
+        "operationId": "createEmailVerifyRequest",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerifyRequestOk"
+                }
+              }
+            },
+            "description": "EmailVerifyRequestOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/email-verify/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/email-verify/confirm/": {
+      "post": {
+        "description": "`POST /api/v1/auth/email-verify/confirm/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createEmailVerifyConfirm",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailVerifyConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailVerifyConfirmOk"
+                }
+              }
+            },
+            "description": "EmailVerifyConfirmOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/email-verify/confirm/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/invites/": {
+      "get": {
+        "description": "GET — kendi firma bekleyen davetler (platform: ?firma_id=).",
+        "operationId": "listInvites",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteList"
+                }
+              }
+            },
+            "description": "InviteList"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/auth/invites/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/invites/accept/": {
+      "post": {
+        "description": "POST {token, username, password, password_confirm}.",
+        "operationId": "createInviteAccept",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteAcceptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteAccepted"
+                }
+              }
+            },
+            "description": "InviteAccepted"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/invites/accept/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/invites/create/": {
+      "post": {
+        "description": "POST {email, rol, firma_id?} — manage_users.",
+        "operationId": "createInvite",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCreated"
+                }
+              }
+            },
+            "description": "InviteCreated"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/invites/create/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/login/": {
       "post": {
         "description": "POST /api/v1/auth/login/ — {username, password}; session cookie.",
@@ -3562,6 +4597,471 @@
           }
         },
         "summary": "POST /api/v1/auth/logout/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/resend/": {
+      "post": {
+        "description": "`POST /api/v1/auth/mfa/resend/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createMfaResend",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaResendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailOk"
+                }
+              }
+            },
+            "description": "DetailOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/mfa/resend/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/mfa/verify/": {
+      "post": {
+        "description": "POST {code} — e-posta OTP; MFA_ENFORCE_PLATFORM iken zorunlu.",
+        "operationId": "createMfaVerify",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaVerifyOk"
+                }
+              }
+            },
+            "description": "MfaVerifyOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/mfa/verify/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password-change/": {
+      "post": {
+        "description": "POST {current_password, new_password, new_password_confirm}.",
+        "operationId": "createPasswordChange",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailOk"
+                }
+              }
+            },
+            "description": "DetailOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/password-change/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/": {
+      "post": {
+        "description": "POST {email} — her zaman genel başarı mesajı.",
+        "operationId": "createPasswordResetRequest",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailOk"
+                }
+              }
+            },
+            "description": "DetailOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/password-reset/",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/confirm/": {
+      "post": {
+        "description": "POST {uid, token, new_password, new_password_confirm}.",
+        "operationId": "createPasswordResetConfirm",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailOk"
+                }
+              }
+            },
+            "description": "DetailOk"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/auth/password-reset/confirm/",
         "tags": [
           "auth"
         ]
@@ -5081,6 +6581,89 @@
           }
         },
         "summary": "GET /api/v1/me/",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/me/dashboard/": {
+      "get": {
+        "description": "GET /me/dashboard/ — alıcı özet sayaçlar (ADR-0029 AO-5).",
+        "operationId": "listMeDashboards",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDashboard"
+                }
+              }
+            },
+            "description": "MeDashboard"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/me/dashboard/",
         "tags": [
           "me"
         ]

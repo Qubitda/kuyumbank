@@ -49,6 +49,51 @@ LOGIN_REQUEST = _obj(
     {"username": _str(), "password": _str(format="password")},
     ["username", "password"],
 )
+PASSWORD_RESET_REQUEST = _obj({"email": _str()}, ["email"])
+PASSWORD_RESET_CONFIRM_REQUEST = _obj(
+    {
+        "uid": _str(),
+        "token": _str(),
+        "new_password": _str(format="password"),
+        "new_password_confirm": _str(format="password"),
+    },
+    ["uid", "token", "new_password", "new_password_confirm"],
+)
+PASSWORD_CHANGE_REQUEST = _obj(
+    {
+        "current_password": _str(format="password"),
+        "new_password": _str(format="password"),
+        "new_password_confirm": _str(format="password"),
+    },
+    ["current_password", "new_password", "new_password_confirm"],
+)
+MFA_VERIFY_REQUEST = _obj({"code": _str()}, ["code"])
+MFA_RESEND_REQUEST = EMPTY_REQUEST
+INVITE_CREATE_REQUEST = _obj(
+    {
+        "email": _str(),
+        "rol": _str(),
+        "firma_id": _int(description="Yalnız manage_all_users"),
+    },
+    ["email", "rol"],
+)
+INVITE_ACCEPT_REQUEST = _obj(
+    {
+        "token": _str(),
+        "username": _str(),
+        "password": _str(format="password"),
+        "password_confirm": _str(format="password"),
+    },
+    ["token", "username", "password", "password_confirm"],
+)
+EMAIL_VERIFY_REQUEST = _obj(
+    {"email": _str(description="Anonim istekte zorunlu; oturumda yok sayılır")},
+)
+EMAIL_VERIFY_CONFIRM_REQUEST = _obj(
+    {"uid": _str(), "token": _str()},
+    ["uid", "token"],
+)
+ACT_AS_START_REQUEST = _obj({"user_id": _int()}, ["user_id"])
 CART_LINE_CREATE = _obj(
     {"quote_id": _int(), "miktar": _num_str()},
     ["quote_id", "miktar"],
@@ -213,6 +258,16 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "TakipNoRequest": TAKIP_NO_REQUEST,
     "ReorderRequest": REORDER_REQUEST,
     "LoginRequest": LOGIN_REQUEST,
+    "PasswordResetRequest": PASSWORD_RESET_REQUEST,
+    "PasswordResetConfirmRequest": PASSWORD_RESET_CONFIRM_REQUEST,
+    "PasswordChangeRequest": PASSWORD_CHANGE_REQUEST,
+    "MfaVerifyRequest": MFA_VERIFY_REQUEST,
+    "MfaResendRequest": MFA_RESEND_REQUEST,
+    "InviteCreateRequest": INVITE_CREATE_REQUEST,
+    "InviteAcceptRequest": INVITE_ACCEPT_REQUEST,
+    "EmailVerifyRequest": EMAIL_VERIFY_REQUEST,
+    "EmailVerifyConfirmRequest": EMAIL_VERIFY_CONFIRM_REQUEST,
+    "ActAsStartRequest": ACT_AS_START_REQUEST,
     "CartLineCreateRequest": CART_LINE_CREATE,
     "CartLinePatchRequest": CART_LINE_PATCH,
     "QuoteCreateRequest": QUOTE_CREATE,
@@ -244,6 +299,17 @@ REQUEST_SCHEMAS: dict[str, dict] = {
 REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     # A — payload
     "/api/v1/auth/login/": {"post": "LoginRequest"},
+    "/api/v1/auth/password-reset/": {"post": "PasswordResetRequest"},
+    "/api/v1/auth/password-reset/confirm/": {"post": "PasswordResetConfirmRequest"},
+    "/api/v1/auth/password-change/": {"post": "PasswordChangeRequest"},
+    "/api/v1/auth/mfa/verify/": {"post": "MfaVerifyRequest"},
+    "/api/v1/auth/mfa/resend/": {"post": "MfaResendRequest"},
+    "/api/v1/auth/invites/create/": {"post": "InviteCreateRequest"},
+    "/api/v1/auth/invites/accept/": {"post": "InviteAcceptRequest"},
+    "/api/v1/auth/email-verify/": {"post": "EmailVerifyRequest"},
+    "/api/v1/auth/email-verify/confirm/": {"post": "EmailVerifyConfirmRequest"},
+    "/api/v1/act-as/start/": {"post": "ActAsStartRequest"},
+    "/api/v1/act-as/stop/": {"post": "EmptyRequest"},
     "/api/v1/carts/me/lines/": {"post": "CartLineCreateRequest"},
     "/api/v1/carts/me/lines/{line_id}/": {
         "patch": "CartLinePatchRequest",

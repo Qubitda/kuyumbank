@@ -89,6 +89,7 @@ CAPABILITIES = {
             "can_manage_qc",
             "can_manage_shipment",
             "can_manage_return",
+            "can_manage_users",
         )
     },
 }
@@ -98,11 +99,12 @@ ME_RESPONSE = _obj(
         "id": _int(),
         "username": _str(),
         "rol": _str(),
+        "email_verified": _bool(),
         "firma": {"oneOf": [FIRMA_MASKED, {"type": "null"}]},
         "firma_id": _null_int(),
         "capabilities": CAPABILITIES,
     },
-    ["id", "username", "rol", "firma", "firma_id", "capabilities"],
+    ["id", "username", "rol", "email_verified", "firma", "firma_id", "capabilities"],
 )
 
 HEALTH = _obj(
@@ -111,6 +113,76 @@ HEALTH = _obj(
 )
 CSRF = _obj({"csrf_token": _str()}, ["csrf_token"])
 LOGOUT_OK = _obj({"ok": _bool()}, ["ok"])
+
+INVITE_ITEM = _obj(
+    {
+        "id": _int(),
+        "email": _str(),
+        "rol": _str(),
+        "firma_id": _int(),
+        "expires_at": _str(),
+        "expired": _bool(),
+    }
+)
+INVITE_LIST = _obj({"results": {"type": "array", "items": INVITE_ITEM}}, ["results"])
+INVITE_CREATED = _obj(
+    {
+        "id": _int(),
+        "email": _str(),
+        "rol": _str(),
+        "firma_id": _int(),
+        "expires_at": _str(),
+    },
+    ["id", "email", "rol", "firma_id", "expires_at"],
+)
+INVITE_ACCEPTED = _obj(
+    {"detail": _str(), "username": _str()},
+    ["detail", "username"],
+)
+EMAIL_VERIFY_REQUEST_OK = _obj({"detail": _str()}, ["detail"])
+EMAIL_VERIFY_CONFIRM_OK = _obj(
+    {"detail": _str(), "username": _str(), "email_verified": _bool()},
+    ["detail", "username", "email_verified"],
+)
+DETAIL_OK = _obj({"detail": _str()}, ["detail"])
+MFA_VERIFY_OK = _obj(
+    {
+        "mfa_ok": _bool(),
+        "detail": _str(description="MFA gerekli değilken"),
+    },
+    ["mfa_ok"],
+)
+ME_DASHBOARD = _obj(
+    {
+        "username": _str(),
+        "rol": _str(),
+        "firma_id": _null_int(),
+        "firma_ad": _str(),
+        "firma_kodu": _str(),
+        "cart_id": _int(),
+        "cart_line_count": _int(),
+        "order_count": _int(),
+        "rfq_count": _int(),
+        "rfq_ozel_count": _int(),
+    }
+)
+ACT_AS_START_OK = _obj(
+    {
+        "act_as": _bool(),
+        "target_id": _int(),
+        "target_username": _str(),
+        "redirect_url": _str(),
+    },
+    ["act_as", "target_id", "target_username", "redirect_url"],
+)
+ACT_AS_STOP_OK = _obj(
+    {
+        "act_as": _bool(),
+        "actor_id": _null_int(),
+        "redirect_url": _str(),
+    },
+    ["act_as", "redirect_url"],
+)
 
 BUYER_CATALOG_VARIANT = _obj(
     {
@@ -520,6 +592,16 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "Health": HEALTH,
     "CsrfResponse": CSRF,
     "LogoutOk": LOGOUT_OK,
+    "InviteList": INVITE_LIST,
+    "InviteCreated": INVITE_CREATED,
+    "InviteAccepted": INVITE_ACCEPTED,
+    "EmailVerifyRequestOk": EMAIL_VERIFY_REQUEST_OK,
+    "EmailVerifyConfirmOk": EMAIL_VERIFY_CONFIRM_OK,
+    "DetailOk": DETAIL_OK,
+    "MfaVerifyOk": MFA_VERIFY_OK,
+    "MeDashboard": ME_DASHBOARD,
+    "ActAsStartOk": ACT_AS_START_OK,
+    "ActAsStopOk": ACT_AS_STOP_OK,
     "BuyerCatalogItem": BUYER_CATALOG_ITEM,
     "BuyerCatalogDetail": BUYER_CATALOG_DETAIL,
     "BuyerCatalogPage": paginated("BuyerCatalogItem"),
@@ -574,7 +656,20 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/auth/csrf/": {"get": ("200", "CsrfResponse")},
     "/api/v1/auth/login/": {"post": ("200", "MeResponse")},
     "/api/v1/auth/logout/": {"post": ("200", "LogoutOk")},
+    "/api/v1/auth/password-reset/": {"post": ("200", "DetailOk")},
+    "/api/v1/auth/password-reset/confirm/": {"post": ("200", "DetailOk")},
+    "/api/v1/auth/password-change/": {"post": ("200", "DetailOk")},
+    "/api/v1/auth/mfa/verify/": {"post": ("200", "MfaVerifyOk")},
+    "/api/v1/auth/mfa/resend/": {"post": ("200", "DetailOk")},
+    "/api/v1/auth/invites/": {"get": ("200", "InviteList")},
+    "/api/v1/auth/invites/create/": {"post": ("201", "InviteCreated")},
+    "/api/v1/auth/invites/accept/": {"post": ("201", "InviteAccepted")},
+    "/api/v1/auth/email-verify/": {"post": ("200", "EmailVerifyRequestOk")},
+    "/api/v1/auth/email-verify/confirm/": {"post": ("200", "EmailVerifyConfirmOk")},
     "/api/v1/me/": {"get": ("200", "MeResponse")},
+    "/api/v1/me/dashboard/": {"get": ("200", "MeDashboard")},
+    "/api/v1/act-as/start/": {"post": ("200", "ActAsStartOk")},
+    "/api/v1/act-as/stop/": {"post": ("200", "ActAsStopOk")},
     "/api/v1/catalog/": {"get": ("200", "BuyerCatalogPage")},
     "/api/v1/catalog/{id}/": {"get": ("200", "BuyerCatalogDetail")},
     "/api/v1/quotes/": {"post": ("201", "BuyerQuote")},
