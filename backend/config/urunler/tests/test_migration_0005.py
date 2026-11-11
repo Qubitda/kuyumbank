@@ -8,6 +8,32 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
 
 
+def _create_ayar_milyem(AyarMilyem, *, metal, ayar_kodu, ayar_degeri, milyem):
+    """Historical model may omit fiyat_kaynagi while DB already has NOT NULL (ADR-0018)."""
+    fields = {f.name for f in AyarMilyem._meta.local_fields}
+    kwargs = {
+        "metal": metal,
+        "ayar_kodu": ayar_kodu,
+        "ayar_degeri": ayar_degeri,
+        "milyem": milyem,
+    }
+    if "fiyat_kaynagi" in fields:
+        kwargs["fiyat_kaynagi"] = "MIRAS"
+        return AyarMilyem.objects.create(**kwargs)
+    with connection.cursor() as c:
+        c.execute(
+            """
+            INSERT INTO tanimlar_ayarmilyem
+                (metal_id, ayar_kodu, ayar_degeri, milyem, fiyat_kaynagi)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+            """,
+            [metal.pk, ayar_kodu, ayar_degeri, str(milyem), "MIRAS"],
+        )
+        pk = c.fetchone()[0]
+    return AyarMilyem.objects.get(pk=pk)
+
+
 class Urun0005MigrationTests(TransactionTestCase):
     def tearDown(self):
         call_command("migrate", verbosity=0)
@@ -55,8 +81,12 @@ class Urun0005MigrationTests(TransactionTestCase):
         AyarMilyem = apps.get_model("tanimlar", "AyarMilyem")
 
         metal = KiymetliMetal.objects.create(kod="ALTIN_M5", ad="Altın", gram_bazli=True)
-        ayar = AyarMilyem.objects.create(
-            metal=metal, ayar_kodu="14K", ayar_degeri=14, milyem=Decimal("0.585")
+        ayar = _create_ayar_milyem(
+            AyarMilyem,
+            metal=metal,
+            ayar_kodu="14K",
+            ayar_degeri=14,
+            milyem=Decimal("0.585"),
         )
         grup = FiyatGrubu.objects.create(kod="M5_G", ad="M5")
         kat = Kategori.objects.create(kod="M5_K", ad="Yüzük", fiyat_grubu=grup)
@@ -112,8 +142,12 @@ class Urun0005MigrationTests(TransactionTestCase):
         AyarMilyem = apps.get_model("tanimlar", "AyarMilyem")
 
         metal = KiymetliMetal.objects.create(kod="ALTIN_M5b", ad="Altın", gram_bazli=True)
-        ayar = AyarMilyem.objects.create(
-            metal=metal, ayar_kodu="18K", ayar_degeri=18, milyem=Decimal("0.750")
+        ayar = _create_ayar_milyem(
+            AyarMilyem,
+            metal=metal,
+            ayar_kodu="18K",
+            ayar_degeri=18,
+            milyem=Decimal("0.750"),
         )
         grup = FiyatGrubu.objects.create(kod="M5b_G", ad="M5b")
         kat = Kategori.objects.create(kod="M5b_K", ad="Kolye", fiyat_grubu=grup)

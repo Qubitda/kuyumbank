@@ -87,7 +87,8 @@ class PaymentAdapterTests(CheckoutFixtureMixin, TestCase):
             with self.assertRaises(ValidationError):
                 payment_servisi.tahsil_et(actor=self.finance, intent=pi)
         pi.refresh_from_db()
-        self.assertEqual(pi.durum, PaymentIntent.Durum.BEKLEMEDE)
+        # Provider fail → BASARISIZ (retry için BEKLEMEDE bırakılmaz; fail-closed)
+        self.assertEqual(pi.durum, PaymentIntent.Durum.BASARISIZ)
         self.assertTrue(
             AuditOlay.objects.filter(
                 action="finans.payment.provider_rejected",

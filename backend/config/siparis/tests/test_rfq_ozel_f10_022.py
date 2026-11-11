@@ -3,8 +3,7 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.test import Client, TestCase
-from django.urls import reverse
+from django.test import TestCase
 
 from firmalar.role_permissions import seed_role_permissions
 from firmalar.services.rol_servisi import sync_user_role_groups
@@ -19,9 +18,6 @@ class RfqOzelF10022Tests(CheckoutFixtureMixin, TestCase):
         cls._build_checkout_world()
         seed_role_permissions()
         sync_user_role_groups(cls.buyer)
-
-    def setUp(self):
-        self.client = Client()
 
     def test_ozel_uretim_creates_revision_v1(self):
         rfq = rfq_servisi.olustur(
@@ -61,31 +57,23 @@ class RfqOzelF10022Tests(CheckoutFixtureMixin, TestCase):
                 actor=self.buyer, rfq=rfq, ozet="olmamalı"
             )
 
-    def test_buyer_ui_ozel_and_revision(self):
-        self.client.force_login(self.buyer)
-        res = self.client.post(
-            reverse("buyer-rfq-create"),
-            {
-                "baslik": "Tasarım bilezik",
-                "talep_tipi": "OZEL_URETIM",
-                "aciklama": "CAD revizyonlu",
-                "miktar": "1",
-                "birim": "ADET",
-            },
+    def test_ozel_uretim_revision_has_no_supplier_leak_in_fields(self):
+        """HTML buyer RFQ UI kaldırıldı (ADR-0029); HTTP kanıtı api.tests.test_api_b4_enterprise."""
+        rfq = rfq_servisi.olustur(
+            actor=self.buyer,
+            baslik="Tasarım bilezik",
+            talep_tipi=RFQ.TalepTipi.OZEL_URETIM,
+            line_specs=[
+                {
+                    "aciklama": "CAD revizyonlu",
+                    "miktar": Decimal("1"),
+                    "birim": "ADET",
+                }
+            ],
         )
-        self.assertEqual(res.status_code, 302)
-        rfq = RFQ.objects.get(alici_firma=self.buyer.firma, talep_tipi="OZEL_URETIM")
-        det = self.client.get(reverse("buyer-rfq-detail", kwargs={"pk": rfq.pk}))
-        self.assertEqual(det.status_code, 200)
-        self.assertContains(det, "OZEL_URETIM")
-        self.assertContains(det, "Revizyon geçmişi")
-        self.assertNotContains(det, "tedarikci")
-
-        rev = self.client.post(
-            reverse("buyer-rfq-revision", kwargs={"pk": rfq.pk}),
-            {"ozet": "Ölçü 16.5 olarak güncellendi"},
+        rfq_servisi.revizyon_ekle(
+            actor=self.buyer, rfq=rfq, ozet="Ölçü 16.5 olarak güncellendi"
         )
-        self.assertEqual(rev.status_code, 302)
         self.assertEqual(rfq.revizyonlar.count(), 2)
-        det2 = self.client.get(reverse("buyer-rfq-detail", kwargs={"pk": rfq.pk}))
-        self.assertContains(det2, "Ölçü 16.5")
+        for rev in rfq.revizyonlar.all():
+            self.assertFalse(hasattr(rev, "tedarikci"))

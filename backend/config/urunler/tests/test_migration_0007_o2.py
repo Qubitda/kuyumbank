@@ -8,8 +8,11 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
 from django.utils import timezone
 
+from urunler.tests.test_migration_0005 import _create_ayar_milyem
+
 
 class Urun0007O2MigrationTests(TransactionTestCase):
+
     def tearDown(self):
         call_command("migrate", verbosity=0)
 
@@ -33,8 +36,12 @@ class Urun0007O2MigrationTests(TransactionTestCase):
         metal = KiymetliMetal.objects.create(
             kod=f"M{suffix}", ad="Altın", gram_bazli=True
         )
-        ayar = AyarMilyem.objects.create(
-            metal=metal, ayar_kodu="14K", ayar_degeri=14, milyem=Decimal("0.585")
+        ayar = _create_ayar_milyem(
+            AyarMilyem,
+            metal=metal,
+            ayar_kodu="14K",
+            ayar_degeri=14,
+            milyem=Decimal("0.585"),
         )
         grup = FiyatGrubu.objects.create(kod=f"G{suffix}", ad=f"G{suffix}")
         kat = Kategori.objects.create(kod=f"K{suffix}", ad="Yüzük", fiyat_grubu=grup)
