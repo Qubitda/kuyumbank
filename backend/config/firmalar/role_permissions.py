@@ -41,7 +41,32 @@ P = {
     "manage_spend_limit": "firmalar.manage_spend_limit",
     "manage_approval": "firmalar.manage_approval",
     "manage_rfq": "siparis.manage_rfq",
+    "manage_smtp": "bildirim.manage_smtp",
+    "manage_email_template": "bildirim.manage_email_template",
+    "manage_notification_rule": "bildirim.manage_notification_rule",
+    "send_manual_email": "bildirim.send_manual_email",
+    "view_email_log": "bildirim.view_email_log",
 }
+
+_BILDIRIM_ADMIN = (
+    P["manage_smtp"],
+    P["manage_email_template"],
+    P["manage_notification_rule"],
+    P["send_manual_email"],
+    P["view_email_log"],
+    "bildirim.view_smtpsettings",
+    "bildirim.change_smtpsettings",
+    "bildirim.view_emailtemplate",
+    "bildirim.add_emailtemplate",
+    "bildirim.change_emailtemplate",
+    "bildirim.view_notificationrule",
+    "bildirim.add_notificationrule",
+    "bildirim.change_notificationrule",
+    "bildirim.view_emaildelivery",
+    "bildirim.change_emaildelivery",
+    "bildirim.view_recipientsettings",
+    "bildirim.change_recipientsettings",
+)
 
 _KUR_ADMIN = (
     "tanimlar.view_kursaglayici",
@@ -137,6 +162,7 @@ ROLE_PERMISSION_MATRIX = {
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
         *_PIYASA_ADMIN,
+        *_BILDIRIM_ADMIN,
     ),
     roles.PLATFORM_ADMIN: (
         P["approve_firma"],
@@ -166,6 +192,7 @@ ROLE_PERMISSION_MATRIX = {
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,
         *_PIYASA_ADMIN,
+        *_BILDIRIM_ADMIN,
     ),
     roles.PLATFORM_OPS: (
         P["view_all_tenants"],
@@ -182,6 +209,11 @@ ROLE_PERMISSION_MATRIX = {
         P["manage_kur"],
         P["post_ledger"],
         P["manage_hak_edis"],
+        P["view_email_log"],
+        P["send_manual_email"],
+        "bildirim.view_emaildelivery",
+        "bildirim.change_emaildelivery",
+        "bildirim.view_emailtemplate",
         *_FIYATLAMA_SOZLESME_ADMIN,
         *_FIYATLAMA_LOG_ADMIN,
         *_KUR_ADMIN,

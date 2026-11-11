@@ -46,6 +46,7 @@ class OutboxRollbackTests(TransactionTestCase):
 
 class OutboxProcessTests(TestCase):
     def test_process_pending_marks_processed_idempotent(self):
+        outbox_servisi.register_ack_handler("test.process")
         with domain_atomic():
             msg = outbox_servisi.enqueue(
                 event_type="test.process", payload={"a": 1}
@@ -65,6 +66,18 @@ class OutboxProcessTests(TestCase):
             ).count(),
             1,
         )
+
+    def test_unknown_event_fails_not_processed(self):
+        with domain_atomic():
+            msg = outbox_servisi.enqueue(
+                event_type="test.unknown.no_handler", payload={}
+            )
+        r = outbox_servisi.process_pending(limit=10)
+        self.assertEqual(r["failed"], 1)
+        self.assertEqual(r["processed"], 0)
+        msg.refresh_from_db()
+        self.assertEqual(msg.durum, OutboxMessage.Durum.FAILED)
+        self.assertIn("no handler", msg.last_error)
 
 
 class OutboxOrderIntegrationTests(CheckoutFixtureMixin, TestCase):

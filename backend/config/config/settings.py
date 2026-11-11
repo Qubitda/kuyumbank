@@ -116,7 +116,7 @@ INSTALLED_APPS = [
     'lojistik.apps.LojistikConfig',
     'belgeler.apps.BelgelerConfig',
     'piyasa.apps.PiyasaConfig',
-    # bildirim: ADR-0027 — sonraki commit
+    'bildirim.apps.BildirimConfig',
     'api.apps.ApiConfig',
 
 ]

@@ -1,0 +1,5 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+  <li><a href="{% url 'admin:bildirim_manual_send' %}" class="addlink">Manuel e-posta</a></li>
+  {{ block.super }}
+{% endblock %}

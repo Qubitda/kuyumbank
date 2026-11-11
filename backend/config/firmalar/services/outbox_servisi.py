@@ -3,6 +3,9 @@
 `enqueue` domain_atomic içinde çağrılır → rollback outbox satırını da siler.
 `process_pending` management command / sync worker; at-least-once.
 Celery yok (F8).
+
+Tanımsız event_type → PROCESSED değil, FAILED (sessiz başarı yok).
+Bilinçli yan-etkisiz event’ler `register_ack_handler` ile kaydedilir.
 """
 
 from __future__ import annotations
@@ -21,18 +24,29 @@ logger = logging.getLogger(__name__)
 
 Handler = Callable[[OutboxMessage], None]
 
-# İskelet handler kaydı — gerçek bildirim F7/F8.
 _HANDLERS: dict[str, Handler] = {}
+_ACK_ONLY: set[str] = set()
 
 
 def register_handler(event_type: str, handler: Handler) -> None:
+    event_type = (event_type or "").strip()
+    if not event_type:
+        raise ValidationError("event_type zorunlu.")
     _HANDLERS[event_type] = handler
 
 
-def _default_handler(msg: OutboxMessage) -> None:
-    """İskelet: olay kabul edildi (yan etki yok)."""
+def register_ack_handler(event_type: str) -> None:
+    """Bilinen event; yan etki yok — PROCESSED (bilinçli ack, iskelet tüketici)."""
+    event_type = (event_type or "").strip()
+    if not event_type:
+        raise ValidationError("event_type zorunlu.")
+    _ACK_ONLY.add(event_type)
+    register_handler(event_type, _ack_handler)
+
+
+def _ack_handler(msg: OutboxMessage) -> None:
     logger.info(
-        "outbox processed event_type=%s id=%s payload_keys=%s",
+        "outbox ack-only event_type=%s id=%s payload_keys=%s",
         msg.event_type,
         msg.pk,
         sorted((msg.payload or {}).keys()),
@@ -66,7 +80,9 @@ def enqueue(
 def process_pending(*, limit: int = 100) -> dict[str, int]:
     """PENDING mesajları işle; en az bir kez (at-least-once).
 
-    Başarılı handler → PROCESSED. Hata → attempts++ / FAILED (attempts>=5).
+    Kayıtlı handler → PROCESSED.
+    Handler yok → FAILED (retry yok; kayıt eksikliği geçici değil).
+    Handler hata → attempts++ / FAILED (attempts>=5).
     """
     if limit <= 0:
         raise ValidationError("limit pozitif olmalı.")
@@ -75,7 +91,6 @@ def process_pending(*, limit: int = 100) -> dict[str, int]:
     failed = 0
     skipped = 0
 
-    # id listesini önce al; her satırı kendi atomic'inde kilitle
     ids = list(
         OutboxMessage.objects.filter(durum=OutboxMessage.Durum.PENDING)
         .order_by("pk")
@@ -92,7 +107,21 @@ def process_pending(*, limit: int = 100) -> dict[str, int]:
             if msg is None:
                 skipped += 1
                 continue
-            handler = _HANDLERS.get(msg.event_type, _default_handler)
+            handler = _HANDLERS.get(msg.event_type)
+            if handler is None:
+                msg.attempts = msg.attempts + 1
+                msg.last_error = (
+                    f"no handler registered for event_type={msg.event_type}"
+                )[:255]
+                msg.durum = OutboxMessage.Durum.FAILED
+                msg.save(update_fields=["attempts", "last_error", "durum"])
+                failed += 1
+                logger.error(
+                    "outbox unknown event_type=%s id=%s → FAILED",
+                    msg.event_type,
+                    pk,
+                )
+                continue
             try:
                 handler(msg)
                 msg.durum = OutboxMessage.Durum.PROCESSED
