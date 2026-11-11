@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseRedirect
+from django.template import engines
 from django.urls import reverse
+from django.utils.html import escape
 
 from firmalar.models import Firma
 from firmalar.services.yetki_servisi import can_view_all_tenants
@@ -283,6 +284,7 @@ class UrunAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
 
     @admin.action(description="Reddet (Seçilen ürünler için gerekçe girin)")
     def reddet(self, request, queryset):
+        """Ara sayfa proje HTML dosyası kullanmaz (ADR-0029); admin/base_site inline."""
         changelist_url = reverse("admin:urunler_urun_changelist")
         queryset = scope_urun_queryset(queryset, request.user)
 
@@ -291,23 +293,57 @@ class UrunAdmin(UrunTenantAdminMixin, admin.ModelAdmin):
             if form.is_valid():
                 red_nedeni = form.cleaned_data["red_nedeni"]
                 id_listesi = form.cleaned_data.get("_selected_action") or []
-                hedef = scope_urun_queryset(
-                    Urun.objects.filter(pk__in=id_listesi), request.user
-                ) if id_listesi else queryset
-                self._toplu(request, hedef, servisler.reddet, "reddedildi", neden=red_nedeni)
+                hedef = (
+                    scope_urun_queryset(
+                        Urun.objects.filter(pk__in=id_listesi), request.user
+                    )
+                    if id_listesi
+                    else queryset
+                )
+                self._toplu(
+                    request, hedef, servisler.reddet, "reddedildi", neden=red_nedeni
+                )
                 return HttpResponseRedirect(changelist_url)
         else:
             form = TopluRedForm(
-                initial={"_selected_action": request.POST.getlist(admin.ACTION_CHECKBOX_NAME)}
+                initial={
+                    "_selected_action": request.POST.getlist(
+                        admin.ACTION_CHECKBOX_NAME
+                    )
+                }
             )
 
-        return render(request, "admin/toplu_red_onay.html", context={
-            "items": queryset,
-            "form": form,
-            "title": "Toplu Red Nedeni Girin",
-            "opts": self.model._meta,
-            "action_checkbox_name": admin.ACTION_CHECKBOX_NAME,
-        })
+        items_html = "".join(
+            f"<li>{escape(urun.platform_kodu)} — {escape(urun.ad)}</li>"
+            for urun in queryset
+        )
+        tmpl = engines["django"].from_string(
+            "{% extends 'admin/base_site.html' %}"
+            "{% load i18n %}"
+            "{% block content %}"
+            "<h1>{{ title }}</h1>"
+            "<p>Aşağıdaki <strong>{{ count }}</strong> ürün reddedilecektir:</p>"
+            "<ul>{{ items_html|safe }}</ul>"
+            '<form method="post">{% csrf_token %}{{ form.as_p }}'
+            '<input type="hidden" name="action" value="reddet">'
+            '<input type="submit" name="apply" value="{% trans \'Reddet\' %}" '
+            'class="button default"> '
+            '<a href="{{ changelist_url }}" class="button cancel-link">'
+            "{% trans 'Vazgeç' %}</a></form>"
+            "{% endblock %}"
+        )
+        return HttpResponse(
+            tmpl.render(
+                {
+                    "title": "Toplu Red Nedeni Girin",
+                    "count": queryset.count(),
+                    "items_html": items_html,
+                    "form": form,
+                    "changelist_url": changelist_url,
+                },
+                request,
+            )
+        )
 
     @admin.action(description="Yayına al (aktif)")
     def yayina_al(self, request, queryset):

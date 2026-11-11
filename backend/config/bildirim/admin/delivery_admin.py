@@ -40,7 +40,6 @@ class EmailDeliveryAdmin(admin.ModelAdmin):
         "updated_at",
     )
     actions = ("action_retry",)
-    change_list_template = "admin/bildirim/emaildelivery_changelist.html"
 
     def has_add_permission(self, request):
         return False

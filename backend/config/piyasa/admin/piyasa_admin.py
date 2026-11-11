@@ -1,9 +1,4 @@
-from decimal import Decimal, InvalidOperation
-
-from django.contrib import admin, messages
-from django.core.exceptions import ValidationError
-from django.shortcuts import render
-from django.urls import path, reverse
+from django.contrib import admin
 
 from firmalar.services.yetki_servisi import has_perm
 from piyasa.models import (
@@ -12,7 +7,7 @@ from piyasa.models import (
     PiyasaMarjPolitikasi,
     PiyasaUrun,
 )
-from piyasa.services import kar_yardimcisi, piyasa_fiyat_servisi
+from piyasa.services import piyasa_fiyat_servisi
 
 P_MANAGE = "piyasa.manage_piyasa"
 
@@ -106,7 +101,6 @@ class PiyasaUrunAdmin(_PiyasaPermMixin, admin.ModelAdmin):
     autocomplete_fields = ("metal", "ayar")
     readonly_fields = ("olusturma", "guncelleme")
     ordering = ("grup", "sira", "kod")
-    change_list_template = "admin/piyasa/piyasaurun_changelist.html"
     fieldsets = (
         (None, {"fields": ("kod", "ad", "aktif", "sira", "grup", "varyant_etiket")}),
         (
@@ -151,103 +145,3 @@ class PiyasaUrunAdmin(_PiyasaPermMixin, admin.ModelAdmin):
             return ozet["hata"][:48]
         return ozet["feed_health"] or "—"
 
-    def get_urls(self):
-        urls = super().get_urls()
-        custom = [
-            path(
-                "kar-yardimcisi/",
-                self.admin_site.admin_view(self.kar_yardimcisi_view),
-                name="piyasa_kar_yardimcisi",
-            ),
-        ]
-        return custom + urls
-
-    def kar_yardimcisi_view(self, request):
-        if not _piyasa_perm(request.user):
-            messages.error(request, "Piyasa yetkisi yok.")
-            from django.shortcuts import redirect
-
-            return redirect("admin:index")
-
-        pol = kar_yardimcisi.get_kar_politikasi()
-        g = request.GET
-        ctx = {
-            "title": "Kar hesaplama yardımcısı",
-            "giris": g.get("giris", "PANO"),
-            "urun_kod": g.get("urun_kod", ""),
-            "metal_kod": g.get("metal_kod", ""),
-            "ayar_kodu": g.get("ayar_kodu", ""),
-            "taraf": g.get("taraf", "SATIS"),
-            "agirlik_gr": g.get("agirlik_gr", "1"),
-            "kar_pct": g.get("kar_pct", "0"),
-            "iscilik_tl": g.get("iscilik_tl", "0"),
-            "hedef_toplam": g.get("hedef_toplam", ""),
-            "banka_tipi": g.get("banka_tipi", pol.banka_tipi),
-            "banka_degeri": g.get("banka_degeri", str(pol.banka_degeri)),
-            "isletme_tipi": g.get("isletme_tipi", pol.isletme_tipi),
-            "isletme_degeri": g.get("isletme_degeri", str(pol.isletme_degeri)),
-            "gv_tipi": g.get("gv_tipi", pol.gelir_vergisi_tipi),
-            "gv_degeri": g.get("gv_degeri", str(pol.gelir_vergisi_degeri)),
-            "diger_tipi": g.get("diger_tipi", pol.diger_tipi),
-            "diger_degeri": g.get("diger_degeri", str(pol.diger_degeri)),
-            "sonuc": None,
-            "hata": "",
-            "opts": self.model._meta,
-            "marj_modu": piyasa_fiyat_servisi.get_marj_modu(),
-        }
-        hesapla = bool(g.get("urun_kod") or g.get("metal_kod"))
-        if hesapla:
-            try:
-                hedef = ctx["hedef_toplam"].strip() or None
-                kes = dict(
-                    banka={
-                        "tip": ctx["banka_tipi"],
-                        "deger": Decimal(ctx["banka_degeri"] or "0"),
-                    },
-                    isletme={
-                        "tip": ctx["isletme_tipi"],
-                        "deger": Decimal(ctx["isletme_degeri"] or "0"),
-                    },
-                    gelir_vergisi={
-                        "tip": ctx["gv_tipi"],
-                        "deger": Decimal(ctx["gv_degeri"] or "0"),
-                    },
-                    diger={
-                        "tip": ctx["diger_tipi"],
-                        "deger": Decimal(ctx["diger_degeri"] or "0"),
-                    },
-                )
-                ortak = dict(
-                    taraf=ctx["taraf"],
-                    agirlik_gr=Decimal(ctx["agirlik_gr"] or "1"),
-                    kar_pct=Decimal(ctx["kar_pct"] or "0"),
-                    iscilik_tl=Decimal(ctx["iscilik_tl"] or "0"),
-                    hedef_toplam=Decimal(hedef) if hedef else None,
-                    **kes,
-                )
-                if ctx["giris"] == "METAL_AYAR" or (
-                    not ctx["urun_kod"] and ctx["metal_kod"]
-                ):
-                    ctx["sonuc"] = kar_yardimcisi.simule_metal_ayar(
-                        metal_kod=ctx["metal_kod"],
-                        ayar_kodu=ctx["ayar_kodu"] or None,
-                        **ortak,
-                    )
-                else:
-                    ctx["sonuc"] = kar_yardimcisi.simule_pano_urun(
-                        urun_kod=ctx["urun_kod"], **ortak
-                    )
-            except (
-                ValidationError,
-                ValueError,
-                InvalidOperation,
-                PiyasaUrun.DoesNotExist,
-            ) as exc:
-                ctx["hata"] = str(exc)
-        return render(request, "admin/piyasa/kar_yardimcisi.html", ctx)
-
-    def changelist_view(self, request, extra_context=None):
-        extra_context = extra_context or {}
-        extra_context["kar_yardimcisi_url"] = reverse("admin:piyasa_kar_yardimcisi")
-        extra_context["marj_modu"] = piyasa_fiyat_servisi.get_marj_modu()
-        return super().changelist_view(request, extra_context=extra_context)

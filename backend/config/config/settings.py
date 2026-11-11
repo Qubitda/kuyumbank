@@ -258,7 +258,7 @@ FRONTEND_PORTAL_BASE_URL = env("FRONTEND_PORTAL_BASE_URL", default="")
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],
+        'DIRS': [],  # proje HTML yok (ADR-0029); Admin Django paket şablonları
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
