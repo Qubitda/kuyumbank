@@ -13,13 +13,48 @@ export function getMyCart(): Promise<Cart> {
   return apiFetch<Cart>("/carts/me/");
 }
 
+/** Runtime: `{ line, cart }` — OpenAPI Cart sarmalayıcısından farklı olabilir. */
 export function addCartLine(
   body: components["schemas"]["CartLineCreateRequest"],
   idempotencyKey: string,
-): Promise<Cart> {
-  return apiFetch<Cart>("/carts/me/lines/", {
+): Promise<{ line?: unknown; cart?: Cart }> {
+  return apiFetch("/carts/me/lines/", {
     method: "POST",
     body,
+    idempotencyKey,
+  });
+}
+
+export function patchCartLine(
+  lineId: number,
+  body: components["schemas"]["CartLinePatchRequest"],
+  idempotencyKey: string,
+): Promise<{ line?: unknown; cart?: Cart }> {
+  return apiFetch(`/carts/me/lines/${lineId}/`, {
+    method: "PATCH",
+    body,
+    idempotencyKey,
+  });
+}
+
+export function deleteCartLine(
+  lineId: number,
+  idempotencyKey: string,
+): Promise<{ ok?: boolean; cart?: Cart }> {
+  return apiFetch(`/carts/me/lines/${lineId}/`, {
+    method: "DELETE",
+    body: {},
+    idempotencyKey,
+  });
+}
+
+export function cancelOrder(
+  orderId: number,
+  idempotencyKey: string,
+): Promise<Order> {
+  return apiFetch<Order>(`/orders/${orderId}/cancel/`, {
+    method: "POST",
+    body: {},
     idempotencyKey,
   });
 }

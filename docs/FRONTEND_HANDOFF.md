@@ -176,6 +176,10 @@ cd backend
 # .venv aktif; config/.env: DEBUG, DB_*, CSRF_TRUSTED_ORIGINS=http://localhost:3000
 cd config
 python manage.py migrate
+python manage.py seed_demo_portals
+python manage.py seed_tanimlar
+python manage.py seed_urunler
+python manage.py seed_demo_commerce   # yayınlı ürün + teklif + sözleşme + stok
 python manage.py runserver
 
 # Frontend

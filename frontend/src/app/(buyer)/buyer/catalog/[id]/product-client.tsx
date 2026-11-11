@@ -45,8 +45,13 @@ export function CatalogProductClient({ productId }: { productId: number }) {
       .then(([d, ch]) => {
         if (cancelled) return;
         setDetail(d);
-        setChannels(ch.results ?? []);
-        if (ch.results?.[0]) setChannelId(ch.results[0].id);
+        const list = ch.results ?? [];
+        setChannels(list);
+        const preferred =
+          list.find((c) => c.kod === "KUYUMCU_PANEL") ||
+          list.find((c) => (c.quote_ttl_saniye ?? 0) > 0) ||
+          list[0];
+        if (preferred) setChannelId(preferred.id);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -133,13 +138,17 @@ export function CatalogProductClient({ productId }: { productId: number }) {
           newIdempotencyKey(),
         );
         const co = await checkout(newIdempotencyKey());
+        // Runtime body: { id, durum, ... }; OpenAPI alias checkout_id olabilir.
+        const checkoutId =
+          (co as { checkout_id?: number; id?: number }).checkout_id ??
+          (co as { id?: number }).id;
         if (co.order_id) {
           setMessage(`Sipariş oluştu #${co.order_id}`);
           return;
         }
-        if (co.checkout_id) {
+        if (checkoutId) {
           const order = await orderFromCheckout(
-            co.checkout_id,
+            checkoutId,
             newIdempotencyKey(),
           );
           setMessage(`Sipariş oluştu #${order.id}`);
