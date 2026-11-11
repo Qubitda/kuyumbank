@@ -456,6 +456,47 @@ SUPPLIER_OFFER = _obj(
     },
     ["id", "varyant_id", "durum"],
 )
+RFQ_MATCH = _obj(
+    {
+        "id": _int(),
+        "rfq_line_id": _int(),
+        "varyant_id": _int(),
+        "durum": _str(),
+        "skor": _int(),
+        "kanit": {"type": "object"},
+        "allowed_actions": _actions(),
+    },
+    ["id", "rfq_line_id", "varyant_id", "durum"],
+)
+RFQ_MATCH_CANDIDATES = _obj(
+    {
+        "rfq_line_id": _int(),
+        "results": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "varyant_id": _int(),
+                    "sku": _str(),
+                    "urun_ad": _str(),
+                    "platform_kodu": _str(),
+                    "skor": _int(),
+                },
+            },
+        },
+    },
+    ["rfq_line_id", "results"],
+)
+RFQ_MATCH_LIST = _obj(
+    {
+        "rfq_line_id": _int(),
+        "results": {
+            "type": "array",
+            "items": {"$ref": "#/components/schemas/RfqMatch"},
+        },
+    },
+    ["rfq_line_id", "results"],
+)
 SUPPLIER_STOCK = _obj(
     {
         "warehouse_id": _int(),
@@ -636,6 +677,9 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "RfqPage": paginated("Rfq"),
     "SupplierOffer": SUPPLIER_OFFER,
     "SupplierOfferPage": paginated("SupplierOffer"),
+    "RfqMatch": RFQ_MATCH,
+    "RfqMatchCandidates": RFQ_MATCH_CANDIDATES,
+    "RfqMatchList": RFQ_MATCH_LIST,
     "SupplierStock": SUPPLIER_STOCK,
     "SupplierStockPage": paginated("SupplierStock"),
     "SupplierMovement": SUPPLIER_MOVEMENT,
@@ -754,11 +798,23 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/rfqs/{id}/send/": {"post": ("200", "Rfq")},
     "/api/v1/rfqs/{id}/messages/": {"post": ("201", "Rfq")},
     "/api/v1/rfqs/{id}/revisions/": {"post": ("201", "Rfq")},
-    "/api/v1/supplier/offers/": {"get": ("200", "SupplierOfferPage")},
+    "/api/v1/supplier/offers/": {
+        "get": ("200", "SupplierOfferPage"),
+        "post": ("201", "SupplierOffer"),
+    },
     "/api/v1/supplier/offers/{id}/": {"get": ("200", "SupplierOffer")},
     "/api/v1/supplier/offers/{id}/submit/": {"post": ("200", "SupplierOffer")},
     "/api/v1/supplier/offers/{id}/deactivate/": {"post": ("200", "SupplierOffer")},
     "/api/v1/supplier/offers/{id}/versions/": {"post": ("201", "SupplierOffer")},
+    "/api/v1/ops/rfq-lines/{line_id}/match-candidates/": {
+        "get": ("200", "RfqMatchCandidates")
+    },
+    "/api/v1/ops/rfq-lines/{line_id}/matches/": {
+        "get": ("200", "RfqMatchList"),
+        "post": ("201", "RfqMatch"),
+    },
+    "/api/v1/ops/rfq-matches/{id}/approve/": {"post": ("200", "RfqMatch")},
+    "/api/v1/ops/rfq-matches/{id}/reject/": {"post": ("200", "RfqMatch")},
     "/api/v1/supplier/stock/": {"get": ("200", "SupplierStockPage")},
     "/api/v1/supplier/stock/adjustments/": {"post": ("201", "SupplierMovement")},
     "/api/v1/supplier/rfqs/": {"get": ("200", "RfqPage")},

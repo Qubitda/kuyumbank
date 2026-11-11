@@ -203,12 +203,36 @@ RFQ_CREATE = _obj(
 RFQ_MESSAGE = _obj({"govde": _str()}, ["govde"])
 RFQ_REVISION = _obj({"ozet": _str()}, ["ozet"])
 
+SUPPLIER_OFFER_CREATE = _obj(
+    {
+        "varyant_id": _int(),
+        "fiyat_modeli": _str(),
+        "gram": _num_str(),
+        "birim_fiyat": _num_str(),
+        "tedarikci_kodu": _str(),
+        "gecerlilik_baslangic": _str(),
+        "gecerlilik_bitis": _str(),
+        "temin_tipi": _str(),
+        "uretim_suresi_gun": _int(),
+        "iscilik_override": _num_str(),
+        "para_birimi": _str(),
+    },
+    ["varyant_id", "fiyat_modeli"],
+)
 SUPPLIER_OFFER_VERSION = _obj(
     {
         "gram": _num_str(),
         "birim_fiyat": _num_str(),
         "fiyat_modeli": _str(),
     }
+)
+RFQ_MATCH_CREATE = _obj(
+    {
+        "varyant_id": _int(),
+        "kanit": {"type": "object", "additionalProperties": {"type": "string"}},
+        "skor": _int(),
+    },
+    ["varyant_id"],
 )
 SUPPLIER_STOCK_ADJUST = _obj(
     {
@@ -287,7 +311,9 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "RfqCreateRequest": RFQ_CREATE,
     "RfqMessageRequest": RFQ_MESSAGE,
     "RfqRevisionRequest": RFQ_REVISION,
+    "SupplierOfferCreateRequest": SUPPLIER_OFFER_CREATE,
     "SupplierOfferVersionRequest": SUPPLIER_OFFER_VERSION,
+    "RfqMatchCreateRequest": RFQ_MATCH_CREATE,
     "SupplierStockAdjustRequest": SUPPLIER_STOCK_ADJUST,
     "OpsInspectionCreateRequest": OPS_INSPECTION_CREATE,
     "OpsMeasurementRequest": OPS_MEASUREMENT,
@@ -330,7 +356,11 @@ REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     "/api/v1/rfqs/": {"post": "RfqCreateRequest"},
     "/api/v1/rfqs/{id}/messages/": {"post": "RfqMessageRequest"},
     "/api/v1/rfqs/{id}/revisions/": {"post": "RfqRevisionRequest"},
+    "/api/v1/supplier/offers/": {"post": "SupplierOfferCreateRequest"},
     "/api/v1/supplier/offers/{id}/versions/": {"post": "SupplierOfferVersionRequest"},
+    "/api/v1/ops/rfq-lines/{line_id}/matches/": {"post": "RfqMatchCreateRequest"},
+    "/api/v1/ops/rfq-matches/{id}/approve/": {"post": "EmptyRequest"},
+    "/api/v1/ops/rfq-matches/{id}/reject/": {"post": "ReasonRequest"},
     "/api/v1/supplier/rfqs/{id}/messages/": {"post": "RfqMessageRequest"},
     "/api/v1/supplier/rfqs/{id}/revisions/": {"post": "RfqRevisionRequest"},
     "/api/v1/supplier/stock/adjustments/": {"post": "SupplierStockAdjustRequest"},

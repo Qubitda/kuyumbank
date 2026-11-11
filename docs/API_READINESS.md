@@ -54,7 +54,7 @@ Diğer satırlar önceki gibi (RFQ eşleştirme / belge / limit / release HTTP �
 
 | ID | Konu | İmza |
 |----|------|------|
-| FE-P1-RFQ | RFQ eşleştirme HTTP | **FE v1 dışı** ✓ |
+| FE-P1-RFQ | RFQ eşleştirme HTTP | **UYGULANDI** ✓ — `/ops/rfq-lines/.../matches*` |
 | FE-P1-DOC | Belge HTTP | **FE v1 dışı** ✓ |
 | FE-P2-LIM | Harcama limiti CRUD HTTP | **FE v1 dışı** ✓ |
 | FE-P2-REL | Contract release HTTP | **FE v1 dışı** ✓ |

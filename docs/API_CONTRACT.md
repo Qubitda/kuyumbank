@@ -102,8 +102,8 @@ Tam liste: OpenAPI `paths` (**98** path, çift `/api/v1` önek **0** — `export
 ## 4. Bilinen sınırlamalar (v1)
 
 1. **CORS erteli** — aynı-origin reverse proxy (ADR-0017).
-2. **RFQ eşleştirme HTTP yok** — servis F10-021 var; supplier B6 ters kör havuz (bilinçli). Platform eşleştirme REST: [API_READINESS](API_READINESS.md).
-3. **Teklif create HTTP yok** — yalnız yaşam döngüsü (`submit` / `deactivate` / `versions`); create admin/servis dışı.
+2. **RFQ eşleştirme HTTP** — **UYGULANDI** (F10-021): `GET/POST /ops/rfq-lines/{line_id}/matches|match-candidates/` + `approve|reject`.
+3. **Teklif create HTTP** — **UYGULANDI**: `POST /supplier/offers/` → `teklif_servisi.taslak_olustur` (+ submit/deactivate/versions).
 4. **Mahsup HTTP** — **UYGULANDI** (ADR-0023): `POST /api/v1/returns/{id}/mahsup/` + approve `mahsup`; ödeme iadesi yok (U-004).
 5. **Rapor/anomali HTTP** — **UYGULANDI** (ADR-0026): `GET /reports/orders/`, `/reports/buyer-behavior/`, `/ops/anomalies/ciro/`.
 6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (path sayısı: `openapi-v1.json`; docs_sync AUTO); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.

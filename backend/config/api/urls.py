@@ -51,6 +51,10 @@ from api.views import (
     OpsInspectionPassView,
     OpsInspectionStartView,
     OpsOrderSummaryView,
+    OpsRfqMatchApproveView,
+    OpsRfqMatchCandidatesView,
+    OpsRfqMatchListCreateView,
+    OpsRfqMatchRejectView,
     OpsShipmentCancelView,
     OpsShipmentDeliverView,
     OpsShipmentDetailView,
@@ -404,6 +408,26 @@ api_urlpatterns = [
         "ops/shipments/<int:pk>/pod/",
         OpsShipmentPodCreateView.as_view(),
         name="api-ops-shipment-pod",
+    ),
+    path(
+        "ops/rfq-lines/<int:line_id>/match-candidates/",
+        OpsRfqMatchCandidatesView.as_view(),
+        name="api-ops-rfq-match-candidates",
+    ),
+    path(
+        "ops/rfq-lines/<int:line_id>/matches/",
+        OpsRfqMatchListCreateView.as_view(),
+        name="api-ops-rfq-matches",
+    ),
+    path(
+        "ops/rfq-matches/<int:pk>/approve/",
+        OpsRfqMatchApproveView.as_view(),
+        name="api-ops-rfq-match-approve",
+    ),
+    path(
+        "ops/rfq-matches/<int:pk>/reject/",
+        OpsRfqMatchRejectView.as_view(),
+        name="api-ops-rfq-match-reject",
     ),
     path(
         "payments/webhook/",

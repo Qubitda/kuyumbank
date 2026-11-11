@@ -86,6 +86,12 @@ from .rfq import (
     RfqRevisionView,
     RfqSendView,
 )
+from .rfq_eslestirme import (
+    OpsRfqMatchApproveView,
+    OpsRfqMatchCandidatesView,
+    OpsRfqMatchListCreateView,
+    OpsRfqMatchRejectView,
+)
 from .shipment import ShipmentDetailView, ShipmentListView
 from .supplier import (
     SupplierOfferDeactivateView,
@@ -187,6 +193,10 @@ __all__ = [
     "RfqMessageView",
     "RfqRevisionView",
     "RfqSendView",
+    "OpsRfqMatchApproveView",
+    "OpsRfqMatchCandidatesView",
+    "OpsRfqMatchListCreateView",
+    "OpsRfqMatchRejectView",
     "ShipmentDetailView",
     "ShipmentListView",
     "SupplierOfferDeactivateView",

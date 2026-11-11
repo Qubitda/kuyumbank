@@ -2677,6 +2677,115 @@
         ],
         "type": "object"
       },
+      "RfqMatch": {
+        "properties": {
+          "allowed_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "durum": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kanit": {
+            "type": "object"
+          },
+          "rfq_line_id": {
+            "type": "integer"
+          },
+          "skor": {
+            "type": "integer"
+          },
+          "varyant_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "rfq_line_id",
+          "varyant_id",
+          "durum"
+        ],
+        "type": "object"
+      },
+      "RfqMatchCandidates": {
+        "properties": {
+          "results": {
+            "items": {
+              "properties": {
+                "platform_kodu": {
+                  "type": "string"
+                },
+                "skor": {
+                  "type": "integer"
+                },
+                "sku": {
+                  "type": "string"
+                },
+                "urun_ad": {
+                  "type": "string"
+                },
+                "varyant_id": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "rfq_line_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rfq_line_id",
+          "results"
+        ],
+        "type": "object"
+      },
+      "RfqMatchCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kanit": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "skor": {
+            "type": "integer"
+          },
+          "varyant_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "varyant_id"
+        ],
+        "type": "object"
+      },
+      "RfqMatchList": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/RfqMatch"
+            },
+            "type": "array"
+          },
+          "rfq_line_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rfq_line_id",
+          "results"
+        ],
+        "type": "object"
+      },
       "RfqMessageRequest": {
         "additionalProperties": false,
         "properties": {
@@ -2858,6 +2967,49 @@
           "id",
           "varyant_id",
           "durum"
+        ],
+        "type": "object"
+      },
+      "SupplierOfferCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "birim_fiyat": {
+            "type": "string"
+          },
+          "fiyat_modeli": {
+            "type": "string"
+          },
+          "gecerlilik_baslangic": {
+            "type": "string"
+          },
+          "gecerlilik_bitis": {
+            "type": "string"
+          },
+          "gram": {
+            "type": "string"
+          },
+          "iscilik_override": {
+            "type": "string"
+          },
+          "para_birimi": {
+            "type": "string"
+          },
+          "tedarikci_kodu": {
+            "type": "string"
+          },
+          "temin_tipi": {
+            "type": "string"
+          },
+          "uretim_suresi_gun": {
+            "type": "integer"
+          },
+          "varyant_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "varyant_id",
+          "fiyat_modeli"
         ],
         "type": "object"
       },
@@ -7949,6 +8101,499 @@
         ]
       }
     },
+    "/api/v1/ops/rfq-lines/{line_id}/match-candidates/": {
+      "get": {
+        "description": "GET — aday katalog varyantları (yazmaz).",
+        "operationId": "listOpsRfqMatchCandidates",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqMatchCandidates"
+                }
+              }
+            },
+            "description": "RfqMatchCandidates"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/ops/rfq-lines/{line_id}/match-candidates/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/rfq-lines/{line_id}/matches/": {
+      "get": {
+        "description": "GET satır eşleştirmeleri; POST öner {varyant_id, kanit?, skor?}.",
+        "operationId": "listOpsRfqMatchListCreates",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqMatchList"
+                }
+              }
+            },
+            "description": "RfqMatchList"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/ops/rfq-lines/{line_id}/matches/",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "description": "GET satır eşleştirmeleri; POST öner {varyant_id, kanit?, skor?}.",
+        "operationId": "createOpsRfqMatchList",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "line_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfqMatchCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqMatch"
+                }
+              }
+            },
+            "description": "RfqMatch"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/rfq-lines/{line_id}/matches/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/rfq-matches/{id}/approve/": {
+      "post": {
+        "description": "`POST /api/v1/ops/rfq-matches/{id}/approve/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsRfqMatchApprove",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqMatch"
+                }
+              }
+            },
+            "description": "RfqMatch"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/rfq-matches/{id}/approve/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/rfq-matches/{id}/reject/": {
+      "post": {
+        "description": "`POST /api/v1/ops/rfq-matches/{id}/reject/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsRfqMatchReject",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfqMatch"
+                }
+              }
+            },
+            "description": "RfqMatch"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/rfq-matches/{id}/reject/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
     "/api/v1/ops/shipments/": {
       "get": {
         "description": "GET liste; POST oluştur — {order_id, notlar?, takip_no?}.",
@@ -11927,7 +12572,7 @@
     },
     "/api/v1/supplier/offers/": {
       "get": {
-        "description": "`GET /api/v1/supplier/offers/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "description": "GET liste; POST taslak create (`teklif_servisi.taslak_olustur`).",
         "operationId": "listSupplierOffers",
         "parameters": [],
         "responses": {
@@ -12003,6 +12648,97 @@
           }
         },
         "summary": "GET /api/v1/supplier/offers/",
+        "tags": [
+          "supplier"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST taslak create (`teklif_servisi.taslak_olustur`).",
+        "operationId": "createSupplierOfferList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierOfferCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierOffer"
+                }
+              }
+            },
+            "description": "SupplierOffer"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/supplier/offers/",
         "tags": [
           "supplier"
         ]
