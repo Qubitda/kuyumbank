@@ -10,8 +10,8 @@
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│ 1. Experience & API     admin · /api/v1 · /buyer · /ops     │
-│                         (birincil FE: Next.js; HTML miras)  │
+│ 1. Experience & API     admin · /api/v1 · /act-as (redirect)│
+│                         (birincil FE: Next.js; HTML portal yok — ADR-0029) │
 ├─────────────────────────────────────────────────────────────┤
 │ 2. B2B Capabilities     reorder · bulk · approval · EDI ·   │
 │                         credit view · (compare/alerts P2)   │
@@ -37,7 +37,7 @@
 | Konu | Durum (MASTER) | Not |
 |------|----------------|-----|
 | Account Hierarchy | **UYGULANDI** (ADR-0015) | OrgBirimi + OrgUyeligi; tenant=Firma |
-| Approval / limit | **UYGULANDI** (F10-012/013) + UI F10-014 | Zengin F9 portal ayrı |
+| Approval / limit | **UYGULANDI** (F10-012/013) + API approvals | HTML F10-014 Deprecated; Next portal ayrı |
 | Quick/Bulk Reorder | **UYGULANDI** (F4-080/081) | — |
 | Outbox | **UYGULANDI** iskelet (F4-090) | Celery yok; `process_outbox` |
 | PRE-005 Idempotency | **UYGULANDI** | checkout POST |
@@ -51,10 +51,10 @@
 
 | # | Yetenek | Mevcut | Hedef eksik (özet) | Öncelik |
 |---|---------|--------|--------------------|---------|
-| 1 | B2B katalog | KISMİ | Search API; F9-011 Django `/buyer/catalog/` miras | P1 |
+| 1 | B2B katalog | KISMİ | Search API; catalog HTTP var; Next browse dilimi | P1 |
 | 2 | Firma/şube org | **UYGULANDI** çekirdek | Zengin org UI | P2 |
 | 3 | Fiyat listesi/koşul | UYGULANDI | Liste UI | P2 |
-| 4 | Teklif/RFQ | **UYGULANDI** SM+buyer UI | Eşleştirme motoru; supplier UI | P1 |
+| 4 | Teklif/RFQ | **UYGULANDI** SM+HTTP | Eşleştirme HTTP yok (bilinçli); Next supplier UI | P1 |
 | 5 | Sepet/checkout | **UYGULANDI** (+ HTTP POST) | F9-012 polish | P2 |
 | 6 | Sipariş | **UYGULANDI** | SM genişleme | P2 |
 | 7 | Stok/WH | **UYGULANDI** | Ops UI | P2 |
@@ -62,7 +62,7 @@
 | 9 | Ödeme/cari/kredi | **KISMİ** iskelet | Gerçek provider; oran | P1 |
 | 10 | Sevkiyat | **UYGULANDI** fake carrier | Canlı carrier | P2 |
 | 11 | İade | **UYGULANDI** stok-only | Ödeme iadesi yok (U-004); F6-032 UI | P2 |
-| 12 | Portallar | **KISMİ** `/buyer` F4-062 + F9-010/011 HTML miras | F9-012…015 / Next portal; `/supplier` | **P1** |
+| 12 | Portallar | **KISMİ** NX-FE iskelet; Django HTML yok (ADR-0029) | Next portal dilimleri | **P1** |
 | 13 | Onay workflow | **UYGULANDI** + minimal UI | Escalation zinciri | P2 |
 | 14 | Raporlama | **KISMİ** F11-001/010/011/014/021 | HTTP/FE Product | P2 |
 | 15 | Entegrasyon/EDI | **KISMİ** stub | Canlı ERP/SAP | P2 |
@@ -73,7 +73,7 @@
 | 20 | Quick/Bulk | **UYGULANDI** | — | — |
 | 21 | Dynamic pricing | Yok (kilitli) | U-015 açılmadan yok | — |
 
-**Güncel gap sırası (MASTER §12.3 ile hizalı, backend first):** Mahsup HTTP · FE · [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md). ADR-0019 **Kabul** + OL-11 UYGULANDI.
+**Güncel gap sırası (MASTER §12.3 ile hizalı, backend first):** Next portal dilimleri · [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md). Mahsup/rapor HTTP **UYGULANDI**. ADR-0019 **Kabul** + OL-11 UYGULANDI.
 
 ---
 
@@ -82,7 +82,7 @@
 | Domain | Durum | Eksik (kısa) |
 |--------|-------|--------------|
 | Identity & RBAC | UYGULANDI | — |
-| Product Catalog | KISMİ | Search; F9-011 Django HTML miras |
+| Product Catalog | KISMİ | Search; `/api/v1/catalog/`; Next browse |
 | Supplier Mgmt | UYGULANDI | Supplier portal |
 | Pricing Engine | UYGULANDI | B-01/B-06 kapalı; CAP-PIYASA / ADR-0018 **Kabul+UYGULANDI** |
 | PriceLock | UYGULANDI (L-11) | — |
@@ -149,10 +149,10 @@ G0–G4 kapandı (3.7 + ADR-0010/0011 + U-002 + ince PRE).
 **KISMİ UYGULANDI** (CI, log/request_id, secret/runbook, IDOR smoke, throttle env, Sentry SDK, perf baseline). **Açık:** staging Sentry event kanıtı, Celery/Redis, hosting/yedek prova.
 
 ### Faz 9 — Portal / API readiness
-**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1…12 madde Kabul; CORS erteli). **HTML miras** (F4-062 + F10 UI + F9-010/011). **API-B1…B7 Kabul.** **NX-FE iskelet UYGULANDI.** **Sırada:** Mahsup HTTP / Next portal / NOTE-PENDING — [MASTER](MASTER.md) §12.3.
+**ADR-0016 Supersede** → **ADR-0017 Taslak** (NX-1…12 madde Kabul; CORS erteli). **Django HTML portal yok** (ADR-0029). **API-B1…B7 Kabul.** **NX-FE iskelet UYGULANDI.** **Sırada:** Next portal dilimleri — [MASTER](MASTER.md) §12.3.
 
 ### Faz 10 — Kurumsal & RFQ
-**UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + buyer UI + F10-021 eşleştirme). **Açık:** F10-023 supplier UI.
+**UYGULANDI** çekirdek (org/limit/onay/RFQ/özel üretim + HTTP B4/B6 + F10-021 eşleştirme). HTML F10-014/023 **Deprecated**.
 
 ### Faz 11 — Analitik · Faz 12 — i18n
 F11: **KISMİ UYGULANDI** (NOTE-F11-001 + 010/011/012/013/014/020/021 servis; HTTP/FE Product kapalı). F12/i18n: [NOTE-PENDING](decisions/NOTE-PENDING-PRODUCT-DECISIONS.md).

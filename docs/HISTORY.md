@@ -532,3 +532,56 @@
 - API_CONTRACT ↔ API_READINESS READY hizası; FE-SUITE kanıtı KISMİ işaretlendi; RUNBOOK çift API docs satırı silindi.
 - **Secret:** `.env` gitignore’da; zip sızıntısı varsa DB şifresi + SECRET_KEY rotasyonu ürün sahibi.
 
+### 2026-11-10 — Veri bütünlüğü / perf sertleştirme
+- `StockBalance` ATP CheckConstraint; `get_or_create_balance_locked` IntegrityError yarış düzeltmesi.
+- `LedgerEntry` hareket_tipi/ISO/CONTRA DB kuralları; `StockMovement` tip + QuerySet ban.
+- Return/Onay domain `idempotency_key` UNIQUE; org kod replay; advisory `pg_try_*` + timeout.
+- Rapor tarih aralığı (max 366g); pagination out-of-range → 404; `CONN_MAX_AGE`; LocMem prod `W001`.
+- RUNBOOK: Movement trigger iddiası düzeltildi; cron’a purge + `clearsessions`.
+
+### 2026-11-10 — Auth / webhook sertleştirme
+- Login throttle: `client_ip` (TRUSTED_PROXY_COUNT) + kullanıcı adı kovası; Basic prod kapalı + Basic IP throttle.
+- `ExpiringTokenAuthentication` (`AUTH_TOKEN_TTL_SECONDS`); `purge_expired_tokens`; parola min 12; session idle.
+- Webhook HMAC + replay penceresi + isteğe bağlı IP allow-list; MFA platform/act-as **PLANLANDI**.
+
+### 2026-11-10 — E-posta / bildirim (ADR-0027 Taslak)
+- Yeni app `bildirim`: SmtpSettings (sealed parola), EmailTemplate, NotificationRule, EmailDelivery, RecipientSettings.
+- Outbox handler → idempotent `EmailDelivery`; `process_email_queue`; Admin (SMTP/şablon/kural/log/alıcı + manuel gönderim).
+- Domain enqueue: `order.cancelled`, `payment.*`, `shipment.delivered`, `firma.approved`, `user.welcome` (+ mevcut order/qc/return).
+- Odaklı test: `bildirim.tests` **11 OK**. PDF/Celery/Next dışı.
+
+### 2026-11-10 — ADR-0027 Kabul + migrate + cron
+- Ürün sahibi Kabul; `bildirim` migrate; `seed_role_permissions`; RUNBOOK §11c cron (`process_outbox` → `process_email_queue`).
+
+### 2026-11-10 — Denetim P0 dilimi (50-konu kalite)
+- Outbox: handler yok → FAILED; `register_ack_handler` (`kur.alert`, `edi.punchout.inbound`).
+- Payment: `tahsil_et` intent+order kilidi (ön + ledger).
+- RUNBOOK zip/`.env` rotasyon notu (değer yazılmaz). Bilinçli açık: canlı ödeme/kargo, mutabakat, hak ediş derinliği.
+
+### 2026-11-10 — Auth QA kapıları (şifre / login / MFA / prod)
+- API: password-reset, password-reset/confirm, password-change; login gate (`aktif`+`onayli`); MFA e-posta OTP + middleware.
+- Prod checks: LocMem E001, fake payment/carrier E002/E003; `ALLOW_*` bilinçli bypass.
+- Test: `api.tests.test_auth_qa_gates` **8 OK** (tam suite yok).
+
+### 2026-11-10 — Soft-launch yol A başlangıç
+- `manage.py soft_launch_check` (+ `--allow-fake` / `--require-mfa` / `--strict`); RUNBOOK §11d.
+- Odaklı test `firmalar.tests.test_soft_launch_check`; createcachetable + outbox/email smoke.
+
+### 2026-11-10 — ADR-0028 davet + e-posta doğrulama (Taslak kod)
+- `FirmaInvite` + `Kullanici.email_verified_at`; mig `firmalar.0012`.
+- Servis: `invite_servisi` / `email_verify_servisi`; API invite create/list/accept + email-verify request/confirm.
+- `/me.email_verified`; `EMAIL_VERIFY_REQUIRED_FOR_WRITE` → buyer commerce yazma kapısı (varsayılan kapalı).
+- Admin: FirmaInvite (add yok); odaklı test **8 OK**. Ürün sahibi Kabul bekleniyor.
+
+### 2026-11-10 — ADR-0029 API-only + ADR-0028 Kabul
+- Ürün sahibi onay: `/buyer/` `/supplier/` `/ops/` HTML + `*_ui` + template silindi.
+- `LOGIN_URL` → `/admin/login/`; `POST /api/v1/act-as/start|stop/`; `GET /me/dashboard/`.
+- `FRONTEND_PORTAL_BASE_URL`; OpenAPI; HTML UI testleri API’ye taşındı / silindi.
+- ADR-0028 **Kabul**; ADR-0021 HTML maddeleri supersede.
+
+### 2026-11-11 — Docs↔kod audit (ADIM 0–5)
+- Envanter: `docs/_audit/endpoint-inventory.md` (Django 104 route / OpenAPI 98 path / 106 op).
+- Drift: OpenAPI↔kod path seti uyumlu; bayat HTML iddiaları (`API_CONTRACT` §4.9, MASTER/BACKLOG/ROADMAP/RUNBOOK/ADR-0017) koda göre güncellendi.
+- FE→BE: Next yalnız `csrf/login/logout/me/health` çağırıyor; hepsi backend’de var.
+- Smoke: `scripts/smoke_api.py` (+ sonuç FINAL-REPORT).
+

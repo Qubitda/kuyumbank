@@ -9,7 +9,7 @@
 | Konu | Karar |
 |------|-------|
 | Yeni Django HTML | **Yok** |
-| Mevcut `/buyer/`, `/ops/` | **Korunur** |
+| Mevcut `/buyer/`, `/ops/` | **Supersede** → [ADR-0029](ADR-0029-api-only-html-portal-kaldirma.md) **Kabul** (HTML kaldırıldı; API + Admin) |
 | Yeni ürün UI | **Next.js** (`frontend/` — NX-FE iskelet UYGULANDI; portal dilimleri sonra) |
 | Backend | Mevcut servisleri güvenli REST ile sunmak |
 | Deploy | Aynı-origin reverse proxy tercih |

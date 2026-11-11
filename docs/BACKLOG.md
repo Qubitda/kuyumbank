@@ -47,9 +47,9 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-014] Onay kuyruğu UI
 
 - **Faz:** Faz 10
-- **Durum:** **UYGULANDI** (minimal `/buyer/approvals/`; zengin F9 portal değil) · **Öncelik:** P2 · **Tip:** Frontend
+- **Durum:** **Deprecated HTML** (ADR-0029) → API `/api/v1/approvals/*` · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-013
-- **Kanıt:** `buyer_approval_ui` + selector; `test_approval_ui_f10_014` **5 OK**; admin salt-okunur duruyor
+- **Kanıt (tarihsel HTML silindi):** `buyer_approval_ui` / `test_approval_ui_f10_014` yok (yalnız `__pycache__`); canlı: B4 approvals HTTP
 
 ### [F10-020] RFQ / RFQLine / RFQMessage modelleri
 
@@ -78,10 +78,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F10-023] RFQ buyer/supplier UI (maskeli)
 
 - **Faz:** Faz 10
-- **Durum:** **UYGULANDI** (buyer + ADR-0021 `/supplier/` okuma; yazma API) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Deprecated HTML** (ADR-0029) → API `/api/v1/rfqs/*` + `/api/v1/supplier/rfqs/*` · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F10-020, F7 APIs
 - **Kabul kriterleri:** Kimlik sızıntısı yok
-- **Kanıt:** `buyer_rfq_ui` + `selectors.rfq`; `test_rfq_ui_f10_023` **4 OK**
+- **Kanıt (tarihsel HTML silindi):** `buyer_rfq_ui` / `test_rfq_ui_f10_023` yok; canlı: B4/B6 RFQ HTTP
 
 ### [F11-001] Raporlama veri modeli / read-model kararı
 
@@ -121,10 +121,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 - **Faz:** Faz 11
 - **Durum:** **UYGULANDI** · **Öncelik:** P1 · **Tip:** Backend
-- **Bağımlılıklar:** Notification outbox (F4-090)
+- **Bağımlılıklar:** Notification outbox (F4-090); ADR-0027 **Kabul**
 - **Kabul kriterleri:** Sipariş/QC olayında bildirim
-- **Kanıt:** `order.created` (mevcut) + `qc.passed`/`qc.failed` (`inspection_servisi`) + `return.approved` (`return_servisi`); `test_notify_f11_013` **3 OK**
-- **Not:** Handler iskelet (F4-090 default log); canlı push/email yok (Celery yok)
+- **Kanıt:** Outbox → `bildirim.EmailDelivery` + `process_email_queue`; eventler: order/qc/return/cancel/payment/shipment/firma/welcome; `bildirim.tests` **11 OK** (+ `test_notify_f11_013`)
+- **Not:** Celery yok; SMTP Admin + env fallback; PDF üretimi yok (ADR-0027)
 
 ### [F11-014] Anomali tespiti (basit eşik)
 
@@ -442,10 +442,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F4-062] Minimal buyer sepet/sipariş ekranı
 
 - **Faz:** Faz 4
-- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Frontend (Django session templates)
+- **Durum:** **Deprecated HTML** (ADR-0029, 2026-11-10) · **Tip:** Frontend (Django session templates — silindi)
 - **Bağımlılıklar:** F4-060
-- **Kanıt:** `/buyer/` login + sepet + checkout→order + sipariş liste/detay; `_require_buyer` (tedarikçi/ops 403); `present_cart`/`present_order` kör havuz
-- **Test:** `siparis.tests.test_buyer_ui_f4_062` **3 OK**
+- **Kanıt (canlı):** `/api/v1/carts|checkouts|orders/` + B2 testleri; HTML `/buyer/` → 404 (`test_act_as_adr0021`)
+- **Test (tarihsel):** `siparis.tests.test_buyer_ui_f4_062` **silindi** (yalnız `__pycache__`)
 - **Kapsam dışı:** Portal (Faz 9); Playwright E2E; ops UI
 
 ### [F4-070] Legacy stok alanlarını read-only / kaldırma dilimi
@@ -659,10 +659,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F5-032] Finans UI (RBAC finance)
 
 - **Faz:** Faz 5
-- **Durum:** **UYGULANDI** (2026-11-09) · **Tip:** Frontend (Django session templates)
+- **Durum:** **Deprecated HTML** (ADR-0029) · **Tip:** Frontend (Django session templates — silindi)
 - **Bağımlılıklar:** F5-010, F5-030, F5-031
-- **Kanıt:** `GET /buyer/finance/` (`BuyerFinanceView` + `buyer_finans_servisi`, maskeli); `GET /ops/finance/` (`OpsFinanceView` + `ops_finans_servisi`, `view_all`); tedarikçi/alıcı ops 403
-- **Test:** `finans.tests.test_finance_ui_f5_032` **4 OK**
+- **Kanıt (canlı):** `/api/v1/finance/*` + `/api/v1/ops/finance/*` (F5-030/031); HTML view/test silindi
+- **Test (tarihsel):** `finans.tests.test_finance_ui_f5_032` **silindi**
 - **Kapsam dışı:** Portal (F9); Playwright E2E
 
 ### [F6-001] QC ADR (tolerans, gram farkı)
@@ -1068,27 +1068,27 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F9-010] Buyer dashboard iskeleti (Django HTML miras)
 
 - **Faz:** Faz 9
-- **Durum:** **UYGULANDI** (Django `/buyer/` miras; Next portal değil) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Deprecated HTML** (ADR-0029) → API `GET /api/v1/me/dashboard/` · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-001, F7-010
 - **Kabul kriterleri:** Auth + tenant context
-- **Kanıt:** `buyer_dashboard_servisi` / `BuyerHomeView`; `test_buyer_dashboard_f9_010`
+- **Kanıt:** `buyer_dashboard_servisi` + `MeDashboardView`; HTML `BuyerHomeView` silindi
 - **Not:** Next ürün portalı ayrı (FE kapısı)
 
 ### [F9-011] Katalog arama/browse UI
 
 - **Faz:** Faz 9
-- **Durum:** **UYGULANDI** (Django `/buyer/catalog/` miras; Next portal değil) · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **Deprecated HTML** (ADR-0029) → API `GET /api/v1/catalog/` · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** F9-010, search API
 - **Gizlilik:** kör
 - **Kabul kriterleri:** Maliyet sızıntısı yok
-- **Kanıt:** `urunler.services.buyer_katalog_servisi` / `siparis.views.buyer_catalog_ui`; `test_buyer_catalog_f9_011`
+- **Kanıt:** `urunler.services.buyer_katalog_servisi` + catalog API; HTML `buyer_catalog_ui` silindi
 
 ### [F9-012] Sepet/sipariş portal akışı
 
 - **Faz:** Faz 9
 - **Durum:** **Ertelendi / iptal yönü** (ADR-0016 Supersede; Next.js + API-B2) · **Öncelik:** P2 · **Tip:** Frontend
 - **Bağımlılıklar:** F4-062, F7-010
-- **Not:** Yeni Django HTML polish yok; mevcut `/buyer/` kalır
+- **Not:** Django HTML yok (ADR-0029); Next dilimi + `/api/v1/` carts/orders
 
 ### [F9-013] Supplier dashboard + teklif yönetimi UI
 

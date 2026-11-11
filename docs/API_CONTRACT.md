@@ -29,7 +29,7 @@ Erişim: `DEBUG=True` veya `API_DOCS_PUBLIC=True`; aksi halde kimlikli staff/pla
 
 | # | Konu | Beklenti |
 |---|------|----------|
-| 1 | Auth (tarayıcı) | Session cookie; `GET /api/v1/auth/csrf/` → login; CSRF header; Token tarayıcıda yok (NX-1) |
+| 1 | Auth (tarayıcı) | Session cookie; `GET /api/v1/auth/csrf/` → login; CSRF header; Token tarayıcıda yok (NX-1). Davet/verify (ADR-0028); act-as `/act-as/start|stop/` (ADR-0029); `/me` + `/me/dashboard/`. Django HTML portal yok. |
 | 2 | Auth (S2S) | `TokenAuthentication` / Basic; ayrı istemci |
 | 3 | Tenant | `firma_id` / `tedarikci_id` / `alici_id` client’tan **güvenilmez**; sunucu `request.user.firma` |
 | 4 | Keşif | `GET /api/v1/me/` → `firma` + `capabilities` (UI bayrak; her uç yine RBAC) |
@@ -86,7 +86,7 @@ Presenter’lar durum + yetkiye göre aksiyon listesi döner (RFQ, QC, shipment,
 
 ## 3. Endpoint grupları (B1–B6)
 
-Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-09).
+Tam liste: OpenAPI `paths` (**98** path, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-11).
 
 | Dilim | Örnek path’ler |
 |-------|----------------|
@@ -109,7 +109,7 @@ Tam liste: OpenAPI `paths` (**81** path, çift `/api/v1` önek **0** — `export
 6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (path sayısı: `openapi-v1.json`; docs_sync AUTO); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.
 7. **NX-1…12** madde **Kabul**; ADR-0017 bütünü **Taslak**.
 8. **`frontend/`** — NX-FE iskelet; API kapısı **FRONTEND READY** ([API_READINESS](API_READINESS.md)); Next ürün dilimleri ayrı talimat.
-9. **F9 Django HTML miras** (`/buyer/`) korunur; API yüzeyi bağımsız.
+9. **Django HTML ürün portalı yok** (ADR-0029 **Kabul**): `/buyer|/supplier|/ops` kaldırıldı; karşılık `/api/v1/` (+ `/me/dashboard/`, act-as, invite). Admin + OpenAPI docs UI korunur. **Deprecated:** eski F9 HTML miras iddiası.
 10. **Idempotency bilinçli hariç:** `auth/login|logout`, `payments/webhook`.
 11. **TS client üretimi** — **UYGULANDI** (`frontend/lib/api/schema.d.ts`, `npm run generate:api`); tek kaynak OpenAPI.
 
