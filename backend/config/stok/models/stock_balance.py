@@ -59,6 +59,11 @@ class StockBalance(models.Model):
                 & models.Q(blocked__gte=0),
                 name="stockbalance_negatif_degil",
             ),
+            # ATP: reserved + blocked asla on_hand'i aşamaz (available >= 0)
+            models.CheckConstraint(
+                condition=models.Q(on_hand__gte=models.F("reserved") + models.F("blocked")),
+                name="stockbalance_reserved_blocked_le_on_hand",
+            ),
         ]
         indexes = [
             models.Index(fields=["warehouse", "varyant"]),

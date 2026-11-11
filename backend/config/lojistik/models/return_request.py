@@ -39,6 +39,8 @@ class ReturnRequest(models.Model):
         help_text="F5-023: mahsup ledger yazıldı mı (ödeme iadesi yok).",
     )
     notlar = models.CharField(max_length=255, blank=True)
+    # HTTP Idempotency-Key domain yedekleri (crash sonrası replay)
+    idempotency_key = models.CharField(max_length=64, blank=True, default="")
     olusturan = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -70,6 +72,11 @@ class ReturnRequest(models.Model):
                     ]
                 ),
                 name="returnrequest_durum_gecerli",
+            ),
+            models.UniqueConstraint(
+                condition=~models.Q(idempotency_key=""),
+                fields=["order", "idempotency_key"],
+                name="returnrequest_order_idempotency_uniq",
             ),
         ]
         indexes = [

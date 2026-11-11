@@ -105,6 +105,7 @@ def olustur(
     sebep: str,
     line_specs: list[dict],
     notlar: str = "",
+    idempotency_key: str = "",
 ) -> ReturnRequest:
     """TASLAK iade talebi. Finans hareketi yok (F6-030)."""
     _require_manage(actor, action="lojistik.return.create_denied")
@@ -118,6 +119,15 @@ def olustur(
     if shipment.durum != Shipment.Durum.TESLIM:
         raise ValidationError("İade yalnız TESLIM sevkiyat için açılır.")
     resolved = _validate_line_specs(order, line_specs)
+    key = (idempotency_key or "").strip()[:64]
+    if key:
+        existing = (
+            ReturnRequest.objects.filter(order=order, idempotency_key=key)
+            .prefetch_related("lines")
+            .first()
+        )
+        if existing is not None:
+            return existing
 
     with domain_atomic():
         req = ReturnRequest(
@@ -126,6 +136,7 @@ def olustur(
             durum=ReturnRequest.Durum.TASLAK,
             sebep=sebep_n[:255],
             notlar=notlar or "",
+            idempotency_key=key,
             olusturan=actor if getattr(actor, "pk", None) else None,
         )
         req.save()

@@ -73,6 +73,24 @@ FirmaBankaHesabi(id, firma, banka_adi, iban, swift_bic, para_birimi, aktif)
 | `para_birimi` | CharField | max 10 |  |  |
 | `aktif` | BooleanField |  |  |  |
 
+### FirmaInvite
+
+FirmaInvite(id, firma, email, rol, token, expires_at, olusturan, kabul_edildi_at, kabul_eden, olusturma_tarihi)
+
+| Alan | Tip | Hedef / boyut | Bayrak | Not |
+|------|-----|---------------|--------|-----|
+| `firma` | ForeignKey | firmalar.Firma (CASCADE) |  |  |
+| `email` | CharField | max 254 |  |  |
+| `rol` | CharField | max 30, choices |  |  |
+| `token` | CharField | max 64 | benzersiz |  |
+| `expires_at` | DateTimeField |  |  |  |
+| `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `kabul_edildi_at` | DateTimeField |  | null |  |
+| `kabul_eden` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
+| `olusturma_tarihi` | DateTimeField |  | blank |  |
+
+**Kısıtlar:** `firma_invite_pending_email_uniq` (UniqueConstraint)
+
 ### HarcamaLimiti
 
 HarcamaLimiti(id, firma, org_birimi, donem, tutar, para_birimi, aktif, olusturma_tarihi)
@@ -107,12 +125,13 @@ Sistem kullanıcısı: tek firma + tek iş rolü (ADR-0003).
 | `date_joined` | DateTimeField |  |  |  |
 | `firma` | ForeignKey | firmalar.Firma (PROTECT) |  |  |
 | `rol` | CharField | max 30, choices |  |  |
+| `email_verified_at` | DateTimeField |  | null | Boş = doğrulanmamış (ADR-0028). |
 | `groups` | ManyToManyField | auth.Group | blank | Bu kullanıcının ait olduğu gruplar. Bir kullanıcı kendi gruplarının her birine verilmiş olan tüm ... |
 | `user_permissions` | ManyToManyField | auth.Permission | blank | Bu kullanıcı için belirli izinler. |
 
 ### OnayTalebi
 
-OnayTalebi(id, firma, org_birimi, order, durum, tutar, para_birimi, gerekce, olusturan, karar_veren, olusturma_tarihi, guncelleme_tarihi)
+OnayTalebi(id, firma, org_birimi, order, durum, tutar, para_birimi, gerekce, idempotency_key, olusturan, karar_veren, olusturma_tarihi, guncelleme_tarihi)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
@@ -123,12 +142,13 @@ OnayTalebi(id, firma, org_birimi, order, durum, tutar, para_birimi, gerekce, olu
 | `tutar` | DecimalField | 18,2 |  |  |
 | `para_birimi` | CharField | max 3 |  |  |
 | `gerekce` | CharField | max 255 | blank |  |
+| `idempotency_key` | CharField | max 64 | blank |  |
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `karar_veren` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
 
-**Kısıtlar:** `onaytalebi_durum_gecerli` (CheckConstraint); `onaytalebi_tutar_pozitif` (CheckConstraint)
+**Kısıtlar:** `onaytalebi_durum_gecerli` (CheckConstraint); `onaytalebi_tutar_pozitif` (CheckConstraint); `onaytalebi_firma_idempotency_uniq` (UniqueConstraint)
 
 ### OrgBirimi
 
@@ -521,7 +541,7 @@ LedgerEntry(id, firma, karsi_firma, tutar, para_birimi, yon, hareket_tipi, refer
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  |  |  |
 
-**Kısıtlar:** `ledgerentry_tutar_pozitif` (CheckConstraint); `ledgerentry_yon_gecerli` (CheckConstraint); `ledgerentry_firma_idempotency_uniq` (UniqueConstraint)
+**Kısıtlar:** `ledgerentry_tutar_pozitif` (CheckConstraint); `ledgerentry_yon_gecerli` (CheckConstraint); `ledgerentry_hareket_tipi_gecerli` (CheckConstraint); `ledgerentry_para_birimi_iso` (CheckConstraint); `ledgerentry_contra_of_zorunlu` (CheckConstraint); `ledgerentry_firma_idempotency_uniq` (UniqueConstraint)
 
 ### PaymentIntent
 
@@ -654,7 +674,7 @@ ReturnLine(id, return_request, order_line, miktar, birim)
 
 ### ReturnRequest
 
-ReturnRequest(id, order, shipment, durum, sebep, stok_iade_yapildi, finans_mahsup_yapildi, notlar, olusturan, olusturma_tarihi, guncelleme_tarihi)
+ReturnRequest(id, order, shipment, durum, sebep, stok_iade_yapildi, finans_mahsup_yapildi, notlar, idempotency_key, olusturan, olusturma_tarihi, guncelleme_tarihi)
 
 | Alan | Tip | Hedef / boyut | Bayrak | Not |
 |------|-----|---------------|--------|-----|
@@ -665,11 +685,12 @@ ReturnRequest(id, order, shipment, durum, sebep, stok_iade_yapildi, finans_mahsu
 | `stok_iade_yapildi` | BooleanField |  |  | F6-031: ONAYLANDI sonrası ledger IADE yazıldı mı. |
 | `finans_mahsup_yapildi` | BooleanField |  |  | F5-023: mahsup ledger yazıldı mı (ödeme iadesi yok). |
 | `notlar` | CharField | max 255 | blank |  |
+| `idempotency_key` | CharField | max 64 | blank |  |
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  | blank |  |
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
 
-**Kısıtlar:** `returnrequest_durum_gecerli` (CheckConstraint)
+**Kısıtlar:** `returnrequest_durum_gecerli` (CheckConstraint); `returnrequest_order_idempotency_uniq` (UniqueConstraint)
 
 ### Shipment
 
@@ -964,7 +985,7 @@ StockBalance(id, warehouse, teklif, varyant, birim, on_hand, reserved, blocked, 
 | `blocked` | DecimalField | 18,6 |  |  |
 | `guncelleme_tarihi` | DateTimeField |  | blank |  |
 
-**Kısıtlar:** `stockbalance_wh_teklif_birim_uniq` (UniqueConstraint); `stockbalance_birim_gecerli` (CheckConstraint); `stockbalance_negatif_degil` (CheckConstraint)
+**Kısıtlar:** `stockbalance_wh_teklif_birim_uniq` (UniqueConstraint); `stockbalance_birim_gecerli` (CheckConstraint); `stockbalance_negatif_degil` (CheckConstraint); `stockbalance_reserved_blocked_le_on_hand` (CheckConstraint)
 
 ### StockMovement
 
@@ -982,7 +1003,7 @@ StockMovement(id, warehouse, teklif, varyant, birim, miktar, tip, neden, olustur
 | `olusturan` | ForeignKey | firmalar.Kullanici (SET_NULL) | null |  |
 | `olusturma_tarihi` | DateTimeField |  |  |  |
 
-**Kısıtlar:** `stockmovement_miktar_sifir_degil` (CheckConstraint); `stockmovement_birim_gecerli` (CheckConstraint)
+**Kısıtlar:** `stockmovement_miktar_sifir_degil` (CheckConstraint); `stockmovement_birim_gecerli` (CheckConstraint); `stockmovement_tip_gecerli` (CheckConstraint)
 
 ### StockReservation
 

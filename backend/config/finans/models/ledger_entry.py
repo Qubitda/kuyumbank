@@ -101,6 +101,32 @@ class LedgerEntry(models.Model):
                 condition=models.Q(yon__in=["BORC", "ALACAK"]),
                 name="ledgerentry_yon_gecerli",
             ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    hareket_tipi__in=[
+                        "SATIS",
+                        "TAHSILAT",
+                        "IADE",
+                        "MAHSUP",
+                        "CONTRA",
+                        "DUZELTME",
+                    ]
+                ),
+                name="ledgerentry_hareket_tipi_gecerli",
+            ),
+            # ISO 4217: 3 harf (A-Z); clean() ile uyumlu
+            models.CheckConstraint(
+                condition=models.Q(para_birimi__regex=r"^[A-Z]{3}$"),
+                name="ledgerentry_para_birimi_iso",
+            ),
+            # CONTRA ⇒ contra_of zorunlu; diğer tiplerde serbest
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(hareket_tipi="CONTRA")
+                    | models.Q(contra_of__isnull=False)
+                ),
+                name="ledgerentry_contra_of_zorunlu",
+            ),
             models.UniqueConstraint(
                 fields=["firma", "idempotency_key"],
                 name="ledgerentry_firma_idempotency_uniq",

@@ -39,6 +39,7 @@ class OnayTalebi(models.Model):
     tutar = models.DecimalField(max_digits=18, decimal_places=2)
     para_birimi = models.CharField(max_length=3, default="TRY")
     gerekce = models.CharField(max_length=255, blank=True)
+    idempotency_key = models.CharField(max_length=64, blank=True, default="")
     olusturan = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -75,6 +76,11 @@ class OnayTalebi(models.Model):
             models.CheckConstraint(
                 condition=models.Q(tutar__gt=0),
                 name="onaytalebi_tutar_pozitif",
+            ),
+            models.UniqueConstraint(
+                condition=~models.Q(idempotency_key=""),
+                fields=["firma", "idempotency_key"],
+                name="onaytalebi_firma_idempotency_uniq",
             ),
         ]
         indexes = [

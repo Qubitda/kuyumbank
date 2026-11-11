@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
@@ -145,16 +145,20 @@ class OlcuDegeri(models.Model):
     def mm_cevre(self):
         """Yüzük iç çevresi (mm). TR standardı: çevre = numara + 40."""
         if self.tip == "yuzuk_no" and self.sayisal_deger is not None:
-            return float(self.sayisal_deger) + 40.0
+            return self.sayisal_deger + Decimal("40")
         return None
 
     @property
     def us_olcu(self):
-        """ABD yüzük ölçüsüne yaklaşık dönüşüm.
+        """ABD yüzük ölçüsüne yaklaşık dönüşüm (Decimal; vitrin bilgisi).
 
-        Not: kesin dönüşüm üreticiye göre değişir; bu değer vitrin bilgisi
-        olarak kullanılmalı, sipariş/faturalamada TR numarası esas alınmalıdır.
+        Not: kesin dönüşüm üreticiye göre değişir; sipariş/faturalamada
+        TR numarası esas alınmalıdır.
         """
         if self.tip == "yuzuk_no" and self.sayisal_deger is not None:
-            return round(((float(self.sayisal_deger) * 0.83) - 4.80) * 4) / 4
+            # ((n * 0.83) - 4.80) 1/4 adımına yuvarla
+            raw = (self.sayisal_deger * Decimal("0.83")) - Decimal("4.80")
+            return (raw * 4).quantize(
+                Decimal("1"), rounding=ROUND_HALF_UP
+            ) / Decimal("4")
         return None

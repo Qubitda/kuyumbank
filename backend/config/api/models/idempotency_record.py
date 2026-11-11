@@ -35,7 +35,8 @@ class IdempotencyRecord(models.Model):
             ),
         ]
         indexes = [
-            models.Index(fields=["firma", "key"], name="api_idem_firma_key_idx"),
+            # UniqueConstraint zaten (firma,key) indeksler; purge için created_at
+            models.Index(fields=["created_at"], name="api_idem_created_at_idx"),
         ]
 
     def __str__(self) -> str:

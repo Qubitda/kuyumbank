@@ -50,10 +50,18 @@ def olustur(
     org_birimi=None,
     order=None,
     gerekce: str = "",
+    idempotency_key: str = "",
 ) -> OnayTalebi:
     _require(actor, action="firmalar.onay.create_denied")
     if tutar <= 0:
         raise ValidationError({"tutar": "Pozitif olmalı."})
+    key = (idempotency_key or "").strip()[:64]
+    if key:
+        existing = OnayTalebi.objects.filter(
+            firma=firma, idempotency_key=key
+        ).first()
+        if existing is not None:
+            return existing
     with domain_atomic():
         ot = OnayTalebi(
             firma=firma,
@@ -63,6 +71,7 @@ def olustur(
             tutar=tutar,
             para_birimi=(para_birimi or "TRY").upper(),
             gerekce=gerekce or "",
+            idempotency_key=key,
             olusturan=actor if getattr(actor, "pk", None) else None,
         )
         ot.save()

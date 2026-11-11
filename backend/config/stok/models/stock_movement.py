@@ -10,6 +10,27 @@ from django.utils import timezone
 from stok.birim_constants import StokBirimi
 
 
+class StockMovementQuerySet(models.QuerySet):
+    """ADR-0011 F4-A3 — bulk UPDATE/DELETE yasak (trigger yok; ORM koruması)."""
+
+    def update(self, **kwargs):
+        raise ValidationError(
+            "StockMovement değişmez; QuerySet.update yasak (ADR-0011 F4-A3)."
+        )
+
+    def delete(self):
+        raise ValidationError(
+            "StockMovement değişmez; QuerySet.delete yasak (ADR-0011 F4-A3)."
+        )
+
+
+class StockMovementManager(models.Manager.from_queryset(StockMovementQuerySet)):
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValidationError(
+            "StockMovement değişmez; bulk_update yasak (ADR-0011 F4-A3)."
+        )
+
+
 class StockMovement(models.Model):
     class Tip(models.TextChoices):
         GIRIS = "GIRIS", "Giriş"
@@ -51,6 +72,8 @@ class StockMovement(models.Model):
     )
     olusturma_tarihi = models.DateTimeField(default=timezone.now)
 
+    objects = StockMovementManager()
+
     class Meta:
         verbose_name = "Stok hareketi"
         verbose_name_plural = "Stok hareketleri"
@@ -68,6 +91,20 @@ class StockMovement(models.Model):
             models.CheckConstraint(
                 condition=models.Q(birim__in=["ADET", "GRAM", "KARAT"]),
                 name="stockmovement_birim_gecerli",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    tip__in=[
+                        "GIRIS",
+                        "CIKIS",
+                        "DUZELTME",
+                        "REZERVASYON",
+                        "REZERVASYON_IPTAL",
+                        "SATIS",
+                        "IADE",
+                    ]
+                ),
+                name="stockmovement_tip_gecerli",
             ),
         ]
 

@@ -59,7 +59,13 @@ def get_or_create_balance_locked(
     teklif: TedarikciTeklif,
     birim: str,
 ) -> StockBalance:
-    """Balance satır kilidi — reservation/ledger ortak (select_for_update)."""
+    """Balance satır kilidi — reservation/ledger ortak (select_for_update).
+
+    Eşzamanlı ilk oluşturmada UniqueConstraint yarışını IntegrityError →
+    yeniden kilitleyerek çözer.
+    """
+    from django.db import IntegrityError
+
     bal = (
         StockBalance.objects.select_for_update()
         .filter(warehouse=warehouse, teklif=teklif, birim=birim)
@@ -76,7 +82,15 @@ def get_or_create_balance_locked(
         reserved=Decimal("0"),
         blocked=Decimal("0"),
     )
-    bal.save()
+    try:
+        bal.save()
+    except IntegrityError:
+        bal = (
+            StockBalance.objects.select_for_update()
+            .filter(warehouse=warehouse, teklif=teklif, birim=birim)
+            .get()
+        )
+        return bal
     return StockBalance.objects.select_for_update().get(pk=bal.pk)
 
 
