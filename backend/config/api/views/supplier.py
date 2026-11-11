@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import (
@@ -37,6 +38,7 @@ from siparis.selectors.rfq import (
 from siparis.services import rfq_servisi
 from stok.models import StockBalance, Warehouse
 from stok.services import ledger_servisi
+from urunler.models import Varyant
 
 
 def _require_supplier(user) -> None:
@@ -72,7 +74,9 @@ def _own_stock_qs(user):
     return qs.filter(warehouse__sahip_firma_id=user.firma_id)
 
 
-class SupplierOfferListView(APIView):
+class SupplierOfferListView(IdempotencyMixin, APIView):
+    """GET liste; POST taslak create (`teklif_servisi.taslak_olustur`)."""
+
     permission_classes = [IsAuthenticatedWithFirma]
     throttle_classes = [SupplierRateThrottle]
 
@@ -89,6 +93,85 @@ class SupplierOfferListView(APIView):
         can_m = _can_manage_offers(request.user)
         return paginate_queryset(
             request, qs, present=lambda t: present_offer(t, can_manage=can_m)
+        )
+
+    def post(self, request):
+        _require_supplier(request.user)
+        if not _can_manage_offers(request.user):
+            raise PermissionDenied(detail="Teklif create için manage_own_teklif gerekir.")
+        cached = self.idempotency_begin(request)
+        if cached is not None:
+            return cached
+        body = request.data if isinstance(request.data, dict) else {}
+        body.get("tedarikci_id")  # ignore — tenant actor.firma
+        try:
+            vid = int(body.get("varyant_id"))
+        except (TypeError, ValueError) as exc:
+            raise ValidationError(detail={"varyant_id": "Zorunlu tam sayı."}) from exc
+        varyant = Varyant.objects.filter(pk=vid, aktif=True).select_related("urun").first()
+        if varyant is None:
+            raise ValidationError(detail={"varyant_id": "Aktif varyant bulunamadı."})
+        fiyat_modeli = (body.get("fiyat_modeli") or "").strip()
+        gram = birim = None
+        if body.get("gram") not in (None, ""):
+            try:
+                gram = Decimal(str(body.get("gram")))
+            except (InvalidOperation, TypeError) as exc:
+                raise ValidationError(detail={"gram": "Geçersiz."}) from exc
+        if body.get("birim_fiyat") not in (None, ""):
+            try:
+                birim = Decimal(str(body.get("birim_fiyat")))
+            except (InvalidOperation, TypeError) as exc:
+                raise ValidationError(detail={"birim_fiyat": "Geçersiz."}) from exc
+        iscilik = None
+        if body.get("iscilik_override") not in (None, ""):
+            try:
+                iscilik = Decimal(str(body.get("iscilik_override")))
+            except (InvalidOperation, TypeError) as exc:
+                raise ValidationError(detail={"iscilik_override": "Geçersiz."}) from exc
+        def _date(val):
+            if val in (None, ""):
+                return None
+            if isinstance(val, date):
+                return val
+            try:
+                return date.fromisoformat(str(val)[:10])
+            except ValueError as exc:
+                raise ValidationError(detail={"gecerlilik": "Tarih YYYY-MM-DD."}) from exc
+
+        gun = body.get("uretim_suresi_gun")
+        if gun in (None, ""):
+            gun_v = None
+        else:
+            try:
+                gun_v = int(gun)
+            except (TypeError, ValueError) as exc:
+                raise ValidationError(
+                    detail={"uretim_suresi_gun": "Tam sayı gerekir."}
+                ) from exc
+        try:
+            teklif = teklif_servisi.taslak_olustur(
+                request.user,
+                varyant=varyant,
+                fiyat_modeli=fiyat_modeli,
+                gram=gram,
+                birim_fiyat=birim,
+                tedarikci_kodu=str(body.get("tedarikci_kodu") or ""),
+                gecerlilik_baslangic=_date(body.get("gecerlilik_baslangic")),
+                gecerlilik_bitis=_date(body.get("gecerlilik_bitis")),
+                temin_tipi=body.get("temin_tipi") or None,
+                uretim_suresi_gun=gun_v,
+                iscilik_override=iscilik,
+                para_birimi=str(body.get("para_birimi") or "TRY"),
+            )
+        except (DjangoValidationError, DjangoPermissionDenied) as exc:
+            raise_drf(exc)
+        return self.idempotency_commit(
+            request,
+            Response(
+                present_offer(teklif, can_manage=True),
+                status=status.HTTP_201_CREATED,
+            ),
         )
 
 

@@ -147,6 +147,98 @@ def _assert_no_yayinda_cakisma(teklif, *, exclude_pk=None):
         raise ValidationError(_CAKISMA_MSG)
 
 
+def taslak_olustur(
+    kullanici,
+    *,
+    varyant,
+    fiyat_modeli: str,
+    gram=None,
+    birim_fiyat=None,
+    tedarikci_kodu: str = "",
+    gecerlilik_baslangic=None,
+    gecerlilik_bitis=None,
+    temin_tipi: str | None = None,
+    uretim_suresi_gun: int | None = None,
+    iscilik_override=None,
+    para_birimi: str = "TRY",
+) -> TedarikciTeklif:
+    """Yeni TASLAK teklif. `tedarikci` yalnız actor.firma; client firma_id yok sayılır."""
+    action = "teklif.taslak_olustur"
+    firma = getattr(kullanici, "firma", None)
+    if not getattr(kullanici, "firma_id", None) or firma is None:
+        _deny(
+            kullanici,
+            action=action,
+            teklif=None,
+            exc=ValidationError("Kullanıcının firması tanımlı olmalıdır."),
+            reason="firma_yok",
+        )
+    if not firma.tedarikci_mi:
+        _deny(
+            kullanici,
+            action=action,
+            teklif=None,
+            exc=PermissionDenied("Teklif yalnız tedarikçi firması tarafından oluşturulur."),
+            reason="tedarikci_degil",
+        )
+    try:
+        require_perm(
+            kullanici,
+            P["manage_own_teklif"],
+            message="Teklif yönetim yetkiniz yok.",
+        )
+    except PermissionDenied as exc:
+        _deny(kullanici, action=action, teklif=None, exc=exc, reason="yetki_yok")
+
+    if fiyat_modeli not in {c.value for c in TedarikciTeklif.FiyatModeli}:
+        _deny(
+            kullanici,
+            action=action,
+            teklif=None,
+            exc=ValidationError("fiyat_modeli geçersiz."),
+            reason="fiyat_modeli",
+        )
+
+    try:
+        with domain_atomic():
+            teklif = TedarikciTeklif(
+                varyant=varyant,
+                tedarikci_id=kullanici.firma_id,
+                tedarikci_kodu=(tedarikci_kodu or "")[:64],
+                versiyon=1,
+                fiyat_modeli=fiyat_modeli,
+                gram=gram,
+                birim_fiyat=birim_fiyat,
+                para_birimi=(para_birimi or "TRY")[:3],
+                iscilik_override=iscilik_override,
+                temin_tipi=temin_tipi or TedarikciTeklif.TeminTipi.HAZIR,
+                uretim_suresi_gun=uretim_suresi_gun,
+                gecerlilik_baslangic=gecerlilik_baslangic,
+                gecerlilik_bitis=gecerlilik_bitis,
+                durum=TedarikciTeklif.Durum.TASLAK,
+                eslestirme_durumu="",
+                eslestirme_guveni="",
+                eslestirme_kaniti={},
+                esdegerlik_seviyesi="",
+            )
+            teklif.full_clean()
+            teklif.save()
+            record_audit(
+                actor=kullanici,
+                action=action,
+                entity_type="TedarikciTeklif",
+                entity_id=str(teklif.pk),
+                success=True,
+                detail={
+                    "varyant_id": varyant.pk,
+                    "fiyat_modeli": fiyat_modeli,
+                },
+            )
+            return teklif
+    except ValidationError as exc:
+        _deny(kullanici, action=action, teklif=None, exc=exc, reason="dogrulama")
+
+
 def onaya_gonder(teklif: TedarikciTeklif, kullanici) -> TedarikciTeklif:
     action = "teklif.onaya_gonder"
     teklif.refresh_from_db()
