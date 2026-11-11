@@ -2,12 +2,13 @@
 
 **Durum:** **Kabul** (2026-11-10, ürün sahibi Qubit — öncelik sırasıyla uygulama talimatı)  
 **Bağımlılık:** ADR-0003 (RBAC/audit), ADR-0009 (admin), F4-062 / F9 buyer UI, F7 supplier API  
-**Kapsam:** CAP-ACTAS · CAP-SUP-UI
+**Kapsam:** CAP-ACTAS · CAP-SUP-UI  
+**Supersede (HTML portal):** [ADR-0029](ADR-0029-api-only-html-portal-kaldirma.md) — `/buyer/` `/supplier/` `/ops/` HTML kaldırıldı; act-as çekirdek (AA-1…5, AA-9) + API geçerlidir.
 
 ## Amaç
 
-1. Platform yetkilisinin seçilen kullanıcı **gözüyle** `/buyer/` veya `/supplier/` gezmesi (impersonation).  
-2. Tedarikçi için minimal HTML portal (teklif / stok / RFQ listesi).  
+1. Platform yetkilisinin seçilen kullanıcı **gözüyle** gezmesi (impersonation; hedef artık API/Admin/FE).  
+2. ~~Tedarikçi minimal HTML portal~~ → **API** `/api/v1/supplier/*` (ADR-0029).  
 3. Yerel demo alıcı + tedarikçi kullanıcı seed.
 
 ## Kararlar (Kabul)

@@ -27,12 +27,15 @@
 | [ADR-0018](ADR-0018-cap-piyasa-kur-dayanikliligi.md) | CAP-PIYASA kur dayanıklılığı | Kaynak merdiveni, LKG, batch freeze/senkron, guardrail, sanity, atomik publish; B-04 yeniden tanım | **Kabul** (2026-11-10) | Pricing / Kur | Pricing | UYGULANDI | CAP-PIYASA · `test_cap_piyasa_adr0018` |
 | [ADR-0019](ADR-0019-object-level-drf.md) | Object-level DRF matrisi | OL-1…11 **A**; Permission+selector; rapor/mahsup HTTP yok | **Kabul** (2026-11-10) | API / Güvenlik | API | OL-11 UYGULANDI | `api.permissions` · `test_object_level_adr0019` |
 | [ADR-0020](ADR-0020-piyasa-panosu-baz-fiyat.md) | Piyasa panosu baz fiyat | Katman1 pano + Katman2 ek + PANO/MANUEL seçim + kar yardımcısı | **Kabul** (2026-11-10, Qubit) | Pricing / Pano | Pricing | UYGULANDI çekirdek v1 (PP-9 sonraki) | `piyasa` · `test_piyasa_fiyat` / `test_hesap` |
-| [ADR-0021](ADR-0021-act-as-ve-tedarikci-portal.md) | Act-as + tedarikçi HTML + demo seed | Impersonation audit’li; `/supplier/` okuma; DEMO kullanıcılar | **Kabul** (2026-11-10, Qubit) | Identity / Portal | Identity | UYGULANDI | `act_as_servisi` · `/supplier/` · `test_act_as_adr0021` |
+| [ADR-0021](ADR-0021-act-as-ve-tedarikci-portal.md) | Act-as + demo seed | Impersonation audit’li; HTML portal → ADR-0029 | **Kabul** (2026-11-10, Qubit) | Identity / Portal | Identity | UYGULANDI | `act_as_servisi` · API act-as |
 | [ADR-0022](ADR-0022-piyasa-panosu-v2-domain.md) | Pano domain GoldXT hizası | Grup/varyant; global marj; Darphane; birimli kesinti; metal+ayar sim | **Kabul** (2026-11-10, Qubit) | Pricing / Pano | Pricing | UYGULANDI | `piyasa.0003` · `test_piyasa_fiyat` / `test_karlilik_simulasyonu` |
 | [ADR-0023](ADR-0023-mahsup-http.md) | İade mahsup HTTP | OL-8 açılım; `POST returns/{id}/mahsup/` + approve `mahsup` | **Kabul** (2026-11-10, Qubit) | Finans / API | Finance | UYGULANDI | `test_api_b3_finance_ops` mahsup |
 | [ADR-0024](ADR-0024-pano-quote-baglama.md) | Pano→Quote PP-9 | PANO\|MANUEL → `hedef_toplam` PriceQuote | **Kabul** (2026-11-10, Qubit) | Pricing / Pano | Pricing | UYGULANDI | `test_quote_baglama` |
 | [ADR-0025](ADR-0025-pano-ons-kg.md) | Pano ONS/KG | `olcek`+`cikti_pb`; ONS USD / TL KG | **Kabul** (2026-11-10, Qubit) | Pricing / Pano | Pricing | UYGULANDI | `piyasa.0004` · hesap/fiyat testleri |
 | [ADR-0026](ADR-0026-rapor-http.md) | Rapor/anomali HTTP | OL-7 açılım; reports + ciro anomali | **Kabul** (2026-11-10, Qubit) | Rapor / API | Reporting | UYGULANDI | `test_api_rapor_adr0026` |
+| [ADR-0027](ADR-0027-email-bildirim.md) | E-posta / bildirim Admin | Outbox→EmailDelivery; SMTP sealed; Admin 6 menü | **Kabul** (2026-11-10, Qubit) | Ops / Bildirim | Notification | UYGULANDI | `bildirim` · `bildirim.tests` |
+| [ADR-0028](ADR-0028-invite-email-verify.md) | Davet + e-posta doğrulama | FirmaInvite; email_verified_at; IE-3 yazma kapısı varsayılan kapalı | **Kabul** (2026-11-10, Qubit) | Identity / Auth | Identity | UYGULANDI | `firmalar.0012` · `test_invite_email_verify` |
+| [ADR-0029](ADR-0029-api-only-html-portal-kaldirma.md) | API-only; HTML portal kaldırma | `/buyer|/supplier|/ops` sil; Admin+API; act-as JSON | **Kabul** (2026-11-10, Qubit) | HTTP / Portal | Platform | UYGULANDI | Admin · `/api/v1` · act-as API |
 | [NOTE-PENDING](NOTE-PENDING-PRODUCT-DECISIONS.md) | FXQ / DYN / I18N / AI | ADR-0019’dan ayrı kapılar | **Açık** | — | Product | — | F12-001/011, CAP-DYNPRICE, F11-015 |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |
@@ -57,7 +60,8 @@
 - 2026-11-09 (Qubit/Emre): **ADR-0013 Kabul** (soru cevapları kayıtlı); F6-010 `kalite` app UYGULANDI.
 - 2026-11-09: **ADR-0016** Faz 9 frontend **Taslak** (F9-001); Kabul olmadan F9-010 kodu yok.
 - 2026-11-09 (Qubit): **ADR-0016 Kabul** (FE-1…FE-5); F9-010 buyer dashboard UYGULANDI.
-- 2026-11-09 (Qubit): **ADR-0016 Supersede** — birincil ürün yüzeyi Next.js; **ADR-0017 Taslak** (NX-1…12, B0–B7). Mevcut `/buyer/` `/ops/` HTML silinmez. B1+ kodu ADR-0017 **Kabul** sonrası.
+- 2026-11-09 (Qubit): **ADR-0016 Supersede** — birincil ürün yüzeyi Next.js; **ADR-0017 Taslak** (NX-1…12, B0–B7). B1+ kodu ADR-0017 **Kabul** sonrası.
+- 2026-11-10 (Qubit): **ADR-0029 Kabul** — Django HTML portal (`/buyer|/supplier|/ops`) kaldırıldı; Admin + `/api/v1` API-only.
 - 2026-11-09: Agent ADR-0017’yi erken Kabul saymıştı → ürün sahibi düzeltmesiyle **Taslak**’a alındı; NX maddeleri ayrı onay; tam suite onaysız yasak; B1 WIP durdu.
 - 2026-11-09 (Qubit): API-B1 **Kabul**; ADR-0017 Taslak kalır; NX-1/NX-2 madde **Kabul**; CORS erteli; B2 buyer commerce.
 - 2026-11-09 (Qubit): API-B2 + concurrency + API-B3 **Kabul**; B4 henüz başlatılmadı; TECH-OPENAPI-01 bakım UYGULANDI; oturum handoff. *(tarihsel anı)*
