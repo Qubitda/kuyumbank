@@ -91,9 +91,21 @@ CAPABILITIES = {
             "can_manage_return",
             "can_manage_users",
             "can_manage_addresses",
+            "can_act_as",
         )
     },
 }
+
+ACT_AS_STATE = _obj(
+    {
+        "active": _bool(),
+        "actor_id": _null_int(),
+        "actor_username": _null_str(),
+        "target_id": _null_int(),
+        "target_username": _null_str(),
+    },
+    ["active"],
+)
 
 ME_RESPONSE = _obj(
     {
@@ -104,8 +116,18 @@ ME_RESPONSE = _obj(
         "firma": {"oneOf": [FIRMA_MASKED, {"type": "null"}]},
         "firma_id": _null_int(),
         "capabilities": CAPABILITIES,
+        "act_as": ACT_AS_STATE,
     },
-    ["id", "username", "rol", "email_verified", "firma", "firma_id", "capabilities"],
+    [
+        "id",
+        "username",
+        "rol",
+        "email_verified",
+        "firma",
+        "firma_id",
+        "capabilities",
+        "act_as",
+    ],
 )
 
 HEALTH = _obj(
@@ -224,6 +246,50 @@ ACT_AS_STOP_OK = _obj(
         "redirect_url": _str(),
     },
     ["act_as", "redirect_url"],
+)
+
+OPS_PRODUCT_VARIANT = _obj(
+    {
+        "id": _int(),
+        "sku": _str(),
+        "gram": _null_str(),
+        "renk_id": _null_int(),
+        "beden_id": _null_int(),
+        "ek_bedel": _str(),
+        "aktif": _bool(),
+    },
+    ["id", "sku", "aktif"],
+)
+OPS_PRODUCT = _obj(
+    {
+        "id": _int(),
+        "ad": _str(),
+        "platform_kodu": _str(),
+        "aciklama": _str(),
+        "kategori_id": _int(),
+        "kategori": _str(),
+        "ayar_id": _int(),
+        "ayar": _str(),
+        "fiyat_tipi": _str(),
+        "onay_durumu": _str(),
+        "yayin_durumu": _str(),
+        "red_nedeni": _str(),
+        "olusturan_firma_id": _int(),
+        "varyant_count": _int(),
+        "varyantlar": {"type": "array", "items": OPS_PRODUCT_VARIANT},
+        "allowed_actions": _actions(),
+    },
+    [
+        "id",
+        "ad",
+        "platform_kodu",
+        "kategori_id",
+        "ayar_id",
+        "onay_durumu",
+        "yayin_durumu",
+        "olusturan_firma_id",
+        "varyant_count",
+    ],
 )
 
 BUYER_CATALOG_VARIANT = _obj(
@@ -420,11 +486,12 @@ BUYER_LEDGER = _obj(
 BUYER_CREDIT = _obj(
     {
         "para_birimi": _str(),
+        "bakiye": _str(),
         "kredi_limiti": _str(),
-        "kullanilan": _str(),
-        "kalan": _str(),
-        "server_now": _str(),
-    }
+        "kullanilabilir": _null_str(),
+        "limit_aktif": _bool(),
+    },
+    ["para_birimi", "bakiye", "kredi_limiti", "limit_aktif"],
 )
 BUYER_PAYMENT_INTENT = _obj(
     {
@@ -700,6 +767,9 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "MeDashboard": ME_DASHBOARD,
     "ActAsStartOk": ACT_AS_START_OK,
     "ActAsStopOk": ACT_AS_STOP_OK,
+    "OpsProduct": OPS_PRODUCT,
+    "OpsProductPage": paginated("OpsProduct"),
+    "OpsProductVariant": OPS_PRODUCT_VARIANT,
     "BuyerCatalogItem": BUYER_CATALOG_ITEM,
     "BuyerCatalogDetail": BUYER_CATALOG_DETAIL,
     "BuyerCatalogPage": paginated("BuyerCatalogItem"),
@@ -887,6 +957,17 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     },
     "/api/v1/ops/rfq-matches/{id}/approve/": {"post": ("200", "RfqMatch")},
     "/api/v1/ops/rfq-matches/{id}/reject/": {"post": ("200", "RfqMatch")},
+    "/api/v1/ops/products/": {
+        "get": ("200", "OpsProductPage"),
+        "post": ("201", "OpsProduct"),
+    },
+    "/api/v1/ops/products/{id}/": {"get": ("200", "OpsProduct")},
+    "/api/v1/ops/products/{id}/variants/": {"post": ("201", "OpsProductVariant")},
+    "/api/v1/ops/products/{id}/submit/": {"post": ("200", "OpsProduct")},
+    "/api/v1/ops/products/{id}/approve/": {"post": ("200", "OpsProduct")},
+    "/api/v1/ops/products/{id}/reject/": {"post": ("200", "OpsProduct")},
+    "/api/v1/ops/products/{id}/publish/": {"post": ("200", "OpsProduct")},
+    "/api/v1/ops/products/{id}/unpublish/": {"post": ("200", "OpsProduct")},
     "/api/v1/supplier/stock/": {"get": ("200", "SupplierStockPage")},
     "/api/v1/supplier/stock/adjustments/": {"post": ("201", "SupplierMovement")},
     "/api/v1/supplier/rfqs/": {"get": ("200", "RfqPage")},

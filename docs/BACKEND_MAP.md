@@ -205,7 +205,7 @@ QualityInspection ; Shipment / ReturnRequest
 ## 6. Eksikler / FE’yi bloke edenler (max 10)
 
 1. **Kritik — Sipariş→tedarikçi yönlendirme HTTP yok:** Sipariş alıcıya aittir; admin’in “siparişi tedarikçiye ata” ayrı uç yok. Operasyon yolu: **RFQ eşleştirme** (`/ops/rfq-matches/*`) + teklif/stok. Dilim 4’te bu API’ye map et; eksik iş kuralı varsa küçük backend ekle.
-2. **Kritik — Platform ürün CRUD API yok:** Katalog yazma çoğunlukla Django Admin (`submit_urun`/`approve_urun`/`publish_urun`). Dilim 6 ürün girişi Admin veya yeni API ister.
+2. ~~**Kritik — Platform ürün CRUD API yok**~~ → **ADR-0030 UYGULANDI:** `/api/v1/ops/products/` (+ variants/submit/approve/reject/publish/unpublish).
 3. **Kullanıcı/izin yönetimi API sınırlı:** Invite + profile; tam RBAC UI için Admin veya genişletme gerekir.
 4. **Karşılaştırma endpoint’i yok:** Aynı özellik (gram/çeşit) karşılaştırması FE’de `/catalog` + detay ile yapılır; sunucu-side compare yok. (`GET /sales-channels/` eklendi — quote kanal keşfi.)
 5. **Tek portal iskeleti:** Next’te buyer/supplier/admin ayrımı henüz yoktu (bu dilimde eklenecek); domain stub menü yanlış yönlendiriyordu.

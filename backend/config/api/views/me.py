@@ -16,7 +16,7 @@ class MeView(APIView):
 
     def get(self, request):
         # Client ?firma_id= asla kullanılmaz
-        return Response(present_me(request.user))
+        return Response(present_me(request.user, request=request))
 
 
 class MeDashboardView(APIView):

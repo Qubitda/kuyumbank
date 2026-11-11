@@ -170,6 +170,7 @@ ROLE_PERMISSION_MATRIX = {
         P["manage_users"],
         P["manage_all_users"],
         P["act_as_user"],
+        P["submit_urun"],  # ADR-0030 — create/submit; approve ayrı aktör (dört göz)
         P["approve_urun"],
         P["publish_urun"],
         P["approve_teklif"],
@@ -221,6 +222,7 @@ ROLE_PERMISSION_MATRIX = {
     ),
     roles.PLATFORM_CATALOG: (
         P["view_all_tenants"],
+        P["submit_urun"],  # ADR-0030 — ops products create/submit
         P["approve_urun"],
         P["publish_urun"],
         P["approve_teklif"],

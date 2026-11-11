@@ -698,22 +698,35 @@
       },
       "BuyerCredit": {
         "properties": {
-          "kalan": {
+          "bakiye": {
             "type": "string"
           },
           "kredi_limiti": {
             "type": "string"
           },
-          "kullanilan": {
-            "type": "string"
+          "kullanilabilir": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit_aktif": {
+            "type": "boolean"
           },
           "para_birimi": {
             "type": "string"
-          },
-          "server_now": {
-            "type": "string"
           }
         },
+        "required": [
+          "para_birimi",
+          "bakiye",
+          "kredi_limiti",
+          "limit_aktif"
+        ],
         "type": "object"
       },
       "BuyerFinanceSummary": {
@@ -1297,6 +1310,9 @@
           "type": "boolean"
         },
         "properties": {
+          "can_act_as": {
+            "type": "boolean"
+          },
           "can_approve": {
             "type": "boolean"
           },
@@ -1957,11 +1973,65 @@
       },
       "MeResponse": {
         "properties": {
+          "act_as": {
+            "properties": {
+              "active": {
+                "type": "boolean"
+              },
+              "actor_id": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "actor_username": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "target_id": {
+                "oneOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "target_username": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "active"
+            ],
+            "type": "object"
+          },
           "capabilities": {
             "additionalProperties": {
               "type": "boolean"
             },
             "properties": {
+              "can_act_as": {
+                "type": "boolean"
+              },
               "can_approve": {
                 "type": "boolean"
               },
@@ -2093,7 +2163,8 @@
           "email_verified",
           "firma",
           "firma_id",
-          "capabilities"
+          "capabilities",
+          "act_as"
         ],
         "type": "object"
       },
@@ -2279,6 +2350,276 @@
           },
           "teslim_alan": {
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OpsProduct": {
+        "properties": {
+          "aciklama": {
+            "type": "string"
+          },
+          "ad": {
+            "type": "string"
+          },
+          "allowed_actions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "ayar": {
+            "type": "string"
+          },
+          "ayar_id": {
+            "type": "integer"
+          },
+          "fiyat_tipi": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kategori": {
+            "type": "string"
+          },
+          "kategori_id": {
+            "type": "integer"
+          },
+          "olusturan_firma_id": {
+            "type": "integer"
+          },
+          "onay_durumu": {
+            "type": "string"
+          },
+          "platform_kodu": {
+            "type": "string"
+          },
+          "red_nedeni": {
+            "type": "string"
+          },
+          "varyant_count": {
+            "type": "integer"
+          },
+          "varyantlar": {
+            "items": {
+              "properties": {
+                "aktif": {
+                  "type": "boolean"
+                },
+                "beden_id": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ek_bedel": {
+                  "type": "string"
+                },
+                "gram": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "renk_id": {
+                  "oneOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sku": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "sku",
+                "aktif"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "yayin_durumu": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ad",
+          "platform_kodu",
+          "kategori_id",
+          "ayar_id",
+          "onay_durumu",
+          "yayin_durumu",
+          "olusturan_firma_id",
+          "varyant_count"
+        ],
+        "type": "object"
+      },
+      "OpsProductCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "aciklama": {
+            "type": "string"
+          },
+          "ad": {
+            "type": "string"
+          },
+          "ayar_id": {
+            "type": "integer"
+          },
+          "fiyat_tipi": {
+            "type": "string"
+          },
+          "kategori_id": {
+            "type": "integer"
+          },
+          "satis_kanali_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ad",
+          "kategori_id",
+          "ayar_id"
+        ],
+        "type": "object"
+      },
+      "OpsProductPage": {
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page": {
+            "type": "integer"
+          },
+          "page_size": {
+            "type": "integer"
+          },
+          "previous": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/OpsProduct"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "count",
+          "page",
+          "page_size",
+          "results"
+        ],
+        "type": "object"
+      },
+      "OpsProductPublishRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "durum": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OpsProductVariant": {
+        "properties": {
+          "aktif": {
+            "type": "boolean"
+          },
+          "beden_id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ek_bedel": {
+            "type": "string"
+          },
+          "gram": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "integer"
+          },
+          "renk_id": {
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sku": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sku",
+          "aktif"
+        ],
+        "type": "object"
+      },
+      "OpsProductVariantCreateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "ek_bedel": {
+            "type": "string"
+          },
+          "gram": {
+            "type": "string"
+          },
+          "renk_id": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -9028,6 +9369,891 @@
           }
         },
         "summary": "GET /api/v1/ops/orders/summary/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/": {
+      "get": {
+        "description": "GET liste; POST taslak create.",
+        "operationId": "listOpsProductListCreates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProductPage"
+                }
+              }
+            },
+            "description": "OpsProductPage"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/ops/products/",
+        "tags": [
+          "ops"
+        ]
+      },
+      "post": {
+        "description": "GET liste; POST taslak create.",
+        "operationId": "createOpsProductList",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpsProductCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/": {
+      "get": {
+        "description": "`GET /api/v1/ops/products/{id}/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "retrieveOpsProductDetail",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/ops/products/{id}/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/approve/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/approve/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductApprove",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/approve/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/publish/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/publish/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductPublish",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpsProductPublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/publish/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/reject/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/reject/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductReject",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/reject/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/submit/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/submit/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductSubmit",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/submit/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/unpublish/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/unpublish/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductUnpublish",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProduct"
+                }
+              }
+            },
+            "description": "OpsProduct"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/unpublish/",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/api/v1/ops/products/{id}/variants/": {
+      "post": {
+        "description": "`POST /api/v1/ops/products/{id}/variants/` — yetki ve tenant view/serviste yeniden doğrulanır; UI gizleme güvenlik değildir.",
+        "operationId": "createOpsProductVariant",
+        "parameters": [
+          {
+            "description": "",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpsProductVariantCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsProductVariant"
+                }
+              }
+            },
+            "description": "OpsProductVariant"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/ops/products/{id}/variants/",
         "tags": [
           "ops"
         ]

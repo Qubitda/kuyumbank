@@ -1,5 +1,6 @@
 """Ürün uygulamasının servis katmanı."""
 
+from .katalog_yazma_servisi import taslak_urun_olustur, varyant_ekle
 from .kategori_servisi import kategori_tasi
 from .onay_servisi import (
     assert_onayli_kritik_kilit,
@@ -21,5 +22,7 @@ __all__ = [
     "pasife_al",
     "reddet",
     "taslaga_al",
+    "taslak_urun_olustur",
+    "varyant_ekle",
     "yayina_al",
 ]

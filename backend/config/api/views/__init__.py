@@ -46,6 +46,16 @@ from .finance import (
 )
 from .health import HealthView, ReadyView
 from .ops import OpsOrderSummaryView
+from .ops_products import (
+    OpsProductApproveView,
+    OpsProductDetailView,
+    OpsProductListCreateView,
+    OpsProductPublishView,
+    OpsProductRejectView,
+    OpsProductSubmitView,
+    OpsProductUnpublishView,
+    OpsProductVariantCreateView,
+)
 from .ops_finance import (
     OpsFinanceCariListView,
     OpsFinanceLedgerListView,
@@ -168,6 +178,14 @@ __all__ = [
     "OpsInspectionPassView",
     "OpsInspectionStartView",
     "OpsOrderSummaryView",
+    "OpsProductApproveView",
+    "OpsProductDetailView",
+    "OpsProductListCreateView",
+    "OpsProductPublishView",
+    "OpsProductRejectView",
+    "OpsProductSubmitView",
+    "OpsProductUnpublishView",
+    "OpsProductVariantCreateView",
     "OpsShipmentCancelView",
     "OpsShipmentDeliverView",
     "OpsShipmentDetailView",

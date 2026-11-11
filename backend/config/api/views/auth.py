@@ -72,7 +72,7 @@ class AuthLoginView(APIView):
 
         login(request, user)
         mfa_servisi.clear_mfa(request.session)
-        body = present_me(user)
+        body = present_me(user, request=request)
         if mfa_servisi.user_requires_mfa(user):
             try:
                 mfa_servisi.issue_email_otp(user=user)
@@ -191,7 +191,7 @@ class MfaVerifyView(APIView):
             )
         except DjangoValidationError as exc:
             raise _django_ve_to_drf(exc) from exc
-        return Response({"mfa_ok": True, **present_me(request.user)})
+        return Response({"mfa_ok": True, **present_me(request.user, request=request)})
 
 
 class MfaResendView(APIView):

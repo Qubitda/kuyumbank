@@ -131,7 +131,7 @@ def _role_for(path: str, method: str = "GET") -> str:
         return "finance_ops"
     if path.startswith("/api/v1/ops/shipments"):
         return "logistics"
-    if path.startswith("/api/v1/ops/rfq"):
+    if path.startswith("/api/v1/ops/rfq") or path.startswith("/api/v1/ops/products"):
         return "catalog"
     if path.startswith("/api/v1/ops/"):
         return "ops"
@@ -220,6 +220,8 @@ def _empty_body_ok(path: str) -> bool:
             "deactivate",
             "mahsup",
             "reorder",
+            "publish",
+            "unpublish",
         )
     )
 

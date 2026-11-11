@@ -347,6 +347,25 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "OpsMeasurementRequest": OPS_MEASUREMENT,
     "OpsShipmentCreateRequest": OPS_SHIPMENT_CREATE,
     "OpsPodRequest": OPS_POD,
+    "OpsProductCreateRequest": _obj(
+        {
+            "ad": _str(),
+            "kategori_id": _int(),
+            "ayar_id": _int(),
+            "aciklama": _str(),
+            "fiyat_tipi": _str(),
+            "satis_kanali_id": _int(),
+        },
+        ["ad", "kategori_id", "ayar_id"],
+    ),
+    "OpsProductVariantCreateRequest": _obj(
+        {
+            "gram": _str(),
+            "renk_id": _int(),
+            "ek_bedel": _str(),
+        }
+    ),
+    "OpsProductPublishRequest": _obj({"durum": _str()}),
 }
 
 # path → method → schema component name
@@ -395,6 +414,13 @@ REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     "/api/v1/ops/rfq-lines/{line_id}/matches/": {"post": "RfqMatchCreateRequest"},
     "/api/v1/ops/rfq-matches/{id}/approve/": {"post": "EmptyRequest"},
     "/api/v1/ops/rfq-matches/{id}/reject/": {"post": "ReasonRequest"},
+    "/api/v1/ops/products/": {"post": "OpsProductCreateRequest"},
+    "/api/v1/ops/products/{id}/variants/": {"post": "OpsProductVariantCreateRequest"},
+    "/api/v1/ops/products/{id}/submit/": {"post": "EmptyRequest"},
+    "/api/v1/ops/products/{id}/approve/": {"post": "EmptyRequest"},
+    "/api/v1/ops/products/{id}/reject/": {"post": "ReasonRequest"},
+    "/api/v1/ops/products/{id}/publish/": {"post": "OpsProductPublishRequest"},
+    "/api/v1/ops/products/{id}/unpublish/": {"post": "EmptyRequest"},
     "/api/v1/supplier/rfqs/{id}/messages/": {"post": "RfqMessageRequest"},
     "/api/v1/supplier/rfqs/{id}/revisions/": {"post": "RfqRevisionRequest"},
     "/api/v1/supplier/stock/adjustments/": {"post": "SupplierStockAdjustRequest"},

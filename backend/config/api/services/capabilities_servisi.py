@@ -54,11 +54,24 @@ def capabilities_for(user) -> dict[str, bool]:
         or has_perm(user, P["manage_users"]),
         "can_manage_addresses": can_manage_all_users(user)
         or has_perm(user, P["manage_users"]),
+        "can_act_as": has_perm(user, P["act_as_user"]),
     }
 
 
-def present_me(user) -> dict:
+def present_me(user, *, request=None) -> dict:
     firma = getattr(user, "firma", None)
+    caps_user = user
+    act_as_payload = {"active": False}
+    if request is not None and getattr(request, "act_as_active", False):
+        actor = getattr(request, "act_as_actor", None)
+        caps_user = actor or user
+        act_as_payload = {
+            "active": True,
+            "actor_id": getattr(actor, "pk", None),
+            "actor_username": actor.get_username() if actor is not None else None,
+            "target_id": user.pk,
+            "target_username": user.get_username(),
+        }
     return {
         "id": user.pk,
         "username": user.get_username(),
@@ -67,5 +80,6 @@ def present_me(user) -> dict:
         "firma": present_firma_masked(firma),
         # Geriye uyum (B0 me alanı); yeni istemciler `firma` kullanır
         "firma_id": getattr(user, "firma_id", None),
-        "capabilities": capabilities_for(user),
+        "capabilities": capabilities_for(caps_user),
+        "act_as": act_as_payload,
     }

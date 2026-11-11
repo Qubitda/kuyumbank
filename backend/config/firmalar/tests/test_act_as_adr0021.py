@@ -101,10 +101,19 @@ class ActAsTests(TestCase):
         me = api.get(reverse("api-me"))
         self.assertEqual(me.status_code, 200)
         self.assertEqual(me.data["username"], "actas_buyer")
+        act = me.data.get("act_as") or {}
+        self.assertTrue(act.get("active"))
+        self.assertEqual(act.get("target_username"), "actas_buyer")
+        self.assertEqual(act.get("actor_username"), "actas_admin")
+        self.assertTrue(me.data["capabilities"].get("can_act_as"))
 
         stop = api.post(reverse("api-act-as-stop"), {}, format="json")
         self.assertEqual(stop.status_code, 200)
         self.assertFalse(stop.data["act_as"])
+
+        me2 = api.get(reverse("api-me"))
+        self.assertEqual(me2.status_code, 200)
+        self.assertFalse((me2.data.get("act_as") or {}).get("active"))
 
     @override_settings(FRONTEND_PORTAL_BASE_URL="https://app.example.test")
     def test_portal_hedef_uses_frontend_base(self):

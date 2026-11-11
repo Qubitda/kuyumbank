@@ -543,13 +543,16 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F9-017 | Profil/adres self-service HTTP | `/me/profile/` + `/me/addresses/` · `test_profile_address_f9_017` **3 OK** · **UYGULANDI** 2026-11-11 |
 | NX-HARDEN | Docs auth · MFA problem+json · `/ready/` · logout Token revoke · supplier ops `tedarikci_id` · throttles | `test_hardening_nx_fe` · OpenAPI **106**/ **120** · [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md) · **UYGULANDI** 2026-11-11 |
 
+| CAP-URUN-CRUD-HTTP | /ops/products/ create/submit/approve/publish | 	est_ops_products_adr0030 · ADR-0030 **Kabul** · **UYGULANDI** 2026-11-11 |
+
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
 > **FRONTEND READY** (2026-11-10; hardening 2026-11-11). Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md). Next dilimleri ayrı açık talimatla.
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş; FE harita: [BACKEND_MAP](BACKEND_MAP.md); portal kökleri `/buyer` `/supplier` `/admin` |
+| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş/RFQ/finans + MFA UI; FE harita: [BACKEND_MAP](BACKEND_MAP.md); portal kökleri `/buyer` `/supplier` `/admin` |
+| — | CAP-URUN-CRUD-HTTP | Platform ürün CRUD API | [ADR-0030](decisions/ADR-0030-platform-urun-crud-http.md) **Kabul** · UYGULANDI |
 | P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
 | — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
 
@@ -571,4 +574,4 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **742 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-11 — NX portal dilimleri (`/buyer|/supplier|/admin`); BACKEND_MAP + `GET /sales-channels/`; sıradaki: MFA UI, ürün CRUD API.*
+*Son güncelleme: 2026-11-11 — alıcı sevkiyat/iade FE (/buyer/logistics).*
