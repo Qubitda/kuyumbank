@@ -3,6 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ApiError, login } from "@/lib/api/client";
 
 export function LoginForm() {
@@ -32,28 +35,22 @@ export function LoginForm() {
   return (
     <form action={onSubmit} className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="username" className="text-xs font-medium text-muted-foreground">
-          Kullanıcı adı
-        </label>
-        <input
+        <Label htmlFor="username">Kullanıcı adı</Label>
+        <Input
           id="username"
           name="username"
           autoComplete="username"
           required
-          className="h-10 rounded-md border border-border bg-background px-3 text-sm outline-none ring-ring focus:ring-2"
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-xs font-medium text-muted-foreground">
-          Parola
-        </label>
-        <input
+        <Label htmlFor="password">Parola</Label>
+        <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           required
-          className="h-10 rounded-md border border-border bg-background px-3 text-sm outline-none ring-ring focus:ring-2"
         />
       </div>
       {error ? (
@@ -61,13 +58,9 @@ export function LoginForm() {
           {error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Giriş yapılıyor…" : "Giriş yap"}
-      </button>
+      </Button>
     </form>
   );
 }

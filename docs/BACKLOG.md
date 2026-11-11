@@ -1061,9 +1061,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 
 ### [NX-SHELL] Application shell + shadcn temel
 
-- **Faz:** Faz 9 / Experience · **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Faz:** Faz 9 / Experience · **Durum:** **UYGULANDI** (2026-11-11) · **Öncelik:** P1 · **Tip:** Frontend
 - **Bağımlılıklar:** NX-FE, NX-ARCH
 - **Kabul kriterleri:** Nav shell; light/dark; Button/Input/Dialog temel; kör havuz UI kuralları
+- **Kanıt:** `components/layout/portal-shell` + `theme-toggle` (`next-themes`); `components/ui/{button,input,label,dialog}`; login form primitives; `npm run build`
 
 ### [F9-010] Buyer dashboard iskeleti (Django HTML miras)
 

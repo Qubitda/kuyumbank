@@ -1,5 +1,12 @@
 # `components/ui`
 
-Shadcn/ui primitives buraya gelecek (**NX-SHELL**).
+NX-SHELL shadcn-style primitives (monokromatik; Card spam yok).
 
-Şimdilik bilinçli boş: rastgele Button/Input kopyası yok; token’lar `app/globals.css` içinde.
+| Dosya | Not |
+|-------|-----|
+| `button.tsx` | CVA variants · `@radix-ui/react-slot` |
+| `input.tsx` | Form girişi |
+| `label.tsx` | Erişilebilir etiket |
+| `dialog.tsx` | `@radix-ui/react-dialog` |
+
+Tema token’ları: `app/globals.css` (`.dark` sınıfı + `next-themes`).

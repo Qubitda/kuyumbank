@@ -1,8 +1,8 @@
 # Kuyumbank Frontend Architecture
 
-**Durum:** NX-FE iskelet + feature/domain katman iskeleti (2026-11-09)  
+**Durum:** NX-FE + NX-ARCH + **NX-SHELL** (2026-11-11)  
 **Politika:** [ADR-0017](../../docs/decisions/ADR-0017-nextjs-api-sozlesmesi.md) · API: [API_CONTRACT](../../docs/API_CONTRACT.md)  
-**Frontend-ready kapısı:** [API_READINESS](../../docs/API_READINESS.md) — **FRONTEND NOT READY** (2026-11-10)  
+**Frontend-ready kapısı:** [API_READINESS](../../docs/API_READINESS.md) — **FRONTEND READY**  
 **Backend paralel:** ADR-0004 (`models` / `services` / `selectors`) → FE `types` / `services` / `hooks` + `components`
 ## 1. Amaç
 
@@ -35,7 +35,7 @@ frontend/src/
 │   ├── page.tsx                  # NX-FE durum /me smoke
 │   ├── (auth)/login/             # URL: /login
 │   └── (portal)/                 # Route group — URL’ye yazılmaz
-│       ├── layout.tsx            # ileride NX-SHELL
+│       ├── layout.tsx            # NX-SHELL PortalShell
 │       ├── firmalar/
 │       │   ├── page.tsx
 │       │   ├── loading.tsx
@@ -125,7 +125,7 @@ Rol bazlı URL önekleri (`/buyer`, `/supplier`) sonraki NX-SHELL diliminde ekle
 
 ## 8. Bilinçli sonraki dilimler
 
-- **NX-SHELL:** shadcn primitives + `(portal)/layout` nav
+- **NX-SHELL:** **UYGULANDI** — shadcn Button/Input/Label/Dialog + PortalShell + light/dark
 - **NX-BUYER:** katalog / sepet / sipariş sayfa doldurma
 - Django ürün HTML portal **yok** (ADR-0029); yalnız `/admin/` + `/api/v1/` — Next portal dilimleri
 

@@ -585,6 +585,12 @@
 - FE→BE: Next yalnız `csrf/login/logout/me/health` çağırıyor; hepsi backend’de var.
 - Smoke: `scripts/smoke_api.py` (+ sonuç FINAL-REPORT).
 
+### 2026-11-11 — NX-SHELL (P1)
+- Next: `PortalShell` / `PortalNav` / `ThemeToggle` (`next-themes` class).
+- shadcn-style `components/ui`: Button, Input, Label, Dialog; login form bağlandı.
+- Kör havuz UI notu shell’de; Card/gradient yok.
+- BACKLOG NX-SHELL **UYGULANDI**.
+
 ### 2026-11-11 — Audit kapanış (ADIM 1–8)
 - WIP dilimli commit (ADR-0027/28/29 + integrity/ops); `makemigrations --check` OK.
 - PG full suite **588 OK**; OpenAPI lint OK (98 path / 106 op).

@@ -1,4 +1,7 @@
-/** Genel sınıf birleştirme — shadcn `cn` sonrası genişletilebilir. */
-export function cn(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(" ");
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/** Tailwind class merge — shadcn `cn`. */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }

@@ -529,6 +529,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | TECH-NX-CONTRACT-01 | NX-3…12 kod kanıt + `application/problem+json` | **UYGULANDI**; `test_api_nx_contract` **4 OK**; NX-3…12 madde **Kabul** (Qubit) |
 | NX-FE | Next.js `frontend/` iskelet | App Router + TS + Tailwind v4; `/api/v1` rewrite; session/CSRF client; `/` + `/login`; `npm run build` OK |
 | NX-ARCH | Feature/domain FE mimarisi | `features/*` ↔ Django apps; `app/(portal)/*` page/loading/error; `FRONTEND_ARCHITECTURE.md`; Zod |
+| NX-SHELL | App shell + shadcn temel | `PortalShell` + light/dark; Button/Input/Label/Dialog; kör havuz notu; **UYGULANDI** 2026-11-11 |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
@@ -536,7 +537,8 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| P1 | NX / F9 Next portal dilimleri | [API_READINESS](API_READINESS.md) **READY**; ürün sahibi dilim talimatı |
+| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş doldurma; [API_READINESS](API_READINESS.md) **READY** |
+| P1 | F9-017 | Profil/adres self-service | firmalar adres API |
 | P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
 | — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
 
@@ -558,4 +560,4 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **588 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-10 — ADR-0029 API-only HTML portal kaldırma.*
+*Son güncelleme: 2026-11-11 — NX-SHELL UYGULANDI; sıradaki NX-BUYER / F9-017.*
