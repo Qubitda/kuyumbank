@@ -24,6 +24,11 @@ from .invite_auth import (
     InviteListView,
 )
 from .me import MeDashboardView, MeView
+from .profile_address import (
+    MeAddressDetailView,
+    MeAddressListCreateView,
+    MeProfileView,
+)
 from .bulk_order import BulkOrderCreateView
 from .buyer_cart import CartLineCreateView, CartLineDetailView, CartMineView
 from .buyer_lock import PriceLockCreateView, PriceLockDetailView
@@ -129,6 +134,9 @@ __all__ = [
     "InviteCreateView",
     "InviteListView",
     "MeDashboardView",
+    "MeProfileView",
+    "MeAddressListCreateView",
+    "MeAddressDetailView",
     "BulkOrderCreateView",
     "BuyerCariDetailView",
     "BuyerCariListView",

@@ -732,6 +732,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/addresses/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /api/v1/me/addresses/
+         * @description GET liste; POST oluştur — {tip, il, ilce?, adres, varsayilan?}.
+         */
+        get: operations["listMeAddressListCreates"];
+        put?: never;
+        /**
+         * POST /api/v1/me/addresses/
+         * @description GET liste; POST oluştur — {tip, il, ilce?, adres, varsayilan?}.
+         */
+        post: operations["createMeAddressList"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/addresses/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /api/v1/me/addresses/{id}/
+         * @description GET/PATCH/DELETE /api/v1/me/addresses/<id>/ — scope dışı → 404.
+         */
+        get: operations["retrieveMeAddressDetail"];
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /api/v1/me/addresses/{id}/
+         * @description GET/PATCH/DELETE /api/v1/me/addresses/<id>/ — scope dışı → 404.
+         */
+        delete: operations["destroyMeAddressDetail"];
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /api/v1/me/addresses/{id}/
+         * @description GET/PATCH/DELETE /api/v1/me/addresses/<id>/ — scope dışı → 404.
+         */
+        patch: operations["partialUpdateMeAddressDetail"];
+        trace?: never;
+    };
     "/api/v1/me/dashboard/": {
         parameters: {
             query?: never;
@@ -750,6 +802,30 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/profile/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /api/v1/me/profile/
+         * @description GET/PATCH /api/v1/me/profile/ — kendi profil (first_name/last_name).
+         */
+        get: operations["listMeProfiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /api/v1/me/profile/
+         * @description GET/PATCH /api/v1/me/profile/ — kendi profil (first_name/last_name).
+         */
+        patch: operations["partialUpdateMeProfile"];
         trace?: never;
     };
     "/api/v1/ops/anomalies/ciro/": {
@@ -2115,6 +2191,21 @@ export interface components {
             actor_id?: number | null;
             redirect_url: string;
         };
+        AddressCreateRequest: {
+            adres: string;
+            il: string;
+            ilce?: string;
+            /** @description merkez|depo|sevk|fatura */
+            tip?: string;
+            varsayilan?: boolean;
+        };
+        AddressPatchRequest: {
+            adres?: string;
+            il?: string;
+            ilce?: string;
+            tip?: string;
+            varsayilan?: boolean;
+        };
         AliciDavranisOzet: {
             alici_firma_id: number;
             ciro_vergisiz?: string;
@@ -2383,6 +2474,7 @@ export interface components {
             can_approve?: boolean;
             can_checkout?: boolean;
             can_lock_quote?: boolean;
+            can_manage_addresses?: boolean;
             can_manage_offers?: boolean;
             can_manage_org?: boolean;
             can_manage_qc?: boolean;
@@ -2450,6 +2542,25 @@ export interface components {
             detail: string;
         };
         EmptyRequest: Record<string, never>;
+        FirmaAdresi: {
+            adres: string;
+            allowed_actions?: string[];
+            firma_id: number;
+            id: number;
+            il: string;
+            ilce?: string;
+            server_now?: string;
+            tip: string;
+            varsayilan: boolean;
+        };
+        FirmaAdresiPage: {
+            count: number;
+            next?: string | null;
+            page: number;
+            page_size: number;
+            previous?: string | null;
+            results: components["schemas"]["FirmaAdresi"][];
+        };
         FirmaMasked: {
             ad: string;
             aktif: boolean;
@@ -2518,11 +2629,31 @@ export interface components {
             rol?: string;
             username?: string;
         };
+        MeProfile: {
+            allowed_actions?: string[];
+            email: string;
+            email_verified: boolean;
+            firma?: {
+                ad: string;
+                aktif: boolean;
+                alici_mi: boolean;
+                id: number;
+                platform_mu: boolean;
+                tedarikci_mi: boolean;
+            } | null;
+            first_name: string;
+            id: number;
+            last_name: string;
+            rol: string;
+            server_now?: string;
+            username: string;
+        };
         MeResponse: {
             capabilities: {
                 can_approve?: boolean;
                 can_checkout?: boolean;
                 can_lock_quote?: boolean;
+                can_manage_addresses?: boolean;
                 can_manage_offers?: boolean;
                 can_manage_org?: boolean;
                 can_manage_qc?: boolean;
@@ -2713,6 +2844,10 @@ export interface components {
             status: number;
             title?: string;
             type?: string;
+        };
+        ProfilePatchRequest: {
+            first_name?: string;
+            last_name?: string;
         };
         QuoteCreateRequest: {
             /** @default TRY */
@@ -5833,6 +5968,394 @@ export interface operations {
             };
         };
     };
+    listMeAddressListCreates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description FirmaAdresiPage */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmaAdresiPage"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    createMeAddressList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description FirmaAdresi */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmaAdresi"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    retrieveMeAddressDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description FirmaAdresi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmaAdresi"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    destroyMeAddressDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EmptyRequest"];
+            };
+        };
+        responses: {
+            /** @description DetailOk */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetailOk"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    partialUpdateMeAddressDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description FirmaAdresi */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FirmaAdresi"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     listMeDashboards: {
         parameters: {
             query?: never;
@@ -5849,6 +6372,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeDashboard"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    listMeProfiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description MeProfile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeProfile"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    partialUpdateMeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfilePatchRequest"];
+            };
+        };
+        responses: {
+            /** @description MeProfile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeProfile"];
                 };
             };
             /** @description Problem+JSON */

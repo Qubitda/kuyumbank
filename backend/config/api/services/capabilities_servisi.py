@@ -52,6 +52,8 @@ def capabilities_for(user) -> dict[str, bool]:
         "can_manage_return": has_perm(user, P["manage_return"]),
         "can_manage_users": can_manage_all_users(user)
         or has_perm(user, P["manage_users"]),
+        "can_manage_addresses": can_manage_all_users(user)
+        or has_perm(user, P["manage_users"]),
     }
 
 

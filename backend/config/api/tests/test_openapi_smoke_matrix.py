@@ -85,6 +85,12 @@ def _role_for(path: str, method: str = "GET") -> str:
         return "buyer_admin"
     if path.startswith("/api/v1/org-units"):
         return "buyer_admin" if method == "POST" else "buyer"
+    if path.startswith("/api/v1/me/addresses") and method in (
+        "POST",
+        "PATCH",
+        "DELETE",
+    ):
+        return "buyer_admin"
     return "buyer"
 
 
@@ -92,7 +98,15 @@ def _role_gated(path: str, method: str = "GET") -> bool:
     """Wrong-role 403 beklenen yüzeyler (auth/me/logout her authenticated’a açık)."""
     if path.startswith("/api/v1/auth/") and not path.startswith("/api/v1/auth/invites"):
         return False
-    if path in ("/api/v1/me/", "/api/v1/me/dashboard/", "/api/v1/health/"):
+    if path in (
+        "/api/v1/me/",
+        "/api/v1/me/dashboard/",
+        "/api/v1/me/profile/",
+        "/api/v1/health/",
+    ):
+        return False
+    # Adres okuma her authenticated; yazma manage_users (role_gated aşağıda)
+    if path.startswith("/api/v1/me/addresses") and method == "GET":
         return False
     if path.startswith("/api/v1/act-as/stop"):
         return False  # stop: act-as yoksa no-op 200
@@ -119,6 +133,10 @@ def _role_gated(path: str, method: str = "GET") -> bool:
         or path.startswith("/api/v1/payments/intents")
         or path.startswith("/api/v1/reports")
         or path.startswith("/api/v1/auth/invites")
+        or (
+            path.startswith("/api/v1/me/addresses")
+            and method in ("POST", "PATCH", "DELETE")
+        )
     )
 
 

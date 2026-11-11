@@ -591,6 +591,12 @@
 - OpenAPI 102 path / 112 op; API_CONTRACT §4.2–4.3 + FE-P1-RFQ **UYGULANDI**.
 - FE feature `services/` tipli client (UI yok); FINAL-REPORT + crud-matrix.
 
+### 2026-11-11 — F9-017 profil/adres self-service HTTP
+- `GET/PATCH /me/profile/` (first_name/last_name; email verify akışı ayrı).
+- `GET/POST /me/addresses/` + `GET/PATCH/DELETE /me/addresses/{id}/` — tenant = actor.firma; yazma `manage_users`; IDOR 404.
+- `firmalar.services.adres_servisi` + selector; OpenAPI **105/119**; FE `features/firmalar/services`.
+- Test: `api.tests.test_profile_address_f9_017` **3 OK**.
+
 ### 2026-11-11 — NX-SHELL (P1)
 - Next: `PortalShell` / `PortalNav` / `ThemeToggle` (`next-themes` class).
 - shadcn-style `components/ui`: Button, Input, Label, Dialog; login form bağlandı.

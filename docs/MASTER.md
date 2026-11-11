@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-11 — docs↔kod audit (`docs/_audit/`); HTML miras bayat iddiaları ADR-0029 ile hizalandı; OpenAPI path sayısı 98
+**Güncelleme:** 2026-11-11 — F9-017 profil/adres HTTP; OpenAPI **105** path / **119** op; HTML miras ADR-0029
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -532,6 +532,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | NX-SHELL | App shell + shadcn temel | `PortalShell` + light/dark; Button/Input/Label/Dialog; kör havuz notu; **UYGULANDI** 2026-11-11 |
 | CAP-OFFER-CREATE | Supplier teklif create HTTP | `POST /supplier/offers/` · **UYGULANDI** 2026-11-11 |
 | CAP-RFQ-MATCH-HTTP | RFQ eşleştirme HTTP (F10-021) | `/ops/rfq-lines|rfq-matches/` · **UYGULANDI** 2026-11-11 |
+| F9-017 | Profil/adres self-service HTTP | `/me/profile/` + `/me/addresses/` · `test_profile_address_f9_017` **3 OK** · **UYGULANDI** 2026-11-11 |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
@@ -540,7 +541,6 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
 | P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş doldurma; [API_READINESS](API_READINESS.md) **READY** |
-| P1 | F9-017 | Profil/adres self-service | firmalar adres API |
 | P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
 | — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
 
@@ -562,4 +562,4 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **588 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-11 — NX-SHELL UYGULANDI; sıradaki NX-BUYER / F9-017.*
+*Son güncelleme: 2026-11-11 — F9-017 profil/adres API UYGULANDI; sıradaki NX-BUYER.*

@@ -28,7 +28,7 @@ Roller: B=buyer · BA=buyer-admin · S=supplier · O=ops/platform · A=admin(Dja
 | ops finance/reports | — | GET | — | — | O | VAR | |
 | invites | create/list | GET | — | accept (anon) | BA/A | VAR | |
 | auth/me | — | GET me/dashboard | password/MFA | logout | * | VAR | |
-| profile/adres | — | — | — | — | — | **EKSİK** | F9-017; firmalar adres API HTTP net değil — `BACKLOG F9-017` |
+| profile/adres | POST adres | GET profile/adres | PATCH | DELETE adres | * / BA yazma | **VAR** | F9-017: `/me/profile/`, `/me/addresses/` · `test_profile_address_f9_017` |
 | bildirimler HTTP | — | — | — | — | — | **KAPSAM DIŞI** | Outbox/admin; portal list API yok (ADR-0027) |
 | payments | intent POST | — | — | webhook | B/* | VAR | |
 | credit/finance | — | GET | — | check | B | VAR | |
@@ -42,7 +42,7 @@ Roller: B=buyer · BA=buyer-admin · S=supplier · O=ops/platform · A=admin(Dja
 | b) RFQ | Eşleştirme HTTP VAR (platform ops) |
 | c) Tedarikçi | Teklif create + lifecycle + stock VAR |
 | d) Ops | Inspection/shipment/finance/report VAR |
-| e) Kurumsal | Org/onay/invite VAR; profil/adres EKSİK |
+| e) Kurumsal | Org/onay/invite + profil/adres VAR |
 
 ## HTML tarama (mimari kilit)
 

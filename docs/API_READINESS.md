@@ -35,7 +35,7 @@
 | Mahsup | **AÇIK** ADR-0023 |
 | Rapor / anomali | **AÇIK** ADR-0026 |
 
-Diğer satırlar önceki gibi (RFQ eşleştirme / belge / limit / release HTTP → FE v1 **dışı** imza).
+RFQ eşleştirme + supplier teklif create + profil/adres HTTP **UYGULANDI**. Belge / limit / release → FE v1 **dışı** imza.
 
 ---
 
@@ -55,12 +55,13 @@ Diğer satırlar önceki gibi (RFQ eşleştirme / belge / limit / release HTTP �
 | ID | Konu | İmza |
 |----|------|------|
 | FE-P1-RFQ | RFQ eşleştirme HTTP | **UYGULANDI** ✓ — `/ops/rfq-lines/.../matches*` |
+| FE-P1-PROFILE | Profil/adres HTTP (F9-017) | **UYGULANDI** ✓ — `/me/profile/`, `/me/addresses/` |
 | FE-P1-DOC | Belge HTTP | **FE v1 dışı** ✓ |
 | FE-P2-LIM | Harcama limiti CRUD HTTP | **FE v1 dışı** ✓ |
 | FE-P2-REL | Contract release HTTP | **FE v1 dışı** ✓ |
 | FE-P2-ORG | Org update/deactivate HTTP | **FE v1 dışı** ✓ |
 | FE-TS | openapi-typescript | **UYGULANDI** ✓ |
-| FE-SUITE | Tam suite | **UYGULANDI** ✓ — PG **588 OK** (2026-11-11; MASTER §2.7) |
+| FE-SUITE | Tam suite | **UYGULANDI** ✓ — PG **590 OK** (2026-11-11; MASTER §2.7); F9-017 sonrası odaklı +3 |
 
 ---
 

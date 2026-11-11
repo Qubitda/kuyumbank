@@ -94,6 +94,31 @@ EMAIL_VERIFY_CONFIRM_REQUEST = _obj(
     ["uid", "token"],
 )
 ACT_AS_START_REQUEST = _obj({"user_id": _int()}, ["user_id"])
+PROFILE_PATCH_REQUEST = _obj(
+    {
+        "first_name": _str(),
+        "last_name": _str(),
+    },
+)
+ADDRESS_CREATE_REQUEST = _obj(
+    {
+        "tip": _str(description="merkez|depo|sevk|fatura"),
+        "il": _str(),
+        "ilce": _str(),
+        "adres": _str(),
+        "varsayilan": _bool(),
+    },
+    ["il", "adres"],
+)
+ADDRESS_PATCH_REQUEST = _obj(
+    {
+        "tip": _str(),
+        "il": _str(),
+        "ilce": _str(),
+        "adres": _str(),
+        "varsayilan": _bool(),
+    },
+)
 CART_LINE_CREATE = _obj(
     {"quote_id": _int(), "miktar": _num_str()},
     ["quote_id", "miktar"],
@@ -292,6 +317,9 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "EmailVerifyRequest": EMAIL_VERIFY_REQUEST,
     "EmailVerifyConfirmRequest": EMAIL_VERIFY_CONFIRM_REQUEST,
     "ActAsStartRequest": ACT_AS_START_REQUEST,
+    "ProfilePatchRequest": PROFILE_PATCH_REQUEST,
+    "AddressCreateRequest": ADDRESS_CREATE_REQUEST,
+    "AddressPatchRequest": ADDRESS_PATCH_REQUEST,
     "CartLineCreateRequest": CART_LINE_CREATE,
     "CartLinePatchRequest": CART_LINE_PATCH,
     "QuoteCreateRequest": QUOTE_CREATE,
@@ -336,6 +364,12 @@ REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     "/api/v1/auth/email-verify/confirm/": {"post": "EmailVerifyConfirmRequest"},
     "/api/v1/act-as/start/": {"post": "ActAsStartRequest"},
     "/api/v1/act-as/stop/": {"post": "EmptyRequest"},
+    "/api/v1/me/profile/": {"patch": "ProfilePatchRequest"},
+    "/api/v1/me/addresses/": {"post": "AddressCreateRequest"},
+    "/api/v1/me/addresses/{id}/": {
+        "patch": "AddressPatchRequest",
+        "delete": "EmptyRequest",
+    },
     "/api/v1/carts/me/lines/": {"post": "CartLineCreateRequest"},
     "/api/v1/carts/me/lines/{line_id}/": {
         "patch": "CartLinePatchRequest",

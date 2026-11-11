@@ -86,11 +86,11 @@ Presenter’lar durum + yetkiye göre aksiyon listesi döner (RFQ, QC, shipment,
 
 ## 3. Endpoint grupları (B1–B6)
 
-Tam liste: OpenAPI `paths` (**98** path, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-11).
+Tam liste: OpenAPI `paths` (**105** path / **119** op, çift `/api/v1` önek **0** — `export_openapi.py --check`, 2026-11-11).
 
 | Dilim | Örnek path’ler |
 |-------|----------------|
-| B1 | `/health`, `/auth/*`, `/me`, schema |
+| B1 | `/health`, `/auth/*`, `/me`, `/me/profile`, `/me/addresses`, schema |
 | B2 | `/catalog`, `/quotes`, `/price-locks`, `/carts`, `/checkouts`, `/orders` |
 | B3 | `/finance/*`, `/credit/*`, `/payments`, `/shipments`, `/returns` |
 | B4 | `/org/*`, `/approvals/*`, `/rfqs/*` |
@@ -104,6 +104,7 @@ Tam liste: OpenAPI `paths` (**98** path, çift `/api/v1` önek **0** — `export
 1. **CORS erteli** — aynı-origin reverse proxy (ADR-0017).
 2. **RFQ eşleştirme HTTP** — **UYGULANDI** (F10-021): `GET/POST /ops/rfq-lines/{line_id}/matches|match-candidates/` + `approve|reject`.
 3. **Teklif create HTTP** — **UYGULANDI**: `POST /supplier/offers/` → `teklif_servisi.taslak_olustur` (+ submit/deactivate/versions).
+3b. **Profil/adres self-service** — **UYGULANDI** (F9-017): `GET/PATCH /me/profile/`, `GET/POST /me/addresses/`, `GET/PATCH/DELETE /me/addresses/{id}/` (yazma: `manage_users`; tenant = `actor.firma`; IDOR → 404).
 4. **Mahsup HTTP** — **UYGULANDI** (ADR-0023): `POST /api/v1/returns/{id}/mahsup/` + approve `mahsup`; ödeme iadesi yok (U-004).
 5. **Rapor/anomali HTTP** — **UYGULANDI** (ADR-0026): `GET /reports/orders/`, `/reports/buyer-behavior/`, `/ops/anomalies/ciro/`.
 6. **OpenAPI** — OpenAPI 3.1 hedef; path keşfi DRF AutoSchema; response DTO `openapi_components.py` (path sayısı: `openapi-v1.json`; docs_sync AUTO); request DTO `openapi_requests.py` (tüm POST/PUT/PATCH). Runtime presenter + test esas.

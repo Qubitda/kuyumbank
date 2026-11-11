@@ -1122,9 +1122,10 @@ Kodda UYGULANDI olanlar: [MASTER](MASTER.md) §12.2. Kart durumları faz bazlıd
 ### [F9-017] Self-service profil/adres
 
 - **Faz:** Faz 9
-- **Durum:** Backlog · **Öncelik:** P1 · **Tip:** Frontend
+- **Durum:** **UYGULANDI** (API 2026-11-11) · UI dilim ayrı · **Öncelik:** P1 · **Tip:** Backend+FE servis
 - **Bağımlılıklar:** firmalar adres API
 - **Kabul kriterleri:** Başka firma adresi IDOR yok
+- **Kanıt:** `GET/PATCH /api/v1/me/profile/`; `GET/POST /api/v1/me/addresses/`; `GET/PATCH/DELETE /api/v1/me/addresses/{id}/`; `adres_servisi` + `test_profile_address_f9_017` **3 OK**; yazma `manage_users`; FE `features/firmalar/services`
 
 ### [U-001] ADR-0010 PriceLock varsayımları (L-01…L-11)
 

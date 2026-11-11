@@ -90,6 +90,7 @@ CAPABILITIES = {
             "can_manage_shipment",
             "can_manage_return",
             "can_manage_users",
+            "can_manage_addresses",
         )
     },
 }
@@ -151,6 +152,35 @@ MFA_VERIFY_OK = _obj(
         "detail": _str(description="MFA gerekli değilken"),
     },
     ["mfa_ok"],
+)
+ME_PROFILE = _obj(
+    {
+        "id": _int(),
+        "username": _str(),
+        "email": _str(),
+        "first_name": _str(),
+        "last_name": _str(),
+        "rol": _str(),
+        "email_verified": _bool(),
+        "firma": {"oneOf": [FIRMA_MASKED, {"type": "null"}]},
+        "allowed_actions": _actions(),
+        "server_now": _str(),
+    },
+    ["id", "username", "email", "first_name", "last_name", "rol", "email_verified"],
+)
+FIRMA_ADRESI = _obj(
+    {
+        "id": _int(),
+        "tip": _str(),
+        "il": _str(),
+        "ilce": _str(),
+        "adres": _str(),
+        "varsayilan": _bool(),
+        "firma_id": _int(),
+        "allowed_actions": _actions(),
+        "server_now": _str(),
+    },
+    ["id", "tip", "il", "adres", "varsayilan", "firma_id"],
 )
 ME_DASHBOARD = _obj(
     {
@@ -630,6 +660,9 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "FirmaMasked": FIRMA_MASKED,
     "Capabilities": CAPABILITIES,
     "MeResponse": ME_RESPONSE,
+    "MeProfile": ME_PROFILE,
+    "FirmaAdresi": FIRMA_ADRESI,
+    "FirmaAdresiPage": paginated("FirmaAdresi"),
     "Health": HEALTH,
     "CsrfResponse": CSRF,
     "LogoutOk": LOGOUT_OK,
@@ -712,6 +745,19 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/auth/email-verify/confirm/": {"post": ("200", "EmailVerifyConfirmOk")},
     "/api/v1/me/": {"get": ("200", "MeResponse")},
     "/api/v1/me/dashboard/": {"get": ("200", "MeDashboard")},
+    "/api/v1/me/profile/": {
+        "get": ("200", "MeProfile"),
+        "patch": ("200", "MeProfile"),
+    },
+    "/api/v1/me/addresses/": {
+        "get": ("200", "FirmaAdresiPage"),
+        "post": ("201", "FirmaAdresi"),
+    },
+    "/api/v1/me/addresses/{id}/": {
+        "get": ("200", "FirmaAdresi"),
+        "patch": ("200", "FirmaAdresi"),
+        "delete": ("200", "DetailOk"),
+    },
     "/api/v1/act-as/start/": {"post": ("200", "ActAsStartOk")},
     "/api/v1/act-as/stop/": {"post": ("200", "ActAsStopOk")},
     "/api/v1/catalog/": {"get": ("200", "BuyerCatalogPage")},
