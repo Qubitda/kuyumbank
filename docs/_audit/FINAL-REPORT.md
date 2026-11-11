@@ -32,6 +32,10 @@
 
 **Kod davranışı (iş kuralı) değiştirilmedi.** Yalnız OpenAPI sözleşme zenginleştirme + döküman hizalama + smoke.
 
+**Commit’ler (bu audit):**
+- `ad2ee36` — `fix(api): OpenAPI password/MFA request and response DTO bindings`
+- `59b6f5c` — `docs: API audit inventory, drift report, and HTML portal Deprecated sync`
+
 ---
 
 ## 2. Döküman ↔ kod uyum durumu (önce / sonra)
@@ -49,10 +53,10 @@
 
 ## 3. Hâlâ açık olan işler (öncelikli)
 
-1. **P1** Next portal dilimleri (MASTER §12.3) — ürün sahibi talimatı  
-2. **P2** FE-SUITE tam PG suite yeşil kanıtı (bu oturumda full suite **çalıştırılmadı**)  
-3. **P2** F6-032 uyuşmazlık ops UI; gerçek ödeme/kargo; staging Sentry event  
-4. **P2** ADR-0027/0028/0029 + audit dosyalarının commit’i (diskte vardı / NO_GIT_HISTORY)  
+1. **P0/P1** Working tree’de ~130 dosya hâlâ uncommitted: ADR-0029 HTML silme, ADR-0028 invite/verify, `bildirim/`, migration’lar (bu audit commit’lerine **bilinçli dahil edilmedi**)  
+2. **P1** Next portal dilimleri (MASTER §12.3) — ürün sahibi talimatı  
+3. **P2** FE-SUITE tam PG suite yeşil kanıtı (bu oturumda full suite **çalıştırılmadı**)  
+4. **P2** F6-032 uyuşmazlık ops UI; gerçek ödeme/kargo; staging Sentry event  
 5. Bilinçli kapalı: CORS, RFQ eşleştirme HTTP, teklif create HTTP, Celery  
 
 Detay: [`open-work.md`](open-work.md).
