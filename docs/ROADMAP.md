@@ -54,7 +54,7 @@
 | 1 | B2B katalog | KISMİ | Search API; catalog HTTP var; Next browse dilimi | P1 |
 | 2 | Firma/şube org | **UYGULANDI** çekirdek | Zengin org UI | P2 |
 | 3 | Fiyat listesi/koşul | UYGULANDI | Liste UI | P2 |
-| 4 | Teklif/RFQ | **UYGULANDI** SM+HTTP | Eşleştirme HTTP yok (bilinçli); Next supplier UI | P1 |
+| 4 | Teklif/RFQ | **UYGULANDI** SM+HTTP (+ teklif create + F10-021 eşleştirme) | Next supplier/buyer RFQ UI | P1 |
 | 5 | Sepet/checkout | **UYGULANDI** (+ HTTP POST) | F9-012 polish | P2 |
 | 6 | Sipariş | **UYGULANDI** | SM genişleme | P2 |
 | 7 | Stok/WH | **UYGULANDI** | Ops UI | P2 |

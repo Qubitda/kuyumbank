@@ -1,8 +1,8 @@
 {
-  "total_checks": 293,
-  "passed": 293,
+  "total_checks": 309,
+  "passed": 309,
   "failed": 0,
-  "openapi_ops": 112,
+  "openapi_ops": 119,
   "ok": true,
   "failures": [],
   "results": [
@@ -451,7 +451,7 @@
       "check": "success_or_reachable",
       "method": "GET",
       "path": "/api/v1/carts/{id}/",
-      "status": 404,
+      "status": 200,
       "ok": true
     },
     {
@@ -685,6 +685,96 @@
     {
       "check": "anon",
       "method": "GET",
+      "path": "/api/v1/me/addresses/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/me/addresses/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/me/addresses/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/me/addresses/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/me/addresses/",
+      "status": 400,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "DELETE",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "DELETE",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "PATCH",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "PATCH",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "buyer_admin"
+    },
+    {
+      "check": "invalid_body",
+      "method": "PATCH",
+      "path": "/api/v1/me/addresses/{id}/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
       "path": "/api/v1/me/dashboard/",
       "status": 401,
       "ok": true
@@ -694,6 +784,34 @@
       "method": "GET",
       "path": "/api/v1/me/dashboard/",
       "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/me/profile/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/me/profile/",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "PATCH",
+      "path": "/api/v1/me/profile/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "invalid_body",
+      "method": "PATCH",
+      "path": "/api/v1/me/profile/",
+      "status": 400,
       "ok": true
     },
     {

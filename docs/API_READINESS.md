@@ -19,7 +19,7 @@
 | Yetki + tenant test | **KISMİ TAMAM** — B1–B6 + ADR-0019 + rapor/mahsup odaklı |
 | OpenAPI + docs UI | **TAMAM** |
 | TS client üretimi | **UYGULANDI** — `frontend/lib/api/schema.d.ts` (`npm run generate:api`) |
-| Backend test paketi | **TAMAM** — PG full suite **588 OK** (2026-11-11; `docs/_audit/full-suite-log.txt`) |
+| Backend test paketi | **TAMAM** — PG full suite **590 OK** (2026-11-11; `docs/_audit/full-suite-log.txt`; F9-017 sonrası odaklı +3 → beklenen ≥593) |
 | FE geliştirme borcu | Next portal dilimleri ayrı talimat |
 
 ### Verdict
@@ -75,5 +75,5 @@ RFQ eşleştirme + supplier teklif create + profil/adres HTTP **UYGULANDI**. Bel
 
 1. §4 imza — **Evet**  
 2. TS client — **Evet** (`lib/api/schema.d.ts`)  
-3. Onaylı tam suite — **KISMİ** (override; yeniden kilitleme: PG’de 0 ERROR)  
+3. Onaylı tam suite — **TAMAM** — PG **590 OK** (`docs/_audit/full-suite-log.txt`); F9-017 sonrası tam suite yeniden kilidi ADIM6’da  
 4. **FRONTEND READY** + Next talimatı — ürün sahibi onayı alındı  

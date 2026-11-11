@@ -60,7 +60,9 @@ Kanıt etiketi: **DOĞRULANDI** = dosya/test; aksi belirtilmez.
 | `/org`, `/approvals`, `/rfqs` (buyer) | R/W `manage_*` | 403 buyer RFQ | Ops `view_all` / `manage_rfq` | — |
 | `/ops/inspections/*` | 403 | 403 | `view_qc` / `manage_qc` | — |
 | `/ops/shipments/*` | 403 | 403 | `manage_shipment` | — |
-| `/supplier/offers|stock|rfqs` | 403 | R + yaşam döngüsü/stok/RFQ yazma (teklif **create HTTP yok**) | `view_all` kapıdan geçer; teklif/stok kendi firma filtresi | — |
+| `/supplier/offers|stock|rfqs` | 403 | R + create/submit/versions/deactivate + stok/RFQ yazma | `view_all` kapıdan geçer; teklif/stok kendi firma filtresi | — |
+| `/ops/rfq-lines|rfq-matches` | 403 | 403 | F10-021 eşleştirme HTTP | — |
+| `/me/profile`, `/me/addresses` | R/W (adres yazma: `manage_users`) | R/W aynı | — | — |
 
 ### 2.2 Kör havuz kuralları
 
