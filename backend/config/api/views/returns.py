@@ -177,6 +177,7 @@ class ReturnListCreateView(IdempotencyMixin, APIView):
         order = _load_order(request.user, order_id)
         ship = _load_shipment(request.user, shipment_id, order)
         specs = _parse_line_specs(request.data.get("lines"), order)
+        meta = getattr(request, "_idempotency", None) or {}
         try:
             req = return_servisi.olustur(
                 actor=request.user,
@@ -185,6 +186,7 @@ class ReturnListCreateView(IdempotencyMixin, APIView):
                 sebep=sebep,
                 line_specs=specs,
                 notlar=notlar,
+                idempotency_key=meta.get("key") or "",
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             raise_drf(exc)

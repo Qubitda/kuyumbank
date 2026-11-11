@@ -390,6 +390,15 @@ def iptal_siparis(*, actor, order: Order, now=None) -> Order:
                     "now": now.isoformat(),
                 },
             )
+            from firmalar.services import outbox_servisi
+
+            outbox_servisi.enqueue(
+                event_type="order.cancelled",
+                payload={
+                    "order_id": locked.pk,
+                    "alici_firma_id": locked.alici_firma_id,
+                },
+            )
             return locked
     except (ValidationError, PermissionDenied) as exc:
         reason = str(exc)

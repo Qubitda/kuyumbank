@@ -1,7 +1,10 @@
-"""SEC-001 — DRF TokenAuthentication."""
+"""SEC-001 — DRF ExpiringTokenAuthentication."""
 
-from django.test import TestCase
+from datetime import timedelta
+
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -24,5 +27,14 @@ class TokenAuthTests(CheckoutFixtureMixin, TestCase):
         self.assertEqual(res.json()["firma_id"], self.buyer.firma_id)
 
     def test_me_without_auth_still_401(self):
+        res = self.api.get(reverse("api-me"))
+        self.assertEqual(res.status_code, 401)
+
+    @override_settings(AUTH_TOKEN_TTL_SECONDS=3600)
+    def test_expired_token_401(self):
+        Token.objects.filter(pk=self.token.pk).update(
+            created=timezone.now() - timedelta(hours=2)
+        )
+        self.api.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
         res = self.api.get(reverse("api-me"))
         self.assertEqual(res.status_code, 401)

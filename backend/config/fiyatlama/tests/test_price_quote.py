@@ -43,10 +43,18 @@ class PriceQuoteFixtureMixin:
         seed_role_permissions()
         cls.platform = ensure_platform_firma()
         cls.alici = Firma.objects.create(
-            ad="PQAL", firma_kodu="PQAL", alici_mi=True
+            ad="PQAL",
+            firma_kodu="PQAL",
+            alici_mi=True,
+            onay_durumu="onayli",
+            aktif=True,
         )
         cls.ted = Firma.objects.create(
-            ad="PQTED", firma_kodu="PQTED", tedarikci_mi=True
+            ad="PQTED",
+            firma_kodu="PQTED",
+            tedarikci_mi=True,
+            onay_durumu="onayli",
+            aktif=True,
         )
 
         cls.finance = User(

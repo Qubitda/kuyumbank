@@ -126,12 +126,33 @@ def olustur_intent(
         raise
 
 
+def _assert_intent_capturable(locked: PaymentIntent, order: Order) -> None:
+    if locked.durum == PaymentIntent.Durum.BASARILI:
+        return
+    if locked.durum != PaymentIntent.Durum.BEKLEMEDE:
+        raise ValidationError(
+            f"Intent durumu tahsilata uygun değil: {locked.durum}"
+        )
+    if order.durum != Order.Durum.OLUSTURULDU:
+        raise ValidationError("İptal sipariş tahsil edilemez.")
+    other = (
+        PaymentIntent.objects.filter(
+            order_id=order.pk, durum=PaymentIntent.Durum.BASARILI
+        )
+        .exclude(pk=locked.pk)
+        .first()
+    )
+    if other is not None:
+        raise ValidationError("Bu sipariş zaten tahsil edilmiş.")
+
+
 def tahsil_et(
     *, actor, intent: PaymentIntent, skip_provider: bool = False
 ) -> PaymentIntent:
     """BEKLEMEDE → BASARILI; SATIS borç (yoksa) + TAHSILAT; çift tahsilat yok.
 
     skip_provider=True: webhook yolu (sağlayıcı zaten tahsil etti; F5-021).
+    Sağlayıcı I/O domain_atomic dışında; ledger yazımında intent+order kilidi.
     """
     order = intent.order
     if not has_perm(actor, POST_LEDGER):
@@ -148,23 +169,15 @@ def tahsil_et(
         )
         raise PermissionDenied("Tahsilat için finans yetkisi yok.")
 
-    if intent.durum == PaymentIntent.Durum.BASARILI:
-        return intent
-    if intent.durum != PaymentIntent.Durum.BEKLEMEDE:
-        raise ValidationError(f"Intent durumu tahsilata uygun değil: {intent.durum}")
-
-    if order.durum != Order.Durum.OLUSTURULDU:
-        raise ValidationError("İptal sipariş tahsil edilemez.")
-
-    other = (
-        PaymentIntent.objects.filter(
-            order=order, durum=PaymentIntent.Durum.BASARILI
-        )
-        .exclude(pk=intent.pk)
-        .first()
-    )
-    if other is not None:
-        raise ValidationError("Bu sipariş zaten tahsil edilmiş.")
+    # Ön kontrol (kilitli): eşzamanlı ikinci çağrı BASARILI görür / çakışmayı erken keser.
+    with domain_atomic():
+        locked_pre = PaymentIntent.objects.select_for_update().get(pk=intent.pk)
+        order_pre = Order.objects.select_for_update().get(pk=locked_pre.order_id)
+        if locked_pre.durum == PaymentIntent.Durum.BASARILI:
+            return locked_pre
+        _assert_intent_capturable(locked_pre, order_pre)
+        intent = locked_pre
+        order = order_pre
 
     from finans.payments import ChargeRequest, ChargeResult, get_payment_adapter
 
@@ -200,6 +213,7 @@ def tahsil_et(
             raise
 
         if not charge.ok:
+            reason = (charge.message or "provider_fail")[:255]
             record_finans_audit_durable(
                 actor=actor,
                 action="finans.payment.provider_rejected",
@@ -209,9 +223,31 @@ def tahsil_et(
                 entity_type="PaymentIntent",
                 entity_id=str(intent.pk),
                 success=False,
-                reason=(charge.message or "provider_fail")[:255],
+                reason=reason,
                 extra={"provider_ref": charge.provider_ref},
             )
+            with domain_atomic():
+                locked = PaymentIntent.objects.select_for_update().get(pk=intent.pk)
+                if locked.durum == PaymentIntent.Durum.BEKLEMEDE:
+                    locked.durum = PaymentIntent.Durum.BASARISIZ
+                    locked._allow_status_transition = True
+                    try:
+                        locked.save(update_fields=["durum", "guncelleme_tarihi"])
+                    finally:
+                        locked._allow_status_transition = False
+                    from firmalar.services import outbox_servisi
+
+                    outbox_servisi.enqueue(
+                        event_type="payment.failed",
+                        payload={
+                            "intent_id": locked.pk,
+                            "order_id": order.pk,
+                            "alici_firma_id": order.alici_firma_id,
+                            "amount": str(locked.tutar),
+                            "currency": locked.para_birimi,
+                            "reason": reason[:120],
+                        },
+                    )
             raise ValidationError(
                 f"Ödeme sağlayıcı reddetti (fail-closed): {charge.message}"
             )
@@ -219,57 +255,75 @@ def tahsil_et(
     platform = ensure_platform_firma()
     try:
         with domain_atomic():
+            locked = PaymentIntent.objects.select_for_update().get(pk=intent.pk)
+            order_locked = Order.objects.select_for_update().get(pk=locked.order_id)
+            if locked.durum == PaymentIntent.Durum.BASARILI:
+                return locked
+            _assert_intent_capturable(locked, order_locked)
+
             kaydet_hareket(
                 actor=actor,
-                firma=order.alici_firma,
+                firma=order_locked.alici_firma,
                 karsi_firma=platform,
-                tutar=intent.tutar,
-                para_birimi=intent.para_birimi,
+                tutar=locked.tutar,
+                para_birimi=locked.para_birimi,
                 yon=LedgerEntry.Yon.BORC,
                 hareket_tipi=LedgerEntry.HareketTipi.SATIS,
-                idempotency_key=f"order-{order.pk}-satis",
+                idempotency_key=f"order-{order_locked.pk}-satis",
                 referans_tip="Order",
-                referans_id=str(order.pk),
-                aciklama=f"Sipariş #{order.pk} satış borcu",
+                referans_id=str(order_locked.pk),
+                aciklama=f"Sipariş #{order_locked.pk} satış borcu",
             )
             tahsil = kaydet_hareket(
                 actor=actor,
-                firma=order.alici_firma,
+                firma=order_locked.alici_firma,
                 karsi_firma=platform,
-                tutar=intent.tutar,
-                para_birimi=intent.para_birimi,
+                tutar=locked.tutar,
+                para_birimi=locked.para_birimi,
                 yon=LedgerEntry.Yon.ALACAK,
                 hareket_tipi=LedgerEntry.HareketTipi.TAHSILAT,
-                idempotency_key=f"pi-{intent.pk}-tahsil",
+                idempotency_key=f"pi-{locked.pk}-tahsil",
                 referans_tip="PaymentIntent",
-                referans_id=str(intent.pk),
-                aciklama=f"PI#{intent.pk} tahsilat",
+                referans_id=str(locked.pk),
+                aciklama=f"PI#{locked.pk} tahsilat",
             )
-            intent.durum = PaymentIntent.Durum.BASARILI
-            intent.ledger_entry = tahsil
-            intent._allow_status_transition = True
+            locked.durum = PaymentIntent.Durum.BASARILI
+            locked.ledger_entry = tahsil
+            locked._allow_status_transition = True
             try:
-                intent.save(
+                locked.save(
                     update_fields=["durum", "ledger_entry", "guncelleme_tarihi"]
                 )
             finally:
-                intent._allow_status_transition = False
+                locked._allow_status_transition = False
             record_finans_audit(
                 actor=actor,
                 action="finans.payment.captured",
-                amount=intent.tutar,
-                currency=intent.para_birimi,
-                order_ref=str(order.pk),
+                amount=locked.tutar,
+                currency=locked.para_birimi,
+                order_ref=str(order_locked.pk),
                 entity_type="PaymentIntent",
-                entity_id=str(intent.pk),
+                entity_id=str(locked.pk),
                 success=True,
                 extra={
-                    "order_id": order.pk,
+                    "order_id": order_locked.pk,
                     "ledger_entry_id": tahsil.pk,
                     "provider_ref": charge.provider_ref,
                 },
             )
-            return intent
+            from firmalar.services import outbox_servisi
+
+            outbox_servisi.enqueue(
+                event_type="payment.succeeded",
+                payload={
+                    "intent_id": locked.pk,
+                    "order_id": order_locked.pk,
+                    "alici_firma_id": order_locked.alici_firma_id,
+                    "amount": str(locked.tutar),
+                    "currency": locked.para_birimi,
+                },
+            )
+            return locked
     except Exception as exc:
         record_finans_audit_durable(
             actor=actor,

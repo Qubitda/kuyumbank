@@ -222,6 +222,23 @@ def teslim_et(*, actor, shipment: Shipment) -> Shipment:
                 "POD zorunlu (SHIPMENT_POD_REQUIRED); teslimat kanıtı yok (F6-022)."
             )
         _set_durum(locked, Shipment.Durum.TESLIM)
+        from firmalar.services import outbox_servisi
+        from siparis.models import Order
+
+        alici_id = (
+            Order.objects.filter(pk=locked.order_id)
+            .values_list("alici_firma_id", flat=True)
+            .first()
+        )
+        outbox_servisi.enqueue(
+            event_type="shipment.delivered",
+            payload={
+                "shipment_id": locked.pk,
+                "order_id": locked.order_id,
+                "takip_no": locked.takip_no or "",
+                "alici_firma_id": alici_id,
+            },
+        )
         record_audit(
             actor=actor,
             action="lojistik.shipment.teslim",

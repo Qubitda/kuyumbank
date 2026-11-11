@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import time
 
+from django.conf import settings
 from django.db import connection
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, Throttled
 from rest_framework.response import Response
 
 from api.services import idempotency_servisi as idem
@@ -25,7 +27,12 @@ def _advisory_lock_id(firma_id: int, actor_id: int, storage_key: str) -> int:
 
 
 class IdempotencyMixin:
-    """Firma+aktör scoped Idempotency-Key; eşzamanlı aynı key → tek işlem (PG advisory)."""
+    """Firma+aktör scoped Idempotency-Key; eşzamanlı aynı key → tek işlem.
+
+    Kilit: `pg_try_advisory_lock` + bekleme tavanı (sonsuz blok yok).
+    Not: session-level advisory lock; PgBouncer **transaction** modunda
+    güvenilir değildir — session pooling veya tek bağlantı kullanın.
+    """
 
     _IDEMP_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
@@ -58,9 +65,27 @@ class IdempotencyMixin:
             return
         skey = idem.storage_key(actor_id=int(actor_id), client_key=client_key)
         lock_id = _advisory_lock_id(int(firma_id), int(actor_id), skey)
+        wait_s = float(getattr(settings, "IDEMPOTENCY_LOCK_WAIT_SECONDS", 5))
+        deadline = time.monotonic() + max(0.1, wait_s)
         cursor = connection.cursor()
-        cursor.execute("SELECT pg_advisory_lock(%s)", [lock_id])
-        request._idempotency_advisory = {"cursor": cursor, "lock_id": lock_id}
+        while True:
+            cursor.execute("SELECT pg_try_advisory_lock(%s)", [lock_id])
+            got = bool(cursor.fetchone()[0])
+            if got:
+                request._idempotency_advisory = {
+                    "cursor": cursor,
+                    "lock_id": lock_id,
+                }
+                return
+            if time.monotonic() >= deadline:
+                cursor.close()
+                raise Throttled(
+                    detail=(
+                        "Idempotency kilidi alınamadı (zaman aşımı). "
+                        "Aynı anahtarlı istek bitene kadar bekleyin."
+                    )
+                )
+            time.sleep(0.05)
 
     def _idempotency_release(self, request) -> None:
         if request is None:

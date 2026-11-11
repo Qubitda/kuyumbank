@@ -8,6 +8,10 @@ from __future__ import annotations
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from firmalar import roles
+from firmalar.services.email_verify_servisi import (
+    email_verify_required_for_write,
+    is_email_verified,
+)
 from firmalar.services.yetki_servisi import can_view_all_tenants
 from fiyatlama.selectors.buyer_quote import BuyerQuoteNotFound, get_quote_for_actor
 from siparis.selectors.tenant import (
@@ -107,7 +111,13 @@ class IsBuyerCommerceWrite(BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return can_buyer_commerce_read(request.user)
-        return can_buyer_commerce_write(request.user)
+        if not can_buyer_commerce_write(request.user):
+            return False
+        # ADR-0028 IE-3: varsayılan kapalı; açılınca yazma için e-posta doğrulama
+        if email_verify_required_for_write() and not is_email_verified(request.user):
+            self.message = "E-posta doğrulaması gerekli."
+            return False
+        return True
 
 
 class HasOrderObjectAccess(BasePermission):

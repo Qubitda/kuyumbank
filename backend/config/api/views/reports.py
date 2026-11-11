@@ -39,7 +39,10 @@ class TicariSiparisOzetView(APIView):
         )
         try:
             data = rapor_servisi.ticari_siparis_ozet(
-                actor=request.user, alici_firma_id=alici
+                actor=request.user,
+                alici_firma_id=alici,
+                date_from=request.query_params.get("date_from"),
+                date_to=request.query_params.get("date_to"),
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             raise_drf(exc)
@@ -58,7 +61,10 @@ class AliciDavranisOzetView(APIView):
         )
         try:
             data = rapor_servisi.alici_davranis_ozet(
-                actor=request.user, alici_firma_id=alici
+                actor=request.user,
+                alici_firma_id=alici,
+                date_from=request.query_params.get("date_from"),
+                date_to=request.query_params.get("date_to"),
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             raise_drf(exc)
@@ -84,7 +90,11 @@ class CiroAnomaliView(APIView):
         )
         try:
             data = anomali_servisi.ciro_esik_tara(
-                actor=request.user, esik_ciro=esik, alici_firma_id=alici
+                actor=request.user,
+                esik_ciro=esik,
+                alici_firma_id=alici,
+                date_from=request.query_params.get("date_from"),
+                date_to=request.query_params.get("date_to"),
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             raise_drf(exc)

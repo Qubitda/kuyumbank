@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Callable, Iterable
 
 from django.core.paginator import EmptyPage, Paginator
+from rest_framework.exceptions import NotFound
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -78,9 +79,9 @@ def paginate_queryset(
     paginator = Paginator(qs, page_size)
     try:
         page_obj = paginator.page(page)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages or 1)
-        page = page_obj.number
+    except EmptyPage as exc:
+        # Sessizce son sayfaya düşürme — istemci sonsuz döngü riski
+        raise NotFound(detail="Sayfa bulunamadı.") from exc
 
     next_url, prev_url = build_page_urls(
         request, page=page, page_size=page_size, num_pages=paginator.num_pages
@@ -112,9 +113,8 @@ def paginate_sequence(
     paginator = Paginator(items, page_size)
     try:
         page_obj = paginator.page(page)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages or 1)
-        page = page_obj.number
+    except EmptyPage as exc:
+        raise NotFound(detail="Sayfa bulunamadı.") from exc
     next_url, prev_url = build_page_urls(
         request, page=page, page_size=page_size, num_pages=paginator.num_pages
     )

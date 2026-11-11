@@ -1,6 +1,16 @@
-"""Session auth: anonim → None (401); CSRF yalnız kimlikli oturumda."""
+"""Session auth + süresi dolan Token; CSRF yalnız kimlikli oturumda."""
 
-from rest_framework.authentication import SessionAuthentication as DRFSessionAuthentication
+from __future__ import annotations
+
+from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
+from rest_framework.authentication import (
+    SessionAuthentication as DRFSessionAuthentication,
+    TokenAuthentication as DRFTokenAuthentication,
+)
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class SessionAuthentication(DRFSessionAuthentication):
@@ -18,6 +28,20 @@ class SessionAuthentication(DRFSessionAuthentication):
 
     def authenticate_header(self, request):
         return "Session"
+
+
+class ExpiringTokenAuthentication(DRFTokenAuthentication):
+    """authtoken + AUTH_TOKEN_TTL_SECONDS (0 = süresiz; prod'da >0 önerilir)."""
+
+    def authenticate_credentials(self, key):
+        user_auth = super().authenticate_credentials(key)
+        user, token = user_auth
+        ttl = int(getattr(settings, "AUTH_TOKEN_TTL_SECONDS", 0) or 0)
+        if ttl > 0:
+            created = getattr(token, "created", None)
+            if created is None or created < timezone.now() - timedelta(seconds=ttl):
+                raise AuthenticationFailed("Token süresi dolmuş; yenileyin.")
+        return user, token
 
 
 def enforce_csrf(request) -> None:

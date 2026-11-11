@@ -96,6 +96,7 @@ class ApprovalListCreateView(IdempotencyMixin, APIView):
                 order = get_order_for_actor(request.user, order_id=int(raw_order))
             except (OrderNotFound, TypeError, ValueError) as exc:
                 raise NotFound(detail="Sipariş bulunamadı.") from exc
+        meta = getattr(request, "_idempotency", None) or {}
         try:
             ot = onay_servisi.olustur(
                 actor=request.user,
@@ -105,6 +106,7 @@ class ApprovalListCreateView(IdempotencyMixin, APIView):
                 org_birimi=org,
                 order=order,
                 gerekce=gerekce,
+                idempotency_key=meta.get("key") or "",
             )
         except (DjangoPermissionDenied, DjangoValidationError) as exc:
             raise_drf(exc)

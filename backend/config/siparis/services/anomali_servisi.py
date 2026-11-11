@@ -16,6 +16,7 @@ from firmalar.services.audit_servisi import (
 )
 from firmalar.services.yetki_servisi import can_view_all_tenants, require_perm
 from siparis.models import OrderLine
+from siparis.services.rapor_servisi import resolve_date_range
 
 
 def _require_platform_ops(actor):
@@ -61,6 +62,8 @@ def ciro_esik_tara(
     actor,
     esik_ciro: Decimal,
     alici_firma_id: int | None = None,
+    date_from=None,
+    date_to=None,
 ) -> dict:
     """Alıcı ciro (OrderLine snapshot) ≥ eşik → uyarı; kör (tedarikçi yok)."""
     _require_platform_ops(actor)
@@ -68,7 +71,11 @@ def ciro_esik_tara(
     if esik <= 0:
         raise ValidationError({"esik_ciro": "Pozitif olmalı."})
 
-    qs = OrderLine.objects.all()
+    d_from, d_to = resolve_date_range(date_from=date_from, date_to=date_to)
+    qs = OrderLine.objects.filter(
+        order__olusturma_tarihi__date__gte=d_from,
+        order__olusturma_tarihi__date__lte=d_to,
+    )
     if alici_firma_id is not None:
         qs = qs.filter(order__alici_firma_id=int(alici_firma_id))
 
@@ -105,12 +112,16 @@ def ciro_esik_tara(
                 "esik_ciro": str(esik),
                 "uyari_adet": len(uyarilar),
                 "alici_firma_id": alici_firma_id,
+                "date_from": d_from.isoformat(),
+                "date_to": d_to.isoformat(),
             },
         )
 
     return {
         "scope": "ciro_esik",
         "esik_ciro": str(esik),
+        "date_from": d_from.isoformat(),
+        "date_to": d_to.isoformat(),
         "uyari_adet": len(uyarilar),
         "uyarilar": uyarilar,
         "read_model": "live_orm",

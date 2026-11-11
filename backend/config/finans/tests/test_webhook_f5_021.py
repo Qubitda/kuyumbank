@@ -1,5 +1,7 @@
-"""F5-021 — webhook iskeleti; tekrarlayan event tek sonuç."""
+"""F5-021 — webhook iskeleti; tekrarlayan event tek sonuç; HMAC HTTP."""
 
+import json
+import time
 from decimal import Decimal
 
 from django.test import TestCase, override_settings
@@ -10,8 +12,22 @@ from firmalar.role_permissions import seed_role_permissions
 from firmalar.services.rol_servisi import sync_user_role_groups
 from finans.models import PaymentIntent, PaymentWebhookEvent
 from finans.services import payment_servisi, webhook_servisi
+from finans.services.webhook_security import sign_body
 from siparis.services import checkout_servisi, order_servisi
 from siparis.tests.test_checkout_f4_040 import CheckoutFixtureMixin
+
+_SECRET = "test-wh-secret"
+
+
+def _hmac_headers(body: dict, *, secret: str = _SECRET, ts: str | None = None):
+    raw = json.dumps(body).encode("utf-8")
+    timestamp = ts or str(int(time.time()))
+    sig = sign_body(secret=secret, timestamp=timestamp, body=raw)
+    return {
+        "HTTP_X_WEBHOOK_TIMESTAMP": timestamp,
+        "HTTP_X_WEBHOOK_SIGNATURE": f"sha256={sig}",
+        "content_type": "application/json",
+    }
 
 
 class WebhookSkeletonTests(CheckoutFixtureMixin, TestCase):
@@ -71,7 +87,10 @@ class WebhookSkeletonTests(CheckoutFixtureMixin, TestCase):
         )
         self.assertEqual(row.sonuc, PaymentWebhookEvent.Sonuc.YOK_SAYILDI)
 
-    @override_settings(PAYMENT_WEBHOOK_SECRET="test-wh-secret")
+    @override_settings(
+        PAYMENT_WEBHOOK_SECRET=_SECRET,
+        PAYMENT_WEBHOOK_REQUIRE_HMAC=True,
+    )
     def test_http_webhook_replay(self):
         pi = self._beklemede_intent("http")
         url = reverse("api-payment-webhook")
@@ -81,23 +100,36 @@ class WebhookSkeletonTests(CheckoutFixtureMixin, TestCase):
             "provider": "fake",
             "intent_id": pi.pk,
         }
-        headers = {"HTTP_X_PAYMENT_WEBHOOK_SECRET": "test-wh-secret"}
-        r1 = self.api.post(url, body, format="json", **headers)
-        self.assertEqual(r1.status_code, 200)
+        headers = _hmac_headers(body)
+        r1 = self.api.post(url, data=json.dumps(body), **headers)
+        self.assertEqual(r1.status_code, 200, r1.content)
         self.assertEqual(r1.json()["sonuc"], "ISLENDI")
-        r2 = self.api.post(url, body, format="json", **headers)
+        r2 = self.api.post(url, data=json.dumps(body), **headers)
         self.assertEqual(r2.status_code, 200)
         self.assertEqual(r1.json()["id"], r2.json()["id"])
         pi.refresh_from_db()
         self.assertEqual(pi.durum, PaymentIntent.Durum.BASARILI)
 
-    @override_settings(PAYMENT_WEBHOOK_SECRET="test-wh-secret")
-    def test_http_bad_secret(self):
+    @override_settings(
+        PAYMENT_WEBHOOK_SECRET=_SECRET,
+        PAYMENT_WEBHOOK_REQUIRE_HMAC=True,
+    )
+    def test_http_bad_signature(self):
         url = reverse("api-payment-webhook")
-        res = self.api.post(
-            url,
-            {"event_id": "x", "event_type": "payment.succeeded"},
-            format="json",
-            HTTP_X_PAYMENT_WEBHOOK_SECRET="wrong",
-        )
+        body = {"event_id": "x", "event_type": "payment.succeeded"}
+        headers = _hmac_headers(body, secret="wrong-secret")
+        res = self.api.post(url, data=json.dumps(body), **headers)
+        self.assertEqual(res.status_code, 401)
+
+    @override_settings(
+        PAYMENT_WEBHOOK_SECRET=_SECRET,
+        PAYMENT_WEBHOOK_REQUIRE_HMAC=True,
+        PAYMENT_WEBHOOK_REPLAY_SECONDS=60,
+    )
+    def test_http_replay_window(self):
+        url = reverse("api-payment-webhook")
+        body = {"event_id": "old", "event_type": "payment.succeeded"}
+        old_ts = str(int(time.time()) - 3600)
+        headers = _hmac_headers(body, ts=old_ts)
+        res = self.api.post(url, data=json.dumps(body), **headers)
         self.assertEqual(res.status_code, 401)

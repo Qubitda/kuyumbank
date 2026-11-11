@@ -55,8 +55,16 @@ class AuthSessionTests(CheckoutFixtureMixin, TestCase):
         cls._build_checkout_world()
         cls.buyer.set_password("Secret123!")
         cls.buyer.save()
+        # Login kapısı: fixture firmaları onaylı olmalı
+        Firma = cls.buyer.firma.__class__
+        Firma.objects.filter(pk=cls.buyer.firma_id).update(
+            onay_durumu="onayli", aktif=True
+        )
 
     def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()  # login throttle LocMem birikimi
         self.api = APIClient(enforce_csrf_checks=False)
 
     def _csrf_headers(self) -> dict:

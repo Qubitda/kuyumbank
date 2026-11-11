@@ -1,47 +1,59 @@
-"""F5-021 — Ödeme sağlayıcı webhook endpoint (secret header; AllowAny)."""
+"""F5-021 — Ödeme sağlayıcı webhook (HMAC + replay; AllowAny)."""
 
 from __future__ import annotations
 
-import secrets
-
-from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from finans.services import webhook_servisi
+from finans.services.webhook_security import verify_webhook_http
 
-HEADER = "X-Payment-Webhook-Secret"
+
+class WebhookAnonThrottle(AnonRateThrottle):
+    """Provider yoğun retry için ayrı (daha yüksek) scope opsiyonel; varsayılan anon."""
+
+    scope = "webhook"
 
 
 class PaymentWebhookView(APIView):
     """POST /api/v1/payments/webhook/
 
     Body: {event_id, event_type, provider?, payload?}
+    Headers: X-Webhook-Timestamp + X-Webhook-Signature (HMAC-SHA256)
     payload.intent_id — payment.succeeded için zorunlu.
     """
 
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [WebhookAnonThrottle]
 
     def post(self, request):
-        expected = getattr(settings, "PAYMENT_WEBHOOK_SECRET", "") or ""
-        if not expected:
-            return Response(
-                {"detail": "Webhook secret yapılandırılmamış."}, status=401
+        try:
+            verify_webhook_http(request)
+        except DjangoValidationError as exc:
+            msg = (
+                exc.messages[0]
+                if hasattr(exc, "messages") and exc.messages
+                else str(exc)
             )
-        got = request.headers.get(HEADER) or ""
-        if not secrets.compare_digest(got, expected):
-            return Response({"detail": "Webhook secret geçersiz."}, status=401)
+            # Yapılandırma / auth hataları → 401; diğerleri 400
+            status = 401
+            low = str(msg).lower()
+            if "zaman" in low or "replay" in low or "imza" in low:
+                status = 401
+            if "yapılandırılmamış" in low or "secret" in low or "allow-list" in low:
+                status = 401
+            return Response({"detail": msg}, status=status)
 
         data = request.data if isinstance(request.data, dict) else {}
         event_id = data.get("event_id")
         event_type = data.get("event_type")
         provider = data.get("provider") or "fake"
         payload = data.get("payload") if isinstance(data.get("payload"), dict) else {}
-        # Düz alanlar da kabul (iskelet)
         if "intent_id" in data and "intent_id" not in payload:
             payload = {**payload, "intent_id": data.get("intent_id")}
 

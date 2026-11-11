@@ -60,6 +60,12 @@ def olustur_birim(
         raise ValidationError({"kod": "Zorunlu."})
     if parent is not None and parent.firma_id != firma.pk:
         raise ValidationError({"parent": "Parent aynı firmada olmalı."})
+    # Domain UNIQUE(firma, kod) — HTTP cache kaybında aynı kod replay güvenli
+    existing = OrgBirimi.objects.filter(firma=firma, kod=kod_n).first()
+    if existing is not None:
+        return existing
+
+    from django.db import IntegrityError
 
     with domain_atomic():
         ob = OrgBirimi(
@@ -69,7 +75,10 @@ def olustur_birim(
             ad=(ad or "").strip() or kod_n,
             aktif=aktif,
         )
-        ob.save()
+        try:
+            ob.save()
+        except IntegrityError:
+            return OrgBirimi.objects.get(firma=firma, kod=kod_n)
         record_audit(
             actor=actor,
             action="firmalar.org.created",

@@ -45,13 +45,14 @@ class Command(BaseCommand):
         sellers = self._user("demo_tedarikci", ted, roles.TEDARIKCI_SATIS)
 
         self.stdout.write(self.style.SUCCESS("seed_demo_portals tamam."))
-        self.stdout.write(f"  Alıcı:     {buyers.username} / {DEMO_PASSWORD}  → /buyer/")
         self.stdout.write(
-            f"  Tedarikçi: {sellers.username} / {DEMO_PASSWORD}  → /supplier/"
+            f"  Alıcı:     {buyers.username} / {DEMO_PASSWORD}  → /api/v1/ (session)"
         )
         self.stdout.write(
-            "  Act-as: Admin → Kullanıcılar → seç → "
-            "aksiyon «Seçilen kullanıcı olarak gör»"
+            f"  Tedarikçi: {sellers.username} / {DEMO_PASSWORD}  → /api/v1/supplier/"
+        )
+        self.stdout.write(
+            "  Act-as: Admin aksiyon veya POST /api/v1/act-as/start/"
         )
 
     def _user(self, username, firma, rol):

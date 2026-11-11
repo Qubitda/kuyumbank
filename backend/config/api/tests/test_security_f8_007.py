@@ -3,7 +3,7 @@
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -53,7 +53,6 @@ class SecurityIdorF8007Tests(CheckoutFixtureMixin, TestCase):
 
     def setUp(self):
         self.api = APIClient()
-        self.browser = Client()
 
     def _order(self, key="sec-ord-1"):
         self._quote_and_cart(miktar=Decimal("1"))
@@ -85,13 +84,10 @@ class SecurityIdorF8007Tests(CheckoutFixtureMixin, TestCase):
             ).status_code,
             403,
         )
-        self.browser.force_login(self.ted_user)
-        self.assertEqual(self.browser.get(reverse("buyer-cart")).status_code, 403)
-        self.assertEqual(
-            self.browser.get(reverse("buyer-rfq-list")).status_code, 403
-        )
+        self.assertEqual(self.api.get(reverse("api-cart-mine")).status_code, 403)
+        self.assertEqual(self.api.get(reverse("api-rfq-list")).status_code, 403)
 
-    def test_buyer_ui_approval_cross_tenant_404(self):
+    def test_api_approval_cross_tenant_404(self):
         ot = onay_servisi.olustur(
             actor=self.approver,
             firma=self.alici,
@@ -107,10 +103,9 @@ class SecurityIdorF8007Tests(CheckoutFixtureMixin, TestCase):
         other_appr.set_password("x")
         other_appr.save()
         sync_user_role_groups(other_appr)
-        self.browser.force_login(other_appr)
-        res = self.browser.post(
-            reverse("buyer-approval-action", kwargs={"pk": ot.pk}),
-            {"action": "onayla"},
+        self.api.force_authenticate(user=other_appr)
+        res = self.api.get(
+            reverse("api-approval-detail", kwargs={"pk": ot.pk})
         )
         self.assertEqual(res.status_code, 404)
         ot.refresh_from_db()
@@ -125,6 +120,6 @@ class SecurityIdorF8007Tests(CheckoutFixtureMixin, TestCase):
             ],
         )
         self.assertEqual(RFQ.objects.filter(pk=rfq.pk).count(), 1)
-        self.browser.force_login(self.other_buyer)
-        res = self.browser.get(reverse("buyer-rfq-detail", kwargs={"pk": rfq.pk}))
+        self.api.force_authenticate(user=self.other_buyer)
+        res = self.api.get(reverse("api-rfq-detail", kwargs={"pk": rfq.pk}))
         self.assertEqual(res.status_code, 404)
