@@ -201,7 +201,9 @@ class SupplierOfferSubmitView(IdempotencyMixin, APIView):
         teklif = _get_own_offer(request.user, pk)
         try:
             teklif = teklif_servisi.onaya_gonder(teklif, request.user)
-        except (DjangoValidationError, DjangoPermissionDenied) as exc:
+        except DjangoValidationError as exc:
+            raise_drf(exc, as_conflict=True)
+        except DjangoPermissionDenied as exc:
             raise_drf(exc)
         teklif = _get_own_offer(request.user, teklif.pk)
         return self.idempotency_commit(
@@ -224,7 +226,9 @@ class SupplierOfferDeactivateView(IdempotencyMixin, APIView):
         teklif = _get_own_offer(request.user, pk)
         try:
             teklif = teklif_servisi.pasifle(teklif, request.user)
-        except (DjangoValidationError, DjangoPermissionDenied) as exc:
+        except DjangoValidationError as exc:
+            raise_drf(exc, as_conflict=True)
+        except DjangoPermissionDenied as exc:
             raise_drf(exc)
         teklif = _get_own_offer(request.user, teklif.pk)
         return self.idempotency_commit(
@@ -267,7 +271,9 @@ class SupplierOfferVersionView(IdempotencyMixin, APIView):
             yeni = teklif_servisi.yeni_versiyon_olustur(
                 teklif, request.user, **kwargs
             )
-        except (DjangoValidationError, DjangoPermissionDenied) as exc:
+        except DjangoValidationError as exc:
+            raise_drf(exc, as_conflict=True)
+        except DjangoPermissionDenied as exc:
             raise_drf(exc)
         yeni = _get_own_offer(request.user, yeni.pk)
         return self.idempotency_commit(

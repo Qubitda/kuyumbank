@@ -101,6 +101,35 @@ class OfferCreateAndRfqMatchApiTests(CheckoutFixtureMixin, APITestCase):
         )
         self.assertEqual(bad.status_code, 400, bad.content)
 
+    def test_offer_invalid_transition_409(self):
+        """TASLAK üzerinde deactivate → 409 (state machine)."""
+        self.api.force_authenticate(user=self.ted_user)
+        bas = date.today()
+        created = self.api.post(
+            reverse("api-supplier-offers"),
+            {
+                "varyant_id": self.varyant.pk,
+                "fiyat_modeli": TedarikciTeklif.FiyatModeli.METAL_BAZLI,
+                "gram": "1.000",
+                "tedarikci_kodu": "T409",
+                "gecerlilik_baslangic": bas.isoformat(),
+                "gecerlilik_bitis": (bas + timedelta(days=10)).isoformat(),
+            },
+            format="json",
+            **self._idem("offer-409-c"),
+        )
+        self.assertEqual(created.status_code, 201, created.content)
+        pk = created.json()["id"]
+        bad = self.api.post(
+            reverse("api-supplier-offer-deactivate", kwargs={"pk": pk}),
+            {},
+            format="json",
+            **self._idem("offer-409-d"),
+        )
+        self.assertEqual(bad.status_code, 409, bad.content)
+        ct = bad["Content-Type"].split(";")[0]
+        self.assertIn(ct, ("application/json", "application/problem+json"), ct)
+
     def test_rfq_match_flow_json(self):
         rfq = rfq_servisi.olustur(
             actor=self.buyer,

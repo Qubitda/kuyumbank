@@ -4,13 +4,33 @@ from __future__ import annotations
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import (
+    APIException,
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 
 
-def raise_drf(exc: BaseException) -> None:
+class Conflict(APIException):
+    """Durum makinesi / idempotency dışı iş kuralı çatışması → 409."""
+
+    status_code = 409
+    default_detail = "Conflict."
+    default_code = "conflict"
+
+
+def raise_drf(exc: BaseException, *, as_conflict: bool = False) -> None:
     if isinstance(exc, DjangoPermissionDenied):
         raise PermissionDenied(detail=str(exc)) from exc
     if isinstance(exc, DjangoValidationError):
+        if as_conflict:
+            if hasattr(exc, "message_dict") and exc.message_dict:
+                detail = exc.message_dict
+            else:
+                msgs = getattr(exc, "messages", None) or [str(exc)]
+                detail = msgs[0] if len(msgs) == 1 else list(msgs)
+            raise Conflict(detail=detail) from exc
         if hasattr(exc, "message_dict") and exc.message_dict:
             raise ValidationError(detail=exc.message_dict) from exc
         msgs = getattr(exc, "messages", None) or [str(exc)]

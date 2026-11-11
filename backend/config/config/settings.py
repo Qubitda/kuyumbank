@@ -50,8 +50,16 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = False  # JS / Next BFF X-CSRFToken okuyabilsin
-# Aynı-origin reverse proxy; cross-site origin listesi (CSRF). CORS B1'de yok.
+# Aynı-origin reverse proxy; cross-site origin listesi (CSRF). CORS B1'de yok (ADR-0017 erteli).
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+if DEBUG and not CSRF_TRUSTED_ORIGINS:
+    # Next.dev default origins (rewrite same-host tercih; CSRF host kontrolü için)
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
 # Ortak üst alan (opsiyonel cookie paylaşımı): .kuyumbank.local
 SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default="") or None
 CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="") or None

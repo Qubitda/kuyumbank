@@ -2129,6 +2129,35 @@
         ],
         "type": "object"
       },
+      "OpsFinanceSummary": {
+        "properties": {
+          "cari_count": {
+            "type": "integer"
+          },
+          "ledger_count": {
+            "type": "integer"
+          },
+          "ops": {
+            "type": "boolean"
+          },
+          "payment_intent_count": {
+            "type": "integer"
+          },
+          "recent_ledger": {
+            "type": "array"
+          },
+          "recent_payments": {
+            "type": "array"
+          }
+        },
+        "required": [
+          "ops",
+          "cari_count",
+          "ledger_count",
+          "payment_intent_count"
+        ],
+        "type": "object"
+      },
       "OpsInspection": {
         "properties": {
           "allowed_actions": {
@@ -7793,11 +7822,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BuyerFinanceSummary"
+                  "$ref": "#/components/schemas/OpsFinanceSummary"
                 }
               }
             },
-            "description": "BuyerFinanceSummary"
+            "description": "OpsFinanceSummary"
           },
           "400": {
             "content": {

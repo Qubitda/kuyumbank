@@ -2696,6 +2696,14 @@ export interface components {
         MfaVerifyRequest: {
             code: string;
         };
+        OpsFinanceSummary: {
+            cari_count: number;
+            ledger_count: number;
+            ops: boolean;
+            payment_intent_count: number;
+            recent_ledger?: unknown[];
+            recent_payments?: unknown[];
+        };
         OpsInspection: {
             allowed_actions?: string[];
             durum: string;
@@ -6665,13 +6673,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description BuyerFinanceSummary */
+            /** @description OpsFinanceSummary */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BuyerFinanceSummary"];
+                    "application/json": components["schemas"]["OpsFinanceSummary"];
                 };
             };
             /** @description Problem+JSON */

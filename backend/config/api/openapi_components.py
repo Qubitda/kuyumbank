@@ -367,6 +367,17 @@ BUYER_FINANCE_SUMMARY = _obj(
     },
     ["server_now"],
 )
+OPS_FINANCE_SUMMARY = _obj(
+    {
+        "ops": _bool(),
+        "cari_count": _int(),
+        "ledger_count": _int(),
+        "payment_intent_count": _int(),
+        "recent_ledger": {"type": "array"},
+        "recent_payments": {"type": "array"},
+    },
+    ["ops", "cari_count", "ledger_count", "payment_intent_count"],
+)
 BUYER_CARI = _obj(
     {
         "id": _int(),
@@ -690,6 +701,7 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "BuyerReturn": BUYER_RETURN,
     "BuyerReturnPage": paginated("BuyerReturn"),
     "BuyerFinanceSummary": BUYER_FINANCE_SUMMARY,
+    "OpsFinanceSummary": OPS_FINANCE_SUMMARY,
     "BuyerCari": BUYER_CARI,
     "BuyerCariPage": paginated("BuyerCari"),
     "BuyerLedger": BUYER_LEDGER,
@@ -797,7 +809,7 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/finance/ledger/": {"get": ("200", "BuyerLedgerPage")},
     "/api/v1/payments/intents/": {"post": ("201", "BuyerPaymentIntent")},
     "/api/v1/payments/webhook/": {"post": ("200", "WebhookAck")},
-    "/api/v1/ops/finance/": {"get": ("200", "BuyerFinanceSummary")},
+    "/api/v1/ops/finance/": {"get": ("200", "OpsFinanceSummary")},
     "/api/v1/ops/finance/cari/": {"get": ("200", "BuyerCariPage")},
     "/api/v1/ops/finance/ledger/": {"get": ("200", "BuyerLedgerPage")},
     "/api/v1/ops/finance/payments/": {"get": ("200", "BuyerOrderPage")},

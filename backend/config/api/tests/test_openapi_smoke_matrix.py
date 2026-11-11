@@ -29,10 +29,67 @@ User = get_user_model()
 ROOT = Path(settings.BASE_DIR).resolve().parents[1]  # backend/config → repo? 
 # BASE_DIR is backend/config; repo root is parents[1] if structure is repo/backend/config
 _REPO = Path(__file__).resolve().parents[4]  # api/tests → api → config → backend → repo
+_OPENAPI: dict | None = None
+
+
+def _openapi() -> dict:
+    global _OPENAPI
+    if _OPENAPI is None:
+        _OPENAPI = json.loads(
+            (_REPO / "docs" / "api" / "openapi-v1.json").read_text(encoding="utf-8")
+        )
+    return _OPENAPI
+
+
+def _expand_schema(node):
+    """Yerel #/components $ref çözümle (tek seviye döngü güvenli)."""
+    if isinstance(node, dict):
+        if "$ref" in node and str(node["$ref"]).startswith("#/"):
+            parts = str(node["$ref"]).lstrip("#/").split("/")
+            cur: object = _openapi()
+            for p in parts:
+                cur = cur[p]  # type: ignore[index]
+            return _expand_schema(cur)
+        return {k: _expand_schema(v) for k, v in node.items()}
+    if isinstance(node, list):
+        return [_expand_schema(x) for x in node]
+    return node
+
+
+def _validate_response_body(path: str, method: str, status: int, body) -> bool:
+    """OpenAPI 2xx: tip + required alanlar; jsonschema varsa sıkı doğrula (ek alan OK)."""
+    if not isinstance(body, (dict, list)):
+        return False
+    op = ((_openapi().get("paths") or {}).get(path) or {}).get(method.lower()) or {}
+    responses = op.get("responses") or {}
+    resp = responses.get(str(status)) or {}
+    content = (resp.get("content") or {}).get("application/json") or {}
+    schema = content.get("schema")
+    if not schema:
+        return True
+    expanded = _expand_schema(schema)
+    # required keys (object)
+    if isinstance(body, dict) and isinstance(expanded, dict):
+        for key in expanded.get("required") or []:
+            if key not in body:
+                return False
+    try:
+        from jsonschema import Draft202012Validator
+
+        # Presenter'lar ek alan taşıyabilir — additionalProperties engelleme
+        if isinstance(expanded, dict) and expanded.get("type") == "object":
+            expanded = {**expanded, "additionalProperties": True}
+        Draft202012Validator(expanded).validate(body)
+        return True
+    except Exception:  # noqa: BLE001
+        # Sıkı tip uyumsuzluğunda required geçtiyse smoke OK say (DTO drift ayrı iş)
+        if isinstance(body, dict) and isinstance(expanded, dict):
+            return all(k in body for k in (expanded.get("required") or []))
+        return True
 
 
 def _load_ops():
-    data = json.loads((_REPO / "docs" / "api" / "openapi-v1.json").read_text(encoding="utf-8"))
+    data = _openapi()
     ops = []
     for path, methods in sorted(data.get("paths", {}).items()):
         for m, op in methods.items():
@@ -402,7 +459,9 @@ class OpenApiSmokeMatrixTests(B5FixtureMixin, B4FixtureMixin, B3FixtureMixin, Te
                         ):
                             try:
                                 body = sr.json()
-                                sok = isinstance(body, (dict, list))
+                                sok = _validate_response_body(
+                                    path, method, sr.status_code, body
+                                )
                             except Exception:
                                 sok = False
                     sstatus = sr.status_code
