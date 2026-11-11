@@ -1,101 +1,72 @@
-# FINAL REPORT — Docs ↔ Kod API Audit (kapanış)
+# FINAL REPORT — CRUD tamamlaması (API-only)
 
 **Tarih:** 2026-11-11  
 **Dal:** `adim-1-ilerleme`  
-**Yöntem:** ADIM 1–8 kapanış; kanıt = dosya/satır veya komut çıktısı. Tahmin yok.
+**Mimari kilit:** ADR-0029 API-only · FE feature services (UI sayfa yok)
 
 ---
 
-## 1. Yapılan değişiklikler (bu kapanış)
+## Eklenen endpoint’ler
 
-| Dilim | Commit / dosya | Sorumluluk |
-|-------|----------------|------------|
-| ADR-0029 HTML | `9a2b79e` | Django HTML buyer/supplier/ops portal kaldırma |
-| ADR-0028 auth | `13306e9` | Invite / email-verify / MFA / password / act-as API |
-| ADR-0027 | `d98ef34` | `bildirim` email outbox |
-| ADR docs | `85edc18` | ADR-0027/28/29 + supersede notları |
-| Integrity | `40778c6` | Ledger/stok DB rules + idempotency |
-| Ops | `19a1c67` | soft_launch, webhook HMAC, pagination, rapor dates |
-| Test fix | `b2b89a8` | RFQ/payment/`fiyat_kaynagi` hizası |
-| ADIM 5 matrix | `f41d39c` | `test_openapi_smoke_matrix` + readiness/JSON |
-| ADIM 6 FE CSRF | `38a8c79` | `test_fe_session_csrf_flow` |
+| Metot | Path | Not |
+|-------|------|-----|
+| POST | `/api/v1/supplier/offers/` | `teklif_servisi.taslak_olustur` → 201 JSON |
+| GET | `/api/v1/ops/rfq-lines/{line_id}/match-candidates/` | F10-021 aday |
+| GET/POST | `/api/v1/ops/rfq-lines/{line_id}/matches/` | liste / öner |
+| POST | `/api/v1/ops/rfq-matches/{id}/approve/` | onay → line.varyant |
+| POST | `/api/v1/ops/rfq-matches/{id}/reject/` | red + neden |
 
-Önceki audit envanter/drift: `docs/_audit/*` (ADIM 0–5 ilk tur).
+OpenAPI: **102 path / 112 op** (`lint_openapi` OK).
 
 ---
 
-## 2. Döküman ↔ kod uyum (önce / sonra)
+## Commit listesi (bu görev)
 
-| Konu | Önce | Sonra |
-|------|------|-------|
-| Uncommitted WIP (~130) | Kirli tree | **Temiz** (dilimli commit) |
-| Full PG suite | Kanıtsız / tarihsel 597 | **588 OK** (`docs/_audit/full-suite-log.txt`) |
-| OpenAPI smoke | 15 anonim / şablon readiness | **106 op · 276/276 check** matrix |
-| FE CSRF same-origin | Yalnız B1 | + `test_fe_session_csrf_flow` |
-| `makemigrations --check` | — | **OK** |
-| `export_openapi --check` / `lint_openapi` | — | **OK** (paths=98, ops=106) |
+| Commit | Özet |
+|--------|------|
+| `763ccb8` | feat(supplier): teklif create |
+| `1602b22` | feat(ops): RFQ eşleştirme HTTP + docs/OpenAPI |
+| *(FE)* | feature services + schema regenerate |
 
 ---
 
-## 3. ADIM 7 — bilinçli kapsam dışı (implement yok)
+## HTML tarama (doğrulama eki)
 
-Teklif create HTTP + RFQ eşleştirme HTTP: **kapsam dışı**, gerekçe: `docs/API_CONTRACT.md:106` · `docs/API_READINESS.md:57` (`FE-P1-RFQ`).
+```
+rg -i "render\(|TemplateView|template_name|HttpResponse\(.*<html" backend/config
+```
 
----
-
-## 4. Endpoint hazırlık + smoke
-
-| Metrik | Değer | Kanıt |
-|--------|-------|-------|
-| OpenAPI paths / ops | 98 / 106 | `lint_openapi` OK |
-| Smoke matrix checks | **276/276** | `smoke-matrix-results.json` |
-| Op satır readiness | hazır (matrix) | `endpoint-readiness.md` |
-| CSRF flow (matrix + FE) | OK | matrix `csrf_*` + `test_fe_session_csrf_flow` |
-| Live HTTP `runserver` smoke | **DOĞRULANAMADI** | Ayrı runserver başlatılmadı; Django Client matrix yeterli |
+Portal eşleşme: **yok**. Kalan: `bildirim.template_servisi.render` (e-posta ADR-0027) · admin toplu-red `engines.from_string` (paket `admin/base_site`).
 
 ---
 
-## 5. Doğrulanamayan / kalan P2
+## Suite / kapılar
 
-| Madde | Neden |
-|-------|-------|
-| Canlı HTTP `--base` smoke | runserver yok (Client kullanıldı) |
-| Prod migrate | Onaysız yasak |
-| Staging Sentry event | Ortam yok |
-| Celery/Redis, gerçek ödeme/kargo | Bilinçli erteli |
-| Next portal dilimleri | MASTER §12.3; ürün sahibi talimatı |
-
-Detay: [`open-work.md`](open-work.md).
-
----
-
-## 6. Integrity / ops özeti (1e)
-
-- Ledger/stok DB constraint migration’ları + onay/return idempotency.
-- Soft-launch check, webhook HMAC, pagination/rapor date guards.
-
----
-
-## ADIM özeti
-
-| ADIM | Durum |
+| Kapı | Sonuç |
 |------|--------|
-| 1 Commit dilimleri | ✅ temiz tree dilimleri |
-| 2 Migrate check | ✅ `makemigrations --check` |
-| 3 Full suite | ✅ **588 OK** PG |
-| 4 Open work | ✅ P0/P1 yok; P2 listeli |
-| 5 Smoke 106 | ✅ 276/276 |
-| 6 FE CSRF | ✅ |
-| 7 Kapsam dışı | ✅ tek satır (yukarı) |
-| 8 Docs + FINAL | ✅ bu dosya |
+| Odaklı: offer create + RFQ match | **2 OK** |
+| `makemigrations --check` | OK |
+| `export_openapi` / `lint_openapi` | OK (102/112) |
+| FE `tsc --noEmit` / `eslint` | OK |
+| FE birim test runner | **KARAR GEREKTİ** — `frontend/package.json` / `frontend/AGENTS.md` test script yok; vitest eklenmedi (mimari bağımlılık yasağı) |
+| Full PG suite | koşum notu: smoke matrix ayrı; full suite FINAL sonrası |
 
 ---
 
-## Durma koşulları
+## crud-matrix kalan EKSİK
 
-- [x] `git status` temiz (FINAL commit sonrası)
-- [x] `makemigrations --check` temiz
-- [x] full suite yeşil — **588**
-- [x] `export_openapi.py --check` + `lint_openapi.py` OK
-- [x] smoke matrix 106 op / 276 check (Client)
-- [x] HTTP mode: DOĞRULANAMADI + neden (yukarı)
+| Kaynak | Durum | Gerekçe |
+|--------|-------|---------|
+| profile/adres CRUD | **EKSİK** | F9-017; firmalar adres HTTP yüzeyi henüz yok — `docs/BACKLOG.md` F9-017 |
+| bildirimler list HTTP | **KAPSAM DIŞI** | ADR-0027 outbox/admin |
+
+---
+
+## KARAR GEREKTİ
+
+1. FE unit test altyapısı: `frontend/AGENTS.md` + `package.json` — test komutu tanımlı değil; bağımlılık eklenmedi.
+2. Profil/adres API şekli (F9-017) — ADR alan sözleşmesi netleşmeden implement yok.
+
+## DOĞRULANAMADI
+
+- Live `runserver` HTTP smoke (Client smoke kullanıldı).

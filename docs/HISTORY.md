@@ -585,6 +585,12 @@
 - FE→BE: Next yalnız `csrf/login/logout/me/health` çağırıyor; hepsi backend’de var.
 - Smoke: `scripts/smoke_api.py` (+ sonuç FINAL-REPORT).
 
+### 2026-11-11 — CRUD P0: teklif create + RFQ eşleştirme HTTP
+- `POST /supplier/offers/` → `teklif_servisi.taslak_olustur` (tenant actor.firma).
+- Ops: `/ops/rfq-lines/{line_id}/match-candidates|matches/` + `/ops/rfq-matches/{id}/approve|reject/`.
+- OpenAPI 102 path / 112 op; API_CONTRACT §4.2–4.3 + FE-P1-RFQ **UYGULANDI**.
+- FE feature `services/` tipli client (UI yok); FINAL-REPORT + crud-matrix.
+
 ### 2026-11-11 — NX-SHELL (P1)
 - Next: `PortalShell` / `PortalNav` / `ThemeToggle` (`next-themes` class).
 - shadcn-style `components/ui`: Button, Input, Label, Dialog; login form bağlandı.

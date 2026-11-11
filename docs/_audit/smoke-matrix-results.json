@@ -1,8 +1,8 @@
 {
-  "total_checks": 276,
-  "passed": 276,
+  "total_checks": 293,
+  "passed": 293,
   "failed": 0,
-  "openapi_ops": 106,
+  "openapi_ops": 112,
   "ok": true,
   "failures": [],
   "results": [
@@ -451,7 +451,7 @@
       "check": "success_or_reachable",
       "method": "GET",
       "path": "/api/v1/carts/{id}/",
-      "status": 404,
+      "status": 200,
       "ok": true
     },
     {
@@ -988,6 +988,114 @@
       "method": "GET",
       "path": "/api/v1/ops/orders/summary/",
       "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/match-candidates/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/match-candidates/",
+      "status": 404,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "catalog"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/match-candidates/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "catalog"
+    },
+    {
+      "check": "success_or_reachable",
+      "method": "GET",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 400,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "catalog"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-lines/{line_id}/matches/",
+      "status": 404,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-matches/{id}/approve/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-matches/{id}/approve/",
+      "status": 400,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "catalog"
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-matches/{id}/reject/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-matches/{id}/reject/",
+      "status": 400,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "catalog"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/ops/rfq-matches/{id}/reject/",
+      "status": 404,
       "ok": true
     },
     {
@@ -1864,6 +1972,29 @@
       "method": "GET",
       "path": "/api/v1/supplier/offers/",
       "status": 200,
+      "ok": true
+    },
+    {
+      "check": "anon",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/",
+      "status": 401,
+      "ok": true
+    },
+    {
+      "check": "wrong_role",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/",
+      "status": 403,
+      "ok": true,
+      "wrong": "buyer",
+      "expected_role": "supplier"
+    },
+    {
+      "check": "invalid_body",
+      "method": "POST",
+      "path": "/api/v1/supplier/offers/",
+      "status": 400,
       "ok": true
     },
     {

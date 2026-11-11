@@ -1,6 +1,6 @@
 # Endpoint readiness (ADIM 5 — smoke matrix)
 
-Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
+Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=112 · checks=293/293
 
 | Metot | Path | anon | wrong_role | invalid_body | success |
 |-------|------|------|------------|--------------|---------|
@@ -29,6 +29,8 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
 | GET | `/api/v1/ops/inspections/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/ops/inspections/{id}/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/ops/orders/summary/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/rfq-lines/{line_id}/match-candidates/` | ✅ | ✅ | — | ✅ |
+| GET | `/api/v1/ops/rfq-lines/{line_id}/matches/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/ops/shipments/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/ops/shipments/{id}/` | ✅ | ✅ | — | ✅ |
 | GET | `/api/v1/orders/` | ✅ | ✅ | — | ✅ |
@@ -79,6 +81,9 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
 | POST | `/api/v1/ops/inspections/{id}/measurements/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/ops/inspections/{id}/pass/` | ✅ | ✅ | — | — |
 | POST | `/api/v1/ops/inspections/{id}/start/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/rfq-lines/{line_id}/matches/` | ✅ | ✅ | ✅ | — |
+| POST | `/api/v1/ops/rfq-matches/{id}/approve/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/ops/rfq-matches/{id}/reject/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/ops/shipments/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/ops/shipments/{id}/cancel/` | ✅ | ✅ | — | — |
 | POST | `/api/v1/ops/shipments/{id}/deliver/` | ✅ | ✅ | — | — |
@@ -104,6 +109,7 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
 | POST | `/api/v1/rfqs/{id}/messages/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/rfqs/{id}/send/` | ✅ | ✅ | — | — |
+| POST | `/api/v1/supplier/offers/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/supplier/offers/{id}/deactivate/` | ✅ | ✅ | — | — |
 | POST | `/api/v1/supplier/offers/{id}/submit/` | ✅ | ✅ | — | — |
 | POST | `/api/v1/supplier/offers/{id}/versions/` | ✅ | ✅ | ✅ | — |
@@ -111,4 +117,4 @@ Kaynak: `api.tests.test_openapi_smoke_matrix` · ops=106 · checks=276/276
 | POST | `/api/v1/supplier/rfqs/{id}/revisions/` | ✅ | ✅ | ✅ | — |
 | POST | `/api/v1/supplier/stock/adjustments/` | ✅ | ✅ | ✅ | — |
 
-**Özet:** hazır_satır=106 sorunlu_satır=0 (op satırı; check bazlı JSON ayrı)
+**Özet:** hazır_satır=112 sorunlu_satır=0 (op satırı; check bazlı JSON ayrı)

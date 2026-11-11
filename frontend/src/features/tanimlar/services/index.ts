@@ -1,6 +1,5 @@
 /**
- * tanimlar API servisleri.
- * Path / alan: OpenAPI + API_CONTRACT — uydurma yok.
- * Örnek: apiFetch via @/lib/api/client
+ * tanimlar — çoğunlukla admin/ops; buyer portal HTTP yüzeyi sınırlı.
+ * Kur/alert: platform admin; FE portal çağrısı yok (OpenAPI path yok).
  */
 export {};

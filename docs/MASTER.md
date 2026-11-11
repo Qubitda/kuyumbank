@@ -530,6 +530,8 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | NX-FE | Next.js `frontend/` iskelet | App Router + TS + Tailwind v4; `/api/v1` rewrite; session/CSRF client; `/` + `/login`; `npm run build` OK |
 | NX-ARCH | Feature/domain FE mimarisi | `features/*` ↔ Django apps; `app/(portal)/*` page/loading/error; `FRONTEND_ARCHITECTURE.md`; Zod |
 | NX-SHELL | App shell + shadcn temel | `PortalShell` + light/dark; Button/Input/Label/Dialog; kör havuz notu; **UYGULANDI** 2026-11-11 |
+| CAP-OFFER-CREATE | Supplier teklif create HTTP | `POST /supplier/offers/` · **UYGULANDI** 2026-11-11 |
+| CAP-RFQ-MATCH-HTTP | RFQ eşleştirme HTTP (F10-021) | `/ops/rfq-lines|rfq-matches/` · **UYGULANDI** 2026-11-11 |
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 

@@ -1,6 +1,4 @@
 /**
- * belgeler API servisleri.
- * Path / alan: OpenAPI + API_CONTRACT — uydurma yok.
- * Örnek: apiFetch via @/lib/api/client
+ * belgeler — B7’de ayrı REST yüzeyi sınırlı (API_READINESS FE-P1-DOC dışı).
  */
 export {};

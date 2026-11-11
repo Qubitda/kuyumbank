@@ -73,6 +73,8 @@ def _role_for(path: str, method: str = "GET") -> str:
         return "finance_ops"
     if path.startswith("/api/v1/ops/shipments"):
         return "logistics"
+    if path.startswith("/api/v1/ops/rfq"):
+        return "catalog"
     if path.startswith("/api/v1/ops/"):
         return "ops"
     if "/act-as/" in path:
@@ -163,6 +165,15 @@ class OpenApiSmokeMatrixTests(B5FixtureMixin, B4FixtureMixin, B3FixtureMixin, Te
         cls.buyer_admin.set_password("x")
         cls.buyer_admin.save()
         sync_user_role_groups(cls.buyer_admin)
+        cls.catalog = User(
+            username="smoke_catalog",
+            firma=cls.platform,
+            rol=roles.PLATFORM_CATALOG,
+            is_staff=True,
+        )
+        cls.catalog.set_password("x")
+        cls.catalog.save()
+        sync_user_role_groups(cls.catalog)
 
     def setUp(self):
         self.results = []
@@ -182,6 +193,7 @@ class OpenApiSmokeMatrixTests(B5FixtureMixin, B4FixtureMixin, B3FixtureMixin, Te
             "ops": self.qc,
             "logistics": self.log,
             "finance_ops": self.finance,
+            "catalog": self.catalog,
         }.get(role, self.buyer)
 
     def _seed_ids(self) -> dict:
@@ -278,7 +290,14 @@ class OpenApiSmokeMatrixTests(B5FixtureMixin, B4FixtureMixin, B3FixtureMixin, Te
                 wrong = (
                     "buyer"
                     if role
-                    in ("supplier", "ops", "finance_ops", "logistics", "buyer_admin")
+                    in (
+                        "supplier",
+                        "ops",
+                        "finance_ops",
+                        "logistics",
+                        "buyer_admin",
+                        "catalog",
+                    )
                     else "supplier"
                 )
                 wc = self._client(self._user(wrong))
