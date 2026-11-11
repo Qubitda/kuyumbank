@@ -49,7 +49,7 @@ Portal eşleşme: **yok**. Kalan: `bildirim.template_servisi.render` (e-posta AD
 | `export_openapi` / `lint_openapi` | OK (102/112) |
 | FE `tsc --noEmit` / `eslint` | OK |
 | FE birim test runner | **KARAR GEREKTİ** — `frontend/package.json` / `frontend/AGENTS.md` test script yok; vitest eklenmedi (mimari bağımlılık yasağı) |
-| Full PG suite | koşum notu: smoke matrix ayrı; full suite FINAL sonrası |
+| Full PG suite | **590 OK** (2026-11-11, PG `--keepdb`; `full-suite-log.txt`) |
 
 ---
 

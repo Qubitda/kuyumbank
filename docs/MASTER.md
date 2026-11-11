@@ -158,7 +158,7 @@ _(git-tracked `test_*.py`; WIP untracked sayılmaz). Koşu sonucu değildir; son
 <!-- /AUTO:tests -->
 
 **Statik sayım ≠ suite sonucu:** üstteki AUTO blok koşulmuş test değildir.  
-**Son kaydedilen suite (elle):** **588 OK** (2026-11-11, PG `--keepdb`) — kanıt `docs/_audit/full-suite-log.txt`.  
+**Son kaydedilen suite (elle):** **590 OK** (2026-11-11, PG `--keepdb`) — kanıt `docs/_audit/full-suite-log.txt`.  
 **Tarihsel:** 597 OK (2026-11-09). Ara kayıt 713/4 migration ERROR **geçersiz** (bu koşuda ERROR yok).  
 `makemigrations --check` temiz (2026-11-11). Üretim migrate onaysız yok.
 
