@@ -55,29 +55,40 @@ CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 # Ortak üst alan (opsiyonel cookie paylaşımı): .kuyumbank.local
 SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN", default="") or None
 CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN", default="") or None
-# Varsayılan 2 hafta yerine 8 saat (finans portalı); idle timeout ayrıca yok.
+# Mutlak oturum süresi (varsayılan 8 saat) + boşta kalma (varsayılan 30 dk)
 SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=28800)
+SESSION_IDLE_TIMEOUT = env.int("SESSION_IDLE_TIMEOUT", default=1800)
 
 # AUD-001b — X-Forwarded-For güvenilir proxy hop sayısı (0 = yalnız REMOTE_ADDR)
 TRUSTED_PROXY_COUNT = env.int("TRUSTED_PROXY_COUNT", default=0)
 
 # --- Cache (DRF throttle + HTML login throttle; çoklu worker için db/redis) ---
-# Varsayılan locmem (test/dev). Prod multi-worker: CACHE_BACKEND=db + createcachetable
-# veya Redis backend. LocMem = worker başına ayrı sayaç (limit N× büyür).
+# DEBUG: LocMem OK. Prod (!DEBUG): varsayılan DatabaseCache; LocMem yalnız
+# ALLOW_LOCMEM_CACHE=1 ile (system check Error).
 _CACHE_BACKEND = env(
     "CACHE_BACKEND",
-    default="django.core.cache.backends.locmem.LocMemCache",
+    default=(
+        "django.core.cache.backends.locmem.LocMemCache"
+        if DEBUG
+        else "django.core.cache.backends.db.DatabaseCache"
+    ),
 )
-_CACHE_LOCATION = env("CACHE_LOCATION", default="kuyumbank-default")
+_CACHE_LOCATION = env(
+    "CACHE_LOCATION",
+    default="kuyumbank-default" if DEBUG else "kuyumbank_cache",
+)
 CACHES = {
     "default": {
         "BACKEND": _CACHE_BACKEND,
         "LOCATION": _CACHE_LOCATION,
     }
 }
-# HTML login (buyer/supplier/admin) POST throttle — LoginThrottleMiddleware
+ALLOW_LOCMEM_CACHE = env.bool("ALLOW_LOCMEM_CACHE", default=False)
+# Admin login POST throttle — LoginThrottleMiddleware (ADR-0029)
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", default="10/min")
-
+LOGIN_THROTTLE_USERNAME_RATE = env(
+    "LOGIN_THROTTLE_USERNAME_RATE", default="20/min"
+)
 
 # --- Uygulamalar ------------------------------------------------------------
 INSTALLED_APPS = [
@@ -105,18 +116,25 @@ INSTALLED_APPS = [
     'lojistik.apps.LojistikConfig',
     'belgeler.apps.BelgelerConfig',
     'piyasa.apps.PiyasaConfig',
+    # bildirim: ADR-0027 — sonraki commit
     'api.apps.ApiConfig',
 
 ]
 
 # --- DRF (PRE ince API, U-012 / ADR-0017) ----------------------------------
-# Session birincil (tarayıcı); Token yalnız S2S; Basic 401 WWW-Authenticate için.
+# Session birincil; Token S2S (TTL); Basic varsayılan kapalı (DEBUG’ta açık).
+_API_BASIC_AUTH_ENABLED = env.bool(
+    "API_BASIC_AUTH_ENABLED", default=bool(DEBUG)
+)
+_DRF_AUTH = [
+    "api.authentication.SessionAuthentication",
+    "api.authentication.ExpiringTokenAuthentication",
+]
+if _API_BASIC_AUTH_ENABLED:
+    _DRF_AUTH.append("rest_framework.authentication.BasicAuthentication")
+
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "api.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": _DRF_AUTH,
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
@@ -133,6 +151,8 @@ REST_FRAMEWORK = {
         "ops": env("DRF_THROTTLE_OPS", default="600/min"),
         # API-B1: login brute-force
         "login": env("DRF_THROTTLE_LOGIN", default="10/min"),
+        # Webhook AllowAny — provider retry (IP başına)
+        "webhook": env("DRF_THROTTLE_WEBHOOK", default="120/min"),
     },
     "EXCEPTION_HANDLER": "api.exception_handler.problem_exception_handler",
     # Path keşfi: DRF AutoSchema (APIView). DTO: api.openapi_components.enrich.
@@ -154,6 +174,15 @@ API_DOCS_PUBLIC = env.bool("API_DOCS_PUBLIC", default=False)
 API_VERSION = "v1"
 # API-B1: Idempotency-Key saklama süresi (saniye); varsayılan 24s.
 IDEMPOTENCY_TTL_SECONDS = env.int("IDEMPOTENCY_TTL_SECONDS", default=86400)
+# Advisory lock bekleme tavanı (pg_try_advisory_lock); sonsuz blok yok.
+IDEMPOTENCY_LOCK_WAIT_SECONDS = env.float(
+    "IDEMPOTENCY_LOCK_WAIT_SECONDS", default=5.0
+)
+# S2S Token TTL (sn). 0 = süresiz (kaçının). Varsayılan 7 gün.
+AUTH_TOKEN_TTL_SECONDS = env.int("AUTH_TOKEN_TTL_SECONDS", default=604800)
+# Basic auth ayrı sıkı throttle (middleware; yalnız Basic header’da)
+DRF_THROTTLE_BASIC = env("DRF_THROTTLE_BASIC", default="5/min")
+API_BASIC_AUTH_ENABLED = _API_BASIC_AUTH_ENABLED
 
 # F7-023 CRM sync opt-in (varsayılan kapalı)
 CRM_SYNC_ENABLED = env.bool("CRM_SYNC_ENABLED", default=False)
@@ -167,8 +196,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'firmalar.middleware.SessionIdleTimeoutMiddleware',
     'firmalar.middleware.ActAsMiddleware',  # ADR-0021: act-as (Authentication sonrası)
-    'firmalar.middleware.LoginThrottleMiddleware',  # HTML login brute-force
+    'firmalar.middleware.MfaEnforceMiddleware',  # platform e-posta OTP (MFA_ENFORCE_PLATFORM)
+    'firmalar.middleware.LoginThrottleMiddleware',  # Admin login IP+username
+    'firmalar.middleware.BasicAuthThrottleMiddleware',  # Basic brute-force
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'api.middleware.IdempotencyKeyMiddleware',  # PRE-005: header → request.idempotency_key
@@ -217,9 +249,11 @@ LOGGING = {
 
 ROOT_URLCONF = 'config.urls'
 
-LOGIN_URL = "/buyer/login/"
-LOGIN_REDIRECT_URL = "/buyer/"
-LOGOUT_REDIRECT_URL = "/buyer/login/"
+LOGIN_URL = "/admin/login/"
+LOGIN_REDIRECT_URL = "/admin/"
+LOGOUT_REDIRECT_URL = "/admin/login/"
+# Act-as / davet linkleri için FE kökü (boş → /admin/)
+FRONTEND_PORTAL_BASE_URL = env("FRONTEND_PORTAL_BASE_URL", default="")
 
 TEMPLATES = [
     {
@@ -250,13 +284,18 @@ DATABASES = {
         "PASSWORD": env("DB_PASSWORD"),
         "HOST": env("DB_HOST"),
         "PORT": env("DB_PORT"),
+        # Bağlantı yeniden kullanımı (0 = her istekte yeni; prod önerisi 60+)
+        "CONN_MAX_AGE": env.int("CONN_MAX_AGE", default=60),
     }
 }
 
 # --- Şifre doğrulama --------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': env.int("PASSWORD_MIN_LENGTH", default=12)},
+    },
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -296,20 +335,41 @@ QC_GRAM_TOLERANCE_PCT = Decimal(env("QC_GRAM_TOLERANCE_PCT", default="0.50"))
 QC_GRAM_TOLERANCE_ABS = Decimal(env("QC_GRAM_TOLERANCE_ABS", default="0"))
 
 # --- Ödeme sağlayıcı (F5-020) -----------------------------------------------
-# "fake" = geliştirme/test. Canlı banka yok. Secret asla koda yazılmaz.
+# "fake" = geliştirme/test. Prod'da ALLOW_FAKE_PROVIDERS=1 olmadan yasak (check).
 PAYMENT_PROVIDER = env("PAYMENT_PROVIDER", default="fake")
 PAYMENT_FAKE_FORCE_FAIL = env.bool("PAYMENT_FAKE_FORCE_FAIL", default=False)
 
 # --- Kargo carrier (F6-021) -------------------------------------------------
-# "fake" = geliştirme/test. Canlı carrier yok. Secret koda yazılmaz.
 CARRIER_PROVIDER = env("CARRIER_PROVIDER", default="fake")
 CARRIER_FAKE_FORCE_FAIL = env.bool("CARRIER_FAKE_FORCE_FAIL", default=False)
+ALLOW_FAKE_PROVIDERS = env.bool("ALLOW_FAKE_PROVIDERS", default=bool(DEBUG))
+
+# --- MFA (e-posta OTP; platform + act-as) ------------------------------------
+MFA_ENFORCE_PLATFORM = env.bool("MFA_ENFORCE_PLATFORM", default=False)
+# Şifre sıfırlama link tabanı (Host header kullanılmaz). Örn. https://app.example.com
+PASSWORD_RESET_BASE_URL = env("PASSWORD_RESET_BASE_URL", default="")
+PASSWORD_RESET_TIMEOUT = env.int("PASSWORD_RESET_TIMEOUT", default=3600)
+# ADR-0028 — davet TTL (saat); e-posta doğrulama yazma kapısı (varsayılan kapalı)
+INVITE_TTL_HOURS = env.int("INVITE_TTL_HOURS", default=72)
+EMAIL_VERIFY_REQUIRED_FOR_WRITE = env.bool(
+    "EMAIL_VERIFY_REQUIRED_FOR_WRITE", default=False
+)
 # F6-022: True → teslim_et öncesi POD zorunlu (ADR-0013: varsayılan opsiyonel).
 SHIPMENT_POD_REQUIRED = env.bool("SHIPMENT_POD_REQUIRED", default=False)
 # F5-022: QC PASS sonrası hak ediş vade günü (0 = geçişte HAKEDILDI).
 SUPPLIER_ACCRUAL_VADE_GUN = env.int("SUPPLIER_ACCRUAL_VADE_GUN", default=0)
 # F5-021 webhook: boşsa endpoint 401 (fail-closed). Secret koda yazılmaz.
 PAYMENT_WEBHOOK_SECRET = env("PAYMENT_WEBHOOK_SECRET", default="")
+PAYMENT_WEBHOOK_REQUIRE_HMAC = env.bool(
+    "PAYMENT_WEBHOOK_REQUIRE_HMAC", default=True
+)
+PAYMENT_WEBHOOK_REPLAY_SECONDS = env.int(
+    "PAYMENT_WEBHOOK_REPLAY_SECONDS", default=300
+)
+# Virgülle CIDR/IP; boş = allow-list kapalı
+PAYMENT_WEBHOOK_IP_ALLOWLIST = env.list(
+    "PAYMENT_WEBHOOK_IP_ALLOWLIST", default=[]
+)
 
 # --- F8-003 Sentry (DSN boş → no-op) ----------------------------------------
 SENTRY_DSN = env("SENTRY_DSN", default="")

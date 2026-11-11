@@ -94,7 +94,7 @@ class ActAsAuditAA9Tests(TestCase):
             return HttpResponse("ok")
 
         mw = ActAsMiddleware(get_response)
-        req = factory.get("/buyer/")
+        req = factory.get("/api/v1/me/")
         req.user = self.admin
         req.session = session
         resp = mw(req)
@@ -105,10 +105,16 @@ class ActAsAuditAA9Tests(TestCase):
         self.assertEqual(row.on_behalf_of_id, self.buyer.pk)
 
     def test_act_as_start_audit_is_real_actor(self):
-        c = Client()
-        self.assertTrue(c.login(username="aa9_admin", password="x"))
-        r = c.post(reverse("act-as-start", args=[self.buyer.pk]))
-        self.assertEqual(r.status_code, 302)
+        from rest_framework.test import APIClient
+
+        api = APIClient(enforce_csrf_checks=False)
+        self.assertTrue(api.login(username="aa9_admin", password="x"))
+        r = api.post(
+            reverse("api-act-as-start"),
+            {"user_id": self.buyer.pk},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 200, r.data)
         start = AuditOlay.objects.filter(action="user.act_as_start").latest(
             "created_at"
         )

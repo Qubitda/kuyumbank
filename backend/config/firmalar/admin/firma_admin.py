@@ -1,7 +1,9 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.models import Group
+from django.core.exceptions import PermissionDenied, ValidationError
 
 from firmalar.selectors.tenant import scope_queryset
+from firmalar.services.firma_onay_servisi import onayla_firma
 from firmalar.services.yetki_servisi import can_view_all_tenants
 
 from ..models import Firma, FirmaAdresi, FirmaBankaHesabi
@@ -32,6 +34,19 @@ class FirmaAdmin(admin.ModelAdmin):
     list_filter = ("alici_mi", "tedarikci_mi", "platform_mu", "onay_durumu", "aktif")
     search_fields = ("ad", "unvan", "vergi_no", "firma_kodu")
     inlines = [FirmaAdresiInline, FirmaBankaHesabiInline]
+    actions = ("action_onayla",)
+
+    @admin.action(description="Seçili firmaları onayla (firma.approved outbox)")
+    def action_onayla(self, request, queryset):
+        ok = 0
+        for firma in queryset:
+            try:
+                onayla_firma(actor=request.user, firma=firma)
+                ok += 1
+            except (PermissionDenied, ValidationError) as exc:
+                self.message_user(request, f"{firma}: {exc}", level=messages.ERROR)
+        if ok:
+            self.message_user(request, f"{ok} firma onaylandı.", level=messages.SUCCESS)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

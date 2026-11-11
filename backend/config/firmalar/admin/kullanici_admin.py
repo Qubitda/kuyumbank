@@ -42,7 +42,17 @@ class KullaniciAdmin(UserAdmin):
         (None, {"fields": ("username", "password")}),
         ("Kişisel bilgiler", {"fields": ("first_name", "last_name", "email")}),
         ("Firma ve iş rolü", {"fields": ("firma", "rol")}),
-        ("Durum", {"fields": ("is_active", "is_staff", "is_superuser")}),
+        (
+            "Durum",
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "email_verified_at",
+                )
+            },
+        ),
         ("Önemli tarihler", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (
@@ -51,12 +61,13 @@ class KullaniciAdmin(UserAdmin):
             "fields": ("username", "password1", "password2", "firma", "rol"),
         }),
     )
-    readonly_fields = ("user_permissions",)
+    readonly_fields = ("user_permissions", "email_verified_at")
     filter_horizontal = ()
     list_display = (
         "username",
         "firma",
         "rol",
+        "email_verified_at",
         "is_active",
         "is_staff",
         "is_superuser",
@@ -71,9 +82,9 @@ class KullaniciAdmin(UserAdmin):
     def act_as_hint(self, obj):
         firma = obj.firma
         if firma and firma.alici_mi:
-            return format_html('<span title="Act-as → /buyer/">alıcı portal</span>')
+            return format_html('<span title="Act-as → API/FE">alıcı</span>')
         if firma and firma.tedarikci_mi:
-            return format_html('<span title="Act-as → /supplier/">tedarikçi portal</span>')
+            return format_html('<span title="Act-as → API/FE">tedarikçi</span>')
         return "—"
 
     @admin.action(description="Seçilen kullanıcı olarak gör (act-as)")
@@ -171,5 +182,12 @@ class KullaniciAdmin(UserAdmin):
             firma=obj.firma,
             rol=obj.rol,
         )
+        creating = not change
         super(UserAdmin, self).save_model(request, obj, form, change)
         sync_user_role_groups(obj)
+        if creating and obj.pk and not getattr(obj.firma, "platform_mu", False):
+            from firmalar.services.audit_servisi import domain_atomic
+            from firmalar.services.firma_onay_servisi import enqueue_user_welcome
+
+            with domain_atomic():
+                enqueue_user_welcome(actor=request.user, user=obj)

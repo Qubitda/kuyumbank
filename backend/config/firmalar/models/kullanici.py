@@ -49,6 +49,12 @@ class Kullanici(AbstractUser):
         on_delete=models.PROTECT,
     )
     rol = models.CharField("Rol", max_length=30, choices=ROL, blank=False)
+    email_verified_at = models.DateTimeField(
+        "E-posta doğrulama",
+        null=True,
+        blank=True,
+        help_text="Boş = doğrulanmamış (ADR-0028).",
+    )
 
     class Meta:
         verbose_name = "Kullanıcı"

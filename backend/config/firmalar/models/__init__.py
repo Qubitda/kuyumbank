@@ -4,6 +4,7 @@ from .audit_olay import AuditOlay
 from .firma import Firma
 from .firma_adresi import FirmaAdresi
 from .firma_banka_hesabi import FirmaBankaHesabi
+from .firma_invite import FirmaInvite
 from .harcama_limiti import HarcamaLimiti
 from .kullanici import Kullanici
 from .onay_talebi import OnayTalebi
@@ -17,6 +18,7 @@ __all__ = [
     "Firma",
     "FirmaAdresi",
     "FirmaBankaHesabi",
+    "FirmaInvite",
     "HarcamaLimiti",
     "Kullanici",
     "OnayTalebi",

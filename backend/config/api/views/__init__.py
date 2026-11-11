@@ -5,7 +5,25 @@ from .approvals import (
     ApprovalRejectView,
     ApprovalSubmitView,
 )
-from .auth import AuthCsrfView, AuthLoginView, AuthLogoutView
+from .act_as import ActAsStartView, ActAsStopView
+from .auth import (
+    AuthCsrfView,
+    AuthLoginView,
+    AuthLogoutView,
+    MfaResendView,
+    MfaVerifyView,
+    PasswordChangeView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
+)
+from .invite_auth import (
+    EmailVerifyConfirmView,
+    EmailVerifyRequestView,
+    InviteAcceptView,
+    InviteCreateView,
+    InviteListView,
+)
+from .me import MeDashboardView, MeView
 from .bulk_order import BulkOrderCreateView
 from .buyer_cart import CartLineCreateView, CartLineDetailView, CartMineView
 from .buyer_lock import PriceLockCreateView, PriceLockDetailView
@@ -22,7 +40,6 @@ from .finance import (
     BuyerLedgerListView,
 )
 from .health import HealthView
-from .me import MeView
 from .ops import OpsOrderSummaryView
 from .ops_finance import (
     OpsFinanceCariListView,
@@ -90,9 +107,22 @@ __all__ = [
     "ApprovalListCreateView",
     "ApprovalRejectView",
     "ApprovalSubmitView",
+    "ActAsStartView",
+    "ActAsStopView",
     "AuthCsrfView",
     "AuthLoginView",
     "AuthLogoutView",
+    "MfaResendView",
+    "MfaVerifyView",
+    "PasswordChangeView",
+    "PasswordResetConfirmView",
+    "PasswordResetRequestView",
+    "EmailVerifyConfirmView",
+    "EmailVerifyRequestView",
+    "InviteAcceptView",
+    "InviteCreateView",
+    "InviteListView",
+    "MeDashboardView",
     "BulkOrderCreateView",
     "BuyerCariDetailView",
     "BuyerCariListView",

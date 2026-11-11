@@ -56,6 +56,10 @@ def baslat(*, actor, target, session) -> User:
     if not target.is_active:
         raise ValidationError("Pasif kullanıcı için act-as yok.")
 
+    from firmalar.services import mfa_servisi
+
+    mfa_servisi.assert_mfa_for_act_as(actor=actor, session=session)
+
     session[SESSION_ACTOR] = actor.pk
     session[SESSION_TARGET] = target.pk
     session.modified = True
@@ -96,10 +100,13 @@ def durdur(*, session, actor_fallback=None) -> User | None:
 
 
 def portal_hedef_url(user) -> str:
-    """Act-as sonrası yönlendirme."""
-    firma = getattr(user, "firma", None)
-    if firma is not None and getattr(firma, "alici_mi", False):
-        return "/buyer/"
-    if firma is not None and getattr(firma, "tedarikci_mi", False):
-        return "/supplier/"
+    """Act-as sonrası yönlendirme — FE base veya Admin (ADR-0029; HTML portal yok)."""
+    from django.conf import settings
+
+    base = (getattr(settings, "FRONTEND_PORTAL_BASE_URL", "") or "").strip().rstrip(
+        "/"
+    )
+    if base:
+        return f"{base}/"
+    # FE yoksa operatör Admin'de kalır (hedef staff değilse yine Admin; API kullanır)
     return "/admin/"
