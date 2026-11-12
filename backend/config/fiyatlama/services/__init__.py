@@ -6,6 +6,7 @@ from . import (
     pricing_service,
     release_servisi,
     sozlesme_servisi,
+    teklif_import_servisi,
     teklif_servisi,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "pricing_service",
     "release_servisi",
     "sozlesme_servisi",
+    "teklif_import_servisi",
     "teklif_servisi",
 ]

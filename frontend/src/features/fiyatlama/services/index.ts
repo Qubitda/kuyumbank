@@ -6,6 +6,9 @@ import type {
   PriceQuote,
   SupplierOffer,
   SupplierOfferCreateRequest,
+  SupplierOfferImportCommitResult,
+  SupplierOfferImportPreview,
+  SupplierOfferImportSatir,
   SupplierOfferPage,
   SupplierRfq,
   SupplierRfqPage,
@@ -109,6 +112,29 @@ export const fiyatlamaService = {
       method: "POST",
       idempotencyKey: newIdempotencyKey(),
     });
+  },
+  /** GAP-F3-04 — CSV metin önizleme (PDF desteklenmez) */
+  previewOfferImport(csv: string): Promise<SupplierOfferImportPreview> {
+    return apiFetch<SupplierOfferImportPreview>(
+      "/supplier/offers/import/preview/",
+      {
+        method: "POST",
+        body: { csv },
+        idempotencyKey: newIdempotencyKey(),
+      }
+    );
+  },
+  commitOfferImport(
+    satirlar: SupplierOfferImportSatir[]
+  ): Promise<SupplierOfferImportCommitResult> {
+    return apiFetch<SupplierOfferImportCommitResult>(
+      "/supplier/offers/import/commit/",
+      {
+        method: "POST",
+        body: { satirlar },
+        idempotencyKey: newIdempotencyKey(),
+      }
+    );
   },
   getBuyerRfqs(): Promise<SupplierRfqPage> {
     return apiFetch<SupplierRfqPage>("/rfqs/");

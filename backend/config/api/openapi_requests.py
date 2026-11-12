@@ -244,6 +244,35 @@ SUPPLIER_OFFER_CREATE = _obj(
     },
     ["varyant_id", "fiyat_modeli"],
 )
+SUPPLIER_OFFER_IMPORT_PREVIEW = _obj(
+    {
+        "csv": _str(),
+        "filename": _str(),
+        "content_type": _str(),
+    }
+)
+SUPPLIER_OFFER_IMPORT_COMMIT = _obj(
+    {
+        "satirlar": {
+            "type": "array",
+            "items": _obj(
+                {
+                    "satir_no": _int(),
+                    "varyant_id": _int(),
+                    "sku": _str(),
+                    "fiyat_modeli": _str(),
+                    "birim_fiyat": _num_str(),
+                    "gram": _num_str(),
+                    "iscilik_override": _num_str(),
+                    "para_birimi": _str(),
+                    "tedarikci_kodu": _str(),
+                },
+                ["varyant_id", "fiyat_modeli"],
+            ),
+        }
+    },
+    ["satirlar"],
+)
 SUPPLIER_OFFER_VERSION = _obj(
     {
         "gram": _num_str(),
@@ -340,6 +369,8 @@ REQUEST_SCHEMAS: dict[str, dict] = {
     "RfqMessageRequest": RFQ_MESSAGE,
     "RfqRevisionRequest": RFQ_REVISION,
     "SupplierOfferCreateRequest": SUPPLIER_OFFER_CREATE,
+    "SupplierOfferImportPreviewRequest": SUPPLIER_OFFER_IMPORT_PREVIEW,
+    "SupplierOfferImportCommitRequest": SUPPLIER_OFFER_IMPORT_COMMIT,
     "SupplierOfferVersionRequest": SUPPLIER_OFFER_VERSION,
     "RfqMatchCreateRequest": RFQ_MATCH_CREATE,
     "SupplierStockAdjustRequest": SUPPLIER_STOCK_ADJUST,
@@ -410,6 +441,12 @@ REQUEST_BINDINGS: dict[str, dict[str, str]] = {
     "/api/v1/rfqs/{id}/messages/": {"post": "RfqMessageRequest"},
     "/api/v1/rfqs/{id}/revisions/": {"post": "RfqRevisionRequest"},
     "/api/v1/supplier/offers/": {"post": "SupplierOfferCreateRequest"},
+    "/api/v1/supplier/offers/import/preview/": {
+        "post": "SupplierOfferImportPreviewRequest"
+    },
+    "/api/v1/supplier/offers/import/commit/": {
+        "post": "SupplierOfferImportCommitRequest"
+    },
     "/api/v1/supplier/offers/{id}/versions/": {"post": "SupplierOfferVersionRequest"},
     "/api/v1/ops/rfq-lines/{line_id}/matches/": {"post": "RfqMatchCreateRequest"},
     "/api/v1/ops/rfq-matches/{id}/approve/": {"post": "EmptyRequest"},

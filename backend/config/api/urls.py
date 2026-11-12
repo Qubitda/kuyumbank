@@ -109,6 +109,8 @@ from api.views import (
     ShipmentListView,
     SupplierOfferDeactivateView,
     SupplierOfferDetailView,
+    SupplierOfferImportCommitView,
+    SupplierOfferImportPreviewView,
     SupplierOfferListView,
     SupplierOfferSubmitView,
     SupplierOfferVersionView,
@@ -268,6 +270,16 @@ api_urlpatterns = [
         "supplier/offers/",
         SupplierOfferListView.as_view(),
         name="api-supplier-offers",
+    ),
+    path(
+        "supplier/offers/import/preview/",
+        SupplierOfferImportPreviewView.as_view(),
+        name="api-supplier-offer-import-preview",
+    ),
+    path(
+        "supplier/offers/import/commit/",
+        SupplierOfferImportCommitView.as_view(),
+        name="api-supplier-offer-import-commit",
     ),
     path(
         "supplier/offers/<int:pk>/",

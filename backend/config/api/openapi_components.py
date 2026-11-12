@@ -840,6 +840,60 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "RfqPage": paginated("Rfq"),
     "SupplierOffer": SUPPLIER_OFFER,
     "SupplierOfferPage": paginated("SupplierOffer"),
+    "SupplierOfferImportSatir": _obj(
+        {
+            "satir_no": _int(),
+            "varyant_id": _int(),
+            "sku": _str(),
+            "fiyat_modeli": _str(),
+            "birim_fiyat": _null_str(),
+            "gram": _null_str(),
+            "iscilik_override": _null_str(),
+            "para_birimi": _str(),
+            "tedarikci_kodu": _str(),
+        },
+        ["satir_no", "varyant_id", "fiyat_modeli"],
+    ),
+    "SupplierOfferImportHata": _obj(
+        {"satir_no": _int(), "hata": _str()},
+        ["satir_no", "hata"],
+    ),
+    "SupplierOfferImportPreview": _obj(
+        {
+            "server_now": _str(),
+            "satirlar": {
+                "type": "array",
+                "items": {"$ref": "#/components/schemas/SupplierOfferImportSatir"},
+            },
+            "hatalar": {
+                "type": "array",
+                "items": {"$ref": "#/components/schemas/SupplierOfferImportHata"},
+            },
+        },
+        ["server_now", "satirlar", "hatalar"],
+    ),
+    "SupplierOfferImportCommitResult": _obj(
+        {
+            "server_now": _null_str(),
+            "created": {
+                "type": "array",
+                "items": _obj(
+                    {
+                        "satir_no": _int(),
+                        "teklif_id": _int(),
+                        "varyant_id": _int(),
+                        "durum": _str(),
+                    }
+                ),
+            },
+            "hatalar": {
+                "type": "array",
+                "items": {"$ref": "#/components/schemas/SupplierOfferImportHata"},
+            },
+            "detail": _str(),
+        },
+        ["created", "hatalar"],
+    ),
     "RfqMatch": RFQ_MATCH,
     "RfqMatchCandidates": RFQ_MATCH_CANDIDATES,
     "RfqMatchList": RFQ_MATCH_LIST,
@@ -979,6 +1033,12 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/supplier/offers/": {
         "get": ("200", "SupplierOfferPage"),
         "post": ("201", "SupplierOffer"),
+    },
+    "/api/v1/supplier/offers/import/preview/": {
+        "post": ("200", "SupplierOfferImportPreview")
+    },
+    "/api/v1/supplier/offers/import/commit/": {
+        "post": ("201", "SupplierOfferImportCommitResult")
     },
     "/api/v1/supplier/offers/{id}/": {"get": ("200", "SupplierOffer")},
     "/api/v1/supplier/offers/{id}/submit/": {"post": ("200", "SupplierOffer")},

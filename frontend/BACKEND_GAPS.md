@@ -43,17 +43,17 @@ OpenAPI kaynağı: `docs/api/openapi-v1.json`. Aşağıdakiler **HTTP yüzünde 
 
 ---
 
-## GAP-F3-04 — Tedarikçi föy PDF/CSV içe aktarma
+## GAP-F3-04 — Tedarikçi föy CSV içe aktarma — **UYGULANDI** (2026-11-12; PDF sonra)
 
 | | |
 |--|--|
-| **İhtiyaç** | Yükleme → önizleme → hatalı satır düzeltme → onay (teklif taslakları) |
-| **Önerilen** | `POST /api/v1/supplier/offers/import/preview/` + `POST /api/v1/supplier/offers/import/commit/` |
-| **İstek (preview)** | multipart `file` (csv/pdf) + `Idempotency-Key` |
-| **Yanıt (preview)** | `{ "satirlar": [...], "hatalar": [{ "satir_no": 3, "hata": "..." }] }` |
-| **İstek (commit)** | `{ "satirlar": [ { "varyant_id": 1, "fiyat_modeli": "GRAM", "birim_fiyat": "..." } ] }` |
-| **Ekran** | Teklifler / tedarikçi portalı |
-| **Not** | `bulk-orders` CSV alıcı siparişi içindir; teklif föyü değil |
+| **İhtiyaç** | Yükleme → önizleme → hatalı satır → commit (taslak teklifler) |
+| **Uygulama** | `POST /supplier/offers/import/preview/` + `…/commit/` (`teklif_import_servisi`) |
+| **Preview** | multipart `file` **veya** JSON `{csv}`; PDF → 400 |
+| **Commit** | `{ "satirlar": [...] }` — hepsi geçerliyse atomic taslak; aksi yazma yok |
+| **CSV** | `fiyat_modeli` + (`varyant_id`\|`sku`); opsiyonel gram/birim_fiyat/iscilik_override/… |
+| **Ekran** | Teklifler sekmesi föy paneli |
+| **Kanıt** | `api.tests.test_supplier_offer_import_f304` |
 
 ---
 

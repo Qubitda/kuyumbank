@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { fiyatlamaService } from "../services";
-import type { SupplierRfq } from "../types";
+import type { SupplierOfferImportSatir, SupplierRfq } from "../types";
 import { formatMoney } from "@/lib/format";
 import {
   useSupplierRfqsQuery,
@@ -14,6 +14,7 @@ import {
   useSupplierRfqQuery,
   useFiyatlamaInvalidate,
 } from "../hooks";
+import { ApiError } from "@/lib/api/client";
 import {
   Table,
   TableHeader,
@@ -43,6 +44,7 @@ import {
   EyeOff,
   CheckCircle2,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { BlindPoolCallout } from "./blind-pool-callout";
@@ -105,6 +107,14 @@ export function SupplierRfqOffersView({
   const [selectedRfq, setSelectedRfq] = useState<SupplierRfq | null>(null);
 
   const [buyerRfqModalOpen, setBuyerRfqModalOpen] = useState(false);
+
+  const [importBusy, setImportBusy] = useState(false);
+  const [importPreviewRows, setImportPreviewRows] = useState<
+    SupplierOfferImportSatir[]
+  >([]);
+  const [importErrors, setImportErrors] = useState<
+    Array<{ satir_no: number; hata: string }>
+  >([]);
 
   // Tedarikçi Teklif Formu
   const {
@@ -280,6 +290,61 @@ export function SupplierRfqOffersView({
     }
   };
 
+  const handleImportFile = async (file: File | null) => {
+    if (!file) return;
+    if (file.name.toLowerCase().endsWith(".pdf")) {
+      setError("PDF föy henüz desteklenmiyor; CSV yükleyin.");
+      actionToast.error("PDF desteklenmiyor", null);
+      return;
+    }
+    setImportBusy(true);
+    setError(null);
+    try {
+      const text = await file.text();
+      const preview = await fiyatlamaService.previewOfferImport(text);
+      setImportPreviewRows(preview.satirlar || []);
+      setImportErrors(preview.hatalar || []);
+      if ((preview.satirlar || []).length === 0) {
+        actionToast.error("Önizlemede geçerli satır yok", null);
+      } else {
+        actionToast.success(
+          `${preview.satirlar.length} satır hazır` +
+            (preview.hatalar?.length ? `, ${preview.hatalar.length} hata` : "")
+        );
+      }
+    } catch (err) {
+      setImportPreviewRows([]);
+      setImportErrors([]);
+      setError(err instanceof Error ? err.message : "Föy önizleme başarısız.");
+      actionToast.error("Föy önizleme başarısız", err);
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
+  const handleImportCommit = async () => {
+    if (importPreviewRows.length === 0) return;
+    setImportBusy(true);
+    setError(null);
+    try {
+      const result = await fiyatlamaService.commitOfferImport(importPreviewRows);
+      setSuccessMsg(`${result.created.length} taslak teklif oluşturuldu.`);
+      actionToast.success("Föy commit tamam");
+      setImportPreviewRows([]);
+      setImportErrors([]);
+      await fetchData();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        const hatalar = (err.problem as { hatalar?: typeof importErrors }).hatalar;
+        if (Array.isArray(hatalar)) setImportErrors(hatalar);
+      }
+      setError(err instanceof Error ? err.message : "Föy commit başarısız.");
+      actionToast.error("Föy commit başarısız", err);
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Başlık ve Sekmeler */}
@@ -430,6 +495,57 @@ export function SupplierRfqOffersView({
         </div>
       ) : activeTab === "offers" ? (
         /* Tedarikçi Tekliflerim Tablosu */
+        <div className="flex flex-col gap-4">
+          <div className="rounded-[8px] border border-border bg-card p-4 space-y-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Föy CSV içe aktarma</p>
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  sütunlar: fiyat_modeli + (varyant_id|sku), gram, birim_fiyat — PDF yok
+                </p>
+              </div>
+              <label className="inline-flex items-center gap-2 text-xs">
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="text-xs file:mr-2 file:rounded-[4px] file:border file:border-border file:bg-muted file:px-2 file:py-1"
+                  disabled={importBusy}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    void handleImportFile(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Upload className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+              </label>
+            </div>
+            {importErrors.length > 0 ? (
+              <ul className="text-[11px] text-destructive space-y-0.5 font-mono">
+                {importErrors.slice(0, 8).map((h) => (
+                  <li key={`${h.satir_no}-${h.hata}`}>
+                    satır {h.satir_no}: {h.hata}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {importPreviewRows.length > 0 ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">
+                  Önizleme: {importPreviewRows.length} geçerli satır → taslak teklif
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 text-xs"
+                  disabled={importBusy}
+                  onClick={() => void handleImportCommit()}
+                >
+                  Commit ({importPreviewRows.length})
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
         <div className="rounded-[8px] border border-border bg-card overflow-hidden">
           {offers.length === 0 ? (
             <div className="p-8 text-center text-xs text-muted-foreground">
@@ -507,6 +623,7 @@ export function SupplierRfqOffersView({
               </TableBody>
             </Table>
           )}
+        </div>
         </div>
       ) : (
         /* Alıcı Özel Tasarım / RFQ Taleplerim (F10-020, F10-022) */

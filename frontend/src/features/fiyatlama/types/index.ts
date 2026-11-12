@@ -109,3 +109,39 @@ export interface SupplierOfferCreateRequest {
   gecerlilik_baslangic?: string;
   gecerlilik_bitis?: string;
 }
+
+/** GAP-F3-04 — CSV föy satırı */
+export interface SupplierOfferImportSatir {
+  satir_no: number;
+  varyant_id: number;
+  sku?: string;
+  fiyat_modeli: string;
+  birim_fiyat?: string | null;
+  gram?: string | null;
+  iscilik_override?: string | null;
+  para_birimi?: string;
+  tedarikci_kodu?: string;
+}
+
+export interface SupplierOfferImportHata {
+  satir_no: number;
+  hata: string;
+}
+
+export interface SupplierOfferImportPreview {
+  server_now: string;
+  satirlar: SupplierOfferImportSatir[];
+  hatalar: SupplierOfferImportHata[];
+}
+
+export interface SupplierOfferImportCommitResult {
+  server_now?: string | null;
+  created: Array<{
+    satir_no: number;
+    teklif_id: number;
+    varyant_id: number;
+    durum: string;
+  }>;
+  hatalar: SupplierOfferImportHata[];
+  detail?: string;
+}

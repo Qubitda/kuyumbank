@@ -3841,6 +3841,216 @@
         ],
         "type": "object"
       },
+      "SupplierOfferImportCommitRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "satirlar": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "birim_fiyat": {
+                  "type": "string"
+                },
+                "fiyat_modeli": {
+                  "type": "string"
+                },
+                "gram": {
+                  "type": "string"
+                },
+                "iscilik_override": {
+                  "type": "string"
+                },
+                "para_birimi": {
+                  "type": "string"
+                },
+                "satir_no": {
+                  "type": "integer"
+                },
+                "sku": {
+                  "type": "string"
+                },
+                "tedarikci_kodu": {
+                  "type": "string"
+                },
+                "varyant_id": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "varyant_id",
+                "fiyat_modeli"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "satirlar"
+        ],
+        "type": "object"
+      },
+      "SupplierOfferImportCommitResult": {
+        "properties": {
+          "created": {
+            "items": {
+              "properties": {
+                "durum": {
+                  "type": "string"
+                },
+                "satir_no": {
+                  "type": "integer"
+                },
+                "teklif_id": {
+                  "type": "integer"
+                },
+                "varyant_id": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "hatalar": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierOfferImportHata"
+            },
+            "type": "array"
+          },
+          "server_now": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "created",
+          "hatalar"
+        ],
+        "type": "object"
+      },
+      "SupplierOfferImportHata": {
+        "properties": {
+          "hata": {
+            "type": "string"
+          },
+          "satir_no": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "satir_no",
+          "hata"
+        ],
+        "type": "object"
+      },
+      "SupplierOfferImportPreview": {
+        "properties": {
+          "hatalar": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierOfferImportHata"
+            },
+            "type": "array"
+          },
+          "satirlar": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierOfferImportSatir"
+            },
+            "type": "array"
+          },
+          "server_now": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "server_now",
+          "satirlar",
+          "hatalar"
+        ],
+        "type": "object"
+      },
+      "SupplierOfferImportPreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "content_type": {
+            "type": "string"
+          },
+          "csv": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SupplierOfferImportSatir": {
+        "properties": {
+          "birim_fiyat": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fiyat_modeli": {
+            "type": "string"
+          },
+          "gram": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "iscilik_override": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "para_birimi": {
+            "type": "string"
+          },
+          "satir_no": {
+            "type": "integer"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "tedarikci_kodu": {
+            "type": "string"
+          },
+          "varyant_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "satir_no",
+          "varyant_id",
+          "fiyat_modeli"
+        ],
+        "type": "object"
+      },
       "SupplierOfferPage": {
         "properties": {
           "count": {
@@ -15345,6 +15555,192 @@
           }
         },
         "summary": "POST /api/v1/supplier/offers/",
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/import/commit/": {
+      "post": {
+        "description": "POST JSON {satirlar: [...]} — hepsi geçerliyse taslak teklifler.",
+        "operationId": "createSupplierOfferImportCommit",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierOfferImportCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierOfferImportCommitResult"
+                }
+              }
+            },
+            "description": "SupplierOfferImportCommitResult"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/supplier/offers/import/commit/",
+        "tags": [
+          "supplier"
+        ]
+      }
+    },
+    "/api/v1/supplier/offers/import/preview/": {
+      "post": {
+        "description": "POST multipart file=…csv veya JSON {csv: \"...\"}.",
+        "operationId": "createSupplierOfferImportPreview",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierOfferImportPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierOfferImportPreview"
+                }
+              }
+            },
+            "description": "SupplierOfferImportPreview"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "POST /api/v1/supplier/offers/import/preview/",
         "tags": [
           "supplier"
         ]

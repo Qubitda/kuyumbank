@@ -2200,6 +2200,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/supplier/offers/import/commit/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /api/v1/supplier/offers/import/commit/
+         * @description POST JSON {satirlar: [...]} — hepsi geçerliyse taslak teklifler.
+         */
+        post: operations["createSupplierOfferImportCommit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/supplier/offers/import/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /api/v1/supplier/offers/import/preview/
+         * @description POST multipart file=…csv veya JSON {csv: "..."}.
+         */
+        post: operations["createSupplierOfferImportPreview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/supplier/offers/{id}/": {
         parameters: {
             query?: never;
@@ -3325,6 +3365,55 @@ export interface components {
             tedarikci_kodu?: string;
             temin_tipi?: string;
             uretim_suresi_gun?: number;
+            varyant_id: number;
+        };
+        SupplierOfferImportCommitRequest: {
+            satirlar: {
+                birim_fiyat?: string;
+                fiyat_modeli: string;
+                gram?: string;
+                iscilik_override?: string;
+                para_birimi?: string;
+                satir_no?: number;
+                sku?: string;
+                tedarikci_kodu?: string;
+                varyant_id: number;
+            }[];
+        };
+        SupplierOfferImportCommitResult: {
+            created: {
+                durum?: string;
+                satir_no?: number;
+                teklif_id?: number;
+                varyant_id?: number;
+            }[];
+            detail?: string;
+            hatalar: components["schemas"]["SupplierOfferImportHata"][];
+            server_now?: string | null;
+        };
+        SupplierOfferImportHata: {
+            hata: string;
+            satir_no: number;
+        };
+        SupplierOfferImportPreview: {
+            hatalar: components["schemas"]["SupplierOfferImportHata"][];
+            satirlar: components["schemas"]["SupplierOfferImportSatir"][];
+            server_now: string;
+        };
+        SupplierOfferImportPreviewRequest: {
+            content_type?: string;
+            csv?: string;
+            filename?: string;
+        };
+        SupplierOfferImportSatir: {
+            birim_fiyat?: string | null;
+            fiyat_modeli: string;
+            gram?: string | null;
+            iscilik_override?: string | null;
+            para_birimi?: string;
+            satir_no: number;
+            sku?: string;
+            tedarikci_kodu?: string;
             varyant_id: number;
         };
         SupplierOfferPage: {
@@ -12671,6 +12760,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SupplierOffer"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    createSupplierOfferImportCommit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierOfferImportCommitRequest"];
+            };
+        };
+        responses: {
+            /** @description SupplierOfferImportCommitResult */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOfferImportCommitResult"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    createSupplierOfferImportPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SupplierOfferImportPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description SupplierOfferImportPreview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupplierOfferImportPreview"];
                 };
             };
             /** @description Problem+JSON */
