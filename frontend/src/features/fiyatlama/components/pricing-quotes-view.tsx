@@ -140,9 +140,9 @@ export function PricingQuotesView() {
         <p className="text-xs text-muted-foreground">
           Liste GET yok. Sepetteki quote_id’ler ve oturumda oluşturulan kayıtlar
           gösterilir. Süre dolunca kilitleme kapanır; yenileme GET quote ile.
-          Canlı borsa / global marj API yok —{" "}
-          <span className="font-mono text-[10px]">BACKEND_GAPS.md</span>{" "}
-          GAP-F3-01/02.
+          Borsa şeridi: <span className="font-mono text-[10px]">GET /piyasa/pano/</span>
+          . Global marj API yok —{" "}
+          <span className="font-mono text-[10px]">BACKEND_GAPS.md</span> GAP-F3-02.
         </p>
       </div>
 

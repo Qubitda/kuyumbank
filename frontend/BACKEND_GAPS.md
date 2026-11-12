@@ -4,16 +4,16 @@ OpenAPI kaynağı: `docs/api/openapi-v1.json`. Aşağıdakiler **HTTP yüzünde 
 
 ---
 
-## GAP-F3-01 — Canlı borsa / piyasa panosu
+## GAP-F3-01 — Canlı borsa / piyasa panosu — **UYGULANDI** (2026-11-12)
 
 | | |
 |--|--|
 | **İhtiyaç** | Portalda canlı (veya LKG) metal/kur panosu; alıcıya yalnızca görüntü |
-| **Önerilen endpoint** | `GET /api/v1/piyasa/pano/` (tenant: authenticated; alanlar maskeli) |
-| **İstek** | — (query: `olcek=ONS\|KG` opsiyonel) |
-| **Yanıt örneği** | `{ "server_now": "...", "satirlar": [{ "kod": "AU24", "fiyat": "3125.50", "para_birimi": "TRY", "kaynak": "LKG", "guncelleme": "..." }] }` |
-| **Ekran** | Header/dashboard borsa şeridi; fiyatlama bağlamı |
-| **Not** | Django `piyasa` app + Admin var; `/api/v1` path yok |
+| **Uygulama** | `GET /api/v1/piyasa/pano/?olcek=ONS\|KG\|GRAM` — `PiyasaPanoView` + `present_buyer_pano` |
+| **Yanıt** | `{ "server_now", "olcek", "satirlar": [{ "kod", "ad", "fiyat", "para_birimi", "olcek", "kaynak", "guncelleme", "banner" }] }` |
+| **Yasak** | `alis_marj`, `satis_marj`, `marj_modu`, detay/saf kur |
+| **Ekran** | Header `PiyasaPanoStrip` |
+| **Kanıt** | `api.tests.test_piyasa_pano_f301` |
 
 ---
 

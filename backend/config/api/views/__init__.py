@@ -107,6 +107,7 @@ from .rfq_eslestirme import (
     OpsRfqMatchListCreateView,
     OpsRfqMatchRejectView,
 )
+from .piyasa_pano import PiyasaPanoView
 from .sales_channels import SalesChannelListView
 from .shipment import ShipmentDetailView, ShipmentListView
 from .supplier import (
@@ -164,6 +165,7 @@ __all__ = [
     "CreditMineView",
     "HealthView",
     "ReadyView",
+    "PiyasaPanoView",
     "SalesChannelListView",
     "MeView",
     "OpsFinanceCariListView",

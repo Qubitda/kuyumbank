@@ -553,7 +553,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 |---------|-----|-----|------------------|
 | — | Faz A | Docs/lockfile/`paa`/host/CI e2e | **UYGULANDI** 2026-11-12 (`0eb1993`) |
 | — | GAP-F3-03 | İşçilik/has alıcı net özeti | **UYGULANDI** — `BuyerQuote.net_ozet` / `iscilik_vergisiz` / `has_gram` |
-| P1 | GAP-F3-01 | `GET /piyasa/pano/` | Model+admin var; endpoint yok |
+| — | GAP-F3-01 | `GET /piyasa/pano/` | **UYGULANDI** — maskeli board; Header şerit |
 | P1 | GAP-F3-04 | Föy import preview→commit | CSV önce, PDF sonra |
 | P1 | GAP-F3-06+05 | RFQ↔offer + montür/taş | Birlikte tasarım; geçici `aciklama` kaldır |
 | P2 | GAP-F3-02 | Marj politikası API (ops) | Alıcıya marj kırılımı **yasak** (test) |
@@ -577,11 +577,11 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 **Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
 1. Oku: AGENTS.md → **§2** (gerçek durum) + **§12** → görev ADR.  
-2. **Sıradaki:** GAP-F3-01 backend; soft-launch seed/act-as; FRONTEND_PORTAL_BASE_URL.
+2. **Sıradaki:** GAP-F3-04 föy import; soft-launch seed/act-as; FRONTEND_PORTAL_BASE_URL.
 3. Ops: createcachetable + cron outbox/email; secret rotasyon; yedek §7; INVITE_TTL_HOURS / EMAIL_VERIFY_REQUIRED_FOR_WRITE.
 4. Bilinçli erteli: tam suite kilidi, gerçek ödeme/kargo (yol B), K-014 PDF, MOQ.
 5. Auth: API login/MFA/reset/invite/verify; Admin login; HTML portal yok (ADR-0029).
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **742 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-12 — GAP-F3-03 BuyerQuote net_ozet (işçilik/has); sıradaki F3-01.*
+*Son güncelleme: 2026-11-12 — GAP-F3-01 `/piyasa/pano/`; sıradaki F3-04.*

@@ -3120,6 +3120,129 @@
         ],
         "type": "object"
       },
+      "PiyasaPano": {
+        "properties": {
+          "olcek": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "satirlar": {
+            "items": {
+              "properties": {
+                "ad": {
+                  "type": "string"
+                },
+                "banner": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "fiyat": {
+                  "type": "string"
+                },
+                "guncelleme": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "kaynak": {
+                  "type": "string"
+                },
+                "kod": {
+                  "type": "string"
+                },
+                "olcek": {
+                  "type": "string"
+                },
+                "para_birimi": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kod",
+                "fiyat",
+                "para_birimi",
+                "kaynak"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "server_now": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "server_now",
+          "satirlar"
+        ],
+        "type": "object"
+      },
+      "PiyasaPanoSatir": {
+        "properties": {
+          "ad": {
+            "type": "string"
+          },
+          "banner": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fiyat": {
+            "type": "string"
+          },
+          "guncelleme": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kaynak": {
+            "type": "string"
+          },
+          "kod": {
+            "type": "string"
+          },
+          "olcek": {
+            "type": "string"
+          },
+          "para_birimi": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kod",
+          "fiyat",
+          "para_birimi",
+          "kaynak"
+        ],
+        "type": "object"
+      },
       "PriceLockCreateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -12728,6 +12851,89 @@
         "summary": "POST /api/v1/payments/webhook/",
         "tags": [
           "payments"
+        ]
+      }
+    },
+    "/api/v1/piyasa/pano/": {
+      "get": {
+        "description": "GET /api/v1/piyasa/pano/?olcek=ONS|KG|GRAM — alıcı board; marj yok.",
+        "operationId": "listPiyasaPanos",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PiyasaPano"
+                }
+              }
+            },
+            "description": "PiyasaPano"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Problem+JSON"
+          }
+        },
+        "summary": "GET /api/v1/piyasa/pano/",
+        "tags": [
+          "piyasa"
         ]
       }
     },

@@ -339,6 +339,27 @@ BUYER_QUOTE_NET_OZET = _obj(
         "has_gram": _null_str(),
     }
 )
+PIYASA_PANO_SATIR = _obj(
+    {
+        "kod": _str(),
+        "ad": _str(),
+        "fiyat": _str(),
+        "para_birimi": _str(),
+        "olcek": _str(),
+        "kaynak": _str(),
+        "guncelleme": _null_str(),
+        "banner": _null_str(),
+    },
+    ["kod", "fiyat", "para_birimi", "kaynak"],
+)
+PIYASA_PANO = _obj(
+    {
+        "server_now": _str(),
+        "olcek": _null_str(),
+        "satirlar": {"type": "array", "items": PIYASA_PANO_SATIR},
+    },
+    ["server_now", "satirlar"],
+)
 BUYER_QUOTE = _obj(
     {
         "id": _int(),
@@ -786,6 +807,8 @@ COMPONENT_SCHEMAS: dict[str, dict] = {
     "BuyerCatalogDetail": BUYER_CATALOG_DETAIL,
     "BuyerCatalogPage": paginated("BuyerCatalogItem"),
     "BuyerQuote": BUYER_QUOTE,
+    "PiyasaPano": PIYASA_PANO,
+    "PiyasaPanoSatir": PIYASA_PANO_SATIR,
     "BuyerPriceLock": BUYER_PRICE_LOCK,
     "BuyerCart": BUYER_CART,
     "BuyerCartLine": BUYER_CART_LINE,
@@ -872,6 +895,7 @@ RESPONSE_BINDINGS: dict[str, _R] = {
     "/api/v1/catalog/{id}/": {"get": ("200", "BuyerCatalogDetail")},
     "/api/v1/quotes/": {"post": ("201", "BuyerQuote")},
     "/api/v1/quotes/{id}/": {"get": ("200", "BuyerQuote")},
+    "/api/v1/piyasa/pano/": {"get": ("200", "PiyasaPano")},
     "/api/v1/price-locks/": {"post": ("201", "BuyerPriceLock")},
     "/api/v1/price-locks/{id}/": {"get": ("200", "BuyerPriceLock")},
     "/api/v1/carts/me/": {"get": ("200", "BuyerCart")},
@@ -996,6 +1020,7 @@ TAG_BY_PREFIX = (
     ("/api/v1/catalog/", "catalog"),
     ("/api/v1/quotes/", "pricing"),
     ("/api/v1/price-locks/", "pricing"),
+    ("/api/v1/piyasa/", "piyasa"),
     ("/api/v1/carts/", "cart"),
     ("/api/v1/checkouts/", "checkout"),
     ("/api/v1/bulk-orders/", "orders"),

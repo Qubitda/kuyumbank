@@ -1708,6 +1708,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/piyasa/pano/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /api/v1/piyasa/pano/
+         * @description GET /api/v1/piyasa/pano/?olcek=ONS|KG|GRAM — alıcı board; marj yok.
+         */
+        get: operations["listPiyasaPanos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/price-locks/": {
         parameters: {
             query?: never;
@@ -3122,6 +3142,30 @@ export interface components {
             };
             /** @default fake */
             provider: string;
+        };
+        PiyasaPano: {
+            olcek?: string | null;
+            satirlar: {
+                ad?: string;
+                banner?: string | null;
+                fiyat: string;
+                guncelleme?: string | null;
+                kaynak: string;
+                kod: string;
+                olcek?: string;
+                para_birimi: string;
+            }[];
+            server_now: string;
+        };
+        PiyasaPanoSatir: {
+            ad?: string;
+            banner?: string | null;
+            fiyat: string;
+            guncelleme?: string | null;
+            kaynak: string;
+            kod: string;
+            olcek?: string;
+            para_birimi: string;
         };
         PriceLockCreateRequest: {
             quote_id: number;
@@ -10552,6 +10596,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WebhookAck"];
+                };
+            };
+            /** @description Problem+JSON */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Problem+JSON */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    listPiyasaPanos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description PiyasaPano */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PiyasaPano"];
                 };
             };
             /** @description Problem+JSON */

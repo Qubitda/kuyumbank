@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { MeResponse } from "@/lib/api/types";
+import { PiyasaPanoStrip } from "@/features/piyasa";
 
 interface HeaderProps {
   user?: MeResponse | null;
@@ -49,19 +50,20 @@ export function Header({ user, onLogout }: HeaderProps) {
       className="flex h-[56px] w-full items-center justify-between border-b border-border bg-card px-6"
       role="banner"
     >
-      <div className="flex items-center gap-3">
-        <h1 className="text-base font-semibold tracking-tight text-foreground">
+      <div className="flex items-center gap-3 min-w-0">
+        <h1 className="text-base font-semibold tracking-tight text-foreground shrink-0">
           {currentTitle}
         </h1>
         <span
-          className="font-mono text-xs text-muted-foreground border-l border-border pl-3"
+          className="hidden xl:inline font-mono text-xs text-muted-foreground border-l border-border pl-3 shrink-0"
           aria-hidden="true"
         >
           {pathname}
         </span>
+        {user ? <PiyasaPanoStrip /> : null}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
         <ThemeToggle />
 
         {user ? (
