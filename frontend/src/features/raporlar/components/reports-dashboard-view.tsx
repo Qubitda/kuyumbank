@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { raporlarService } from "../services";
-import type {
-  CommercialOrderReport,
-  BuyerBehaviorReport,
-  RevenueAnomalyReport,
-} from "../types";
+import React, { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  useBuyerBehaviorQuery,
+  useCommercialOrdersQuery,
+  useRevenueAnomaliesQuery,
+} from "../hooks";
 import { formatMoney } from "@/lib/format";
 import {
   Table,
@@ -25,57 +25,72 @@ import {
   ShieldAlert,
   RefreshCw,
   AlertCircle,
-  Package,
-  ShoppingCart,
   Calendar,
 } from "lucide-react";
 
 export function ReportsDashboardView() {
-  const [activeTab, setActiveTab] = useState<"commercial" | "behavior" | "anomaly">("commercial");
-
-  const [orderReport, setOrderReport] = useState<CommercialOrderReport | null>(null);
-  const [behaviorReport, setBehaviorReport] = useState<BuyerBehaviorReport | null>(null);
-  const [anomalyReport, setAnomalyReport] = useState<RevenueAnomalyReport | null>(null);
-
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [esikCiro, setEsikCiro] = useState("500000");
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchReports = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = {
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-      };
-
-      const [commRes, behRes, anomRes] = await Promise.allSettled([
-        raporlarService.getCommercialOrders(params),
-        raporlarService.getBuyerBehavior(params),
-        raporlarService.getRevenueAnomalies(esikCiro),
-      ]);
-
-      if (commRes.status === "fulfilled") setOrderReport(commRes.value);
-      if (behRes.status === "fulfilled") setBehaviorReport(behRes.value);
-      if (anomRes.status === "fulfilled") setAnomalyReport(anomRes.value);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Rapor verileri alınamadı.");
-    } finally {
-      setLoading(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"commercial" | "behavior" | "anomaly">(
+    () => {
+      const t = searchParams.get("tab");
+      if (t === "behavior" || t === "anomaly" || t === "commercial") return t;
+      return "commercial";
     }
-  };
+  );
 
-  useEffect(() => {
-    fetchReports();
-  }, []);
+  const dateFrom = searchParams.get("from") || "";
+  const dateTo = searchParams.get("to") || "";
+  const esikCiro = searchParams.get("esik") || "500000";
+
+  const [draftFrom, setDraftFrom] = useState(dateFrom);
+  const [draftTo, setDraftTo] = useState(dateTo);
+  const [draftEsik, setDraftEsik] = useState(esikCiro);
+
+  const commercialQ = useCommercialOrdersQuery(dateFrom, dateTo);
+  const behaviorQ = useBuyerBehaviorQuery(dateFrom, dateTo);
+  const anomalyQ = useRevenueAnomaliesQuery(esikCiro);
+
+  const orderReport = commercialQ.data ?? null;
+  const behaviorReport = behaviorQ.data ?? null;
+  const anomalyReport = anomalyQ.data ?? null;
+
+  const loading =
+    commercialQ.isLoading || behaviorQ.isLoading || anomalyQ.isLoading;
+  const error = useMemo(() => {
+    if (
+      commercialQ.isError &&
+      behaviorQ.isError &&
+      anomalyQ.isError
+    ) {
+      return "Rapor verileri alınamadı.";
+    }
+    return null;
+  }, [commercialQ.isError, behaviorQ.isError, anomalyQ.isError]);
+
+  const fetchReports = () => {
+    void commercialQ.refetch();
+    void behaviorQ.refetch();
+    void anomalyQ.refetch();
+  };
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchReports();
+    const next = new URLSearchParams(searchParams);
+    if (draftFrom) next.set("from", draftFrom);
+    else next.delete("from");
+    if (draftTo) next.set("to", draftTo);
+    else next.delete("to");
+    if (draftEsik) next.set("esik", draftEsik);
+    else next.delete("esik");
+    next.set("tab", activeTab);
+    setSearchParams(next, { replace: true });
+  };
+
+  const selectTab = (tab: "commercial" | "behavior" | "anomaly") => {
+    setActiveTab(tab);
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", tab);
+    setSearchParams(next, { replace: true });
   };
 
   return (
@@ -94,7 +109,7 @@ export function ReportsDashboardView() {
         <div className="flex items-center gap-1 rounded-[6px] border border-border bg-muted/40 p-1">
           <button
             type="button"
-            onClick={() => setActiveTab("commercial")}
+            onClick={() => selectTab("commercial")}
             className={`flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === "commercial"
                 ? "bg-card text-foreground shadow-xs"
@@ -106,7 +121,7 @@ export function ReportsDashboardView() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("behavior")}
+            onClick={() => selectTab("behavior")}
             className={`flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === "behavior"
                 ? "bg-card text-foreground shadow-xs"
@@ -118,7 +133,7 @@ export function ReportsDashboardView() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("anomaly")}
+            onClick={() => selectTab("anomaly")}
             className={`flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium transition-colors ${
               activeTab === "anomaly"
                 ? "bg-card text-foreground shadow-xs"
@@ -143,8 +158,8 @@ export function ReportsDashboardView() {
           </span>
           <Input
             type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
+            value={draftFrom}
+            onChange={(e) => setDraftFrom(e.target.value)}
             className="h-8 text-xs w-36"
           />
         </div>
@@ -156,8 +171,8 @@ export function ReportsDashboardView() {
           </span>
           <Input
             type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
+            value={draftTo}
+            onChange={(e) => setDraftTo(e.target.value)}
             className="h-8 text-xs w-36"
           />
         </div>
@@ -167,10 +182,10 @@ export function ReportsDashboardView() {
             <span className="text-xs text-muted-foreground">Eşik Ciro (TRY)</span>
             <Input
               type="text"
-              value={esikCiro}
-              onChange={(e) => setEsikCiro(e.target.value)}
+              value={draftEsik}
+              onChange={(e) => setDraftEsik(e.target.value)}
               placeholder="500000"
-              className="h-8 text-xs w-36"
+              className="h-8 text-xs w-36 font-mono tabular-nums"
             />
           </div>
         )}

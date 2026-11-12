@@ -57,7 +57,7 @@ AUTO blokları ve veri sözlüğü: `python scripts/docs_sync.py` (+ CI `--check
 3. Kabul edilmiş ADR’yi yeniden tartışma; Taslak’ı kendi kendine Kabul etme.
 4. Analiz yeterliyse kodla; bitince master’ı güncelle (kod + test + docs birlikte).
 5. Odak test → (dilim kapanışında / kullanıcı isterse) suite. PG kısıtını SQLite ile “geçti” sayma.
-5b. **Next/FE dilim:** `frontend` altında `npm run smoke` (same-origin rewrite CSRF→login→/me). Django doğrudan 200 smoke sayılmaz; ayrıntı `frontend/AGENTS.md` + `.cursor/rules/06-integration-gates.mdc`.
+5b. **Vite FE dilim (ADR-0031):** `frontend` altında `npm run build` / `npm run dev` (Vite `/api` proxy → Django). Same-origin session/CSRF; Django doğrudan 200 smoke sayılmaz.
 6. Üretim `migrate` / secret / yıkıcı git **kullanıcı onayı olmadan yok**.
 7. Rapor: Tamamlananlar / Testler / Riskler / Sonraki faz (+ değişen dosyalar).
 

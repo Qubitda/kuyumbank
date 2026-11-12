@@ -1,21 +1,32 @@
 import { apiFetch, newIdempotencyKey } from "@/lib/api/client";
 import type { Paginated } from "@/lib/api/types";
 import type {
+  BuyerReturn,
+  BuyerReturnPage,
+  BuyerShipment,
+  DispatchShipmentRequest,
   OpsShipment,
   OpsShipmentPage,
-  BuyerReturnPage,
-  BuyerReturn,
-  DispatchShipmentRequest,
+  PodRequest,
+  ShipmentCreateRequest,
 } from "../types";
 
 export const lojistikService = {
   getShipments(): Promise<OpsShipmentPage> {
     return apiFetch<OpsShipmentPage>("/ops/shipments/");
   },
-  getBuyerShipments(): Promise<
-    Paginated<{ id: number; durum: string; order_id?: number }>
-  > {
-    return apiFetch("/shipments/");
+  getBuyerShipments(
+    params?: Record<string, string>
+  ): Promise<Paginated<BuyerShipment>> {
+    const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+    return apiFetch(`/shipments/${query}`);
+  },
+  createShipment(data: ShipmentCreateRequest): Promise<OpsShipment> {
+    return apiFetch<OpsShipment>("/ops/shipments/", {
+      method: "POST",
+      body: data,
+      idempotencyKey: newIdempotencyKey(),
+    });
   },
   prepareShipment(id: number | string): Promise<OpsShipment> {
     return apiFetch<OpsShipment>(`/ops/shipments/${id}/prepare/`, {
@@ -39,10 +50,13 @@ export const lojistikService = {
       idempotencyKey: newIdempotencyKey(),
     });
   },
-  submitPod(
-    id: number | string,
-    data: { teslim_alan: string; notlar?: string; belgeler_ref?: string }
-  ): Promise<OpsShipment> {
+  cancelShipment(id: number | string): Promise<OpsShipment> {
+    return apiFetch<OpsShipment>(`/ops/shipments/${id}/cancel/`, {
+      method: "POST",
+      idempotencyKey: newIdempotencyKey(),
+    });
+  },
+  submitPod(id: number | string, data: PodRequest): Promise<OpsShipment> {
     return apiFetch<OpsShipment>(`/ops/shipments/${id}/pod/`, {
       method: "POST",
       body: data,

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { stokService } from "../services";
+import { useAdjustStockMutation, useSupplierStockQuery } from "../hooks";
 import { stockAdjustmentSchema, type StockAdjustmentInput } from "../schemas";
-import type { StockBalance } from "../types";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { mapCommerceError } from "@/lib/api/commerce-errors";
 import {
   Table,
   TableHeader,
@@ -27,11 +28,10 @@ import {
 import { Boxes, RefreshCw, AlertCircle, Plus } from "lucide-react";
 
 export function StockManagementView() {
-  const [balances, setBalances] = useState<StockBalance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const actionToast = useActionToast();
+  const stockQ = useSupplierStockQuery();
+  const adjustMut = useAdjustStockMutation();
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [adjustSuccess, setAdjustSuccess] = useState<string | null>(null);
 
   const {
     register,
@@ -48,40 +48,25 @@ export function StockManagementView() {
     },
   });
 
-  const fetchStock = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await stokService.listSupplierStock();
-      setBalances(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Stok verisi alınamadı.");
-      setBalances([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStock();
-  }, []);
+  const balances = stockQ.data ?? [];
+  const loading = stockQ.isLoading;
+  const error = stockQ.isError
+    ? mapCommerceError(stockQ.error, "Stok verisi alınamadı.")
+    : null;
 
   const onAdjustSubmit = async (data: StockAdjustmentInput) => {
-    setError(null);
-    setAdjustSuccess(null);
     try {
-      await stokService.adjustStock({
+      await adjustMut.mutateAsync({
         warehouse_id: Number(data.warehouse_id),
         teklif_id: Number(data.teklif_id),
         miktar: data.miktar,
-        neden: data.neden,
+        neden: data.neden || "",
       });
-      setAdjustSuccess("Stok düzeltmesi kaydedildi.");
+      actionToast.success("Stok düzeltmesi kaydedildi");
       reset();
       setAdjustOpen(false);
-      await fetchStock();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Stok hareketi işlenemedi.");
+      actionToast.error("Stok hareketi işlenemedi", err);
     }
   };
 
@@ -93,27 +78,30 @@ export function StockManagementView() {
             Stok & Depo Dengesi
           </h1>
           <p className="text-xs text-muted-foreground">
-            `GET /supplier/stock/` — available / reserved / on_hand.
+            `GET /supplier/stock/` — available / reserved / on_hand. Depo
+            listesi API’de yok (GAP-F4-03).
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setAdjustSuccess(null);
-            setAdjustOpen(true);
-          }}
-          className="gap-2"
-          size="sm"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Stok Düzeltmesi</span>
-        </Button>
-      </div>
-
-      {adjustSuccess && (
-        <div className="rounded-[6px] border border-border bg-muted/60 p-3 text-xs text-foreground font-medium">
-          {adjustSuccess}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void stockQ.refetch()}
+            className="gap-1.5"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Yenile
+          </Button>
+          <Button
+            onClick={() => setAdjustOpen(true)}
+            className="gap-2"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Stok Düzeltmesi</span>
+          </Button>
         </div>
-      )}
+      </div>
 
       {error && (
         <div
@@ -127,7 +115,7 @@ export function StockManagementView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchStock}
+            onClick={() => void stockQ.refetch()}
             className="h-8 border-destructive/30"
           >
             Yeniden Dene
@@ -146,7 +134,9 @@ export function StockManagementView() {
         ) : balances.length === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center gap-2 text-center p-6 text-xs text-muted-foreground">
             <Boxes className="h-8 w-8 opacity-40 mb-1" />
-            <span className="text-sm font-medium text-foreground">Veri bulunamadı</span>
+            <span className="text-sm font-medium text-foreground">
+              Veri bulunamadı
+            </span>
             <span className="max-w-sm">Tedarikçi stok bakiyesi dönmedi.</span>
           </div>
         ) : (
@@ -167,13 +157,13 @@ export function StockManagementView() {
                 <TableRow
                   key={`${b.warehouse_id ?? "w"}-${b.teklif_id ?? "t"}-${b.varyant_id}`}
                 >
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="font-mono text-xs tabular-nums">
                     {b.warehouse_id != null ? `#${b.warehouse_id}` : "—"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">
+                  <TableCell className="font-mono text-xs tabular-nums">
                     {b.teklif_id != null ? `#${b.teklif_id}` : "—"}
                   </TableCell>
-                  <TableCell className="font-mono text-xs font-medium">
+                  <TableCell className="font-mono text-xs font-medium tabular-nums">
                     #{b.varyant_id}
                   </TableCell>
                   <TableCell className="font-mono text-xs">{b.birim}</TableCell>
@@ -198,20 +188,26 @@ export function StockManagementView() {
           <DialogHeader>
             <DialogTitle>Stok Düzeltmesi</DialogTitle>
             <DialogDescription>
-              `POST /supplier/stock/adjustments/` — warehouse_id, teklif_id, miktar.
+              `POST /supplier/stock/adjustments/` — warehouse_id, teklif_id,
+              miktar (string Decimal).
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onAdjustSubmit)} className="flex flex-col gap-4 pt-2">
+          <form
+            onSubmit={handleSubmit(onAdjustSubmit)}
+            className="flex flex-col gap-4 pt-2"
+          >
             <div className="space-y-1.5">
               <Label htmlFor="warehouse_id">Warehouse ID</Label>
               <Input
                 id="warehouse_id"
                 type="number"
-                className="font-mono"
+                className="font-mono tabular-nums"
                 {...register("warehouse_id", { valueAsNumber: true })}
               />
               {errors.warehouse_id && (
-                <p className="text-xs text-destructive">{errors.warehouse_id.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.warehouse_id.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -219,18 +215,26 @@ export function StockManagementView() {
               <Input
                 id="teklif_id"
                 type="number"
-                className="font-mono"
+                className="font-mono tabular-nums"
                 {...register("teklif_id", { valueAsNumber: true })}
               />
               {errors.teklif_id && (
-                <p className="text-xs text-destructive">{errors.teklif_id.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.teklif_id.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="miktar">Miktar</Label>
-              <Input id="miktar" className="font-mono" {...register("miktar")} />
+              <Input
+                id="miktar"
+                className="font-mono tabular-nums"
+                {...register("miktar")}
+              />
               {errors.miktar && (
-                <p className="text-xs text-destructive">{errors.miktar.message}</p>
+                <p className="text-xs text-destructive">
+                  {errors.miktar.message}
+                </p>
               )}
             </div>
             <div className="space-y-1.5">
@@ -238,10 +242,17 @@ export function StockManagementView() {
               <Input id="neden" {...register("neden")} />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setAdjustOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAdjustOpen(false)}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting || adjustMut.isPending}
+              >
                 Kaydet
               </Button>
             </div>

@@ -1,6 +1,0 @@
-{
-  "name": "Kuyumbank",
-  "description": "Kuyumbank bankacılık ve finans yönetim platformu.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

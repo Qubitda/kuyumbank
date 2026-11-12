@@ -2,7 +2,7 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-11 — NX-FE hardening (docs auth, MFA problem+json, `/ready/`, Token revoke); OpenAPI **106** path / **120** op; [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md)
+**Güncelleme:** 2026-11-12 — FE FAZ 5: firmalar/tanimlar/belgeler/profil/dashboard/raporlar Query; rapor URL filtreleri; GAP-F5-01…03
 **Dal:** `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
@@ -76,8 +76,8 @@ Hedef: **HYCOM Prosperer sınıfı** B2B Commerce yetenek seti (katalog, fiyat l
 | PostgreSQL + psycopg | varsayılan DB | UYGULANDI |
 | django-environ, import-export, Pillow, **DRF 3.18.3** | requirements | UYGULANDI |
 | Celery / Redis | requirements’ta yok (bilinçli) | PLANLANDI |
-| Next.js `frontend/` | **NX-FE UYGULANDI** (iskelet; App Router + session/CSRF rewrite); uyum denetimi [FRONTEND_ARCHITECTURE §9](../frontend/docs/FRONTEND_ARCHITECTURE.md) | ADR-0017 **Taslak** |
-| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B7** + act-as/invite; ADR-0029 API-only) | KISMİ (Next portal yok) |
+| Vite SPA `frontend/` | **ADR-0031 Kabul** — RR + Query; CSRF fail-loud; yazmada Idempotency-Key; toast; SW network-first (`v2`); Next shim yok | ADR-0017 API + ADR-0031 UI |
+| HTTP yüzeyi | `admin/` + `/api/v1/` (**B1–B7** + act-as/invite; ADR-0029 API-only) + Vite portal | UYGULANDI (Vite) |
 
 ### 2.2 Uygulama / paketler (ADR-0004)
 
@@ -148,7 +148,7 @@ Alan düzeyinde ve otomatik: [DATA_DICTIONARY](DATA_DICTIONARY.md).
 - API: B1–B7 tenant 404/403 + maske; client `firma_id` yok sayılır; Token + Basic + Session; throttle; OpenAPI `--check`.  
 - AuditOlay: create OK; instance/QuerySet UPDATE/DELETE yasak (AUD-001); `ip_address`/`changes` (AUD-001b).  
 - F8-002: `X-Request-ID` + structured log; secret scrub (`logging_utils`). F8-007 IDOR smoke paketi.  
-- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi; Next.js ürün portalı (katalog/sepet). **Var:** Sentry SDK (DSN opt-in); `frontend/` NX-FE iskelet. Django HTML portal **kaldırıldı** (ADR-0029).
+- **Yok (henüz):** tam Prosperer API / object-level DRF perm matrisi. **Var:** Sentry SDK (DSN opt-in); Vite SPA portal ([ADR-0031](decisions/ADR-0031-vite-spa-portal.md)). Django HTML portal **kaldırıldı** (ADR-0029).
 
 ### 2.7 Test / migration / yüzey (otomatik + koşu sonucu)
 
@@ -420,7 +420,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | Madde | Değer |
 |-------|--------|
 | Dal | `adim-1-ilerleme` |
-| Faz | F4–F8 **UYGULANDI** · F9 HTML **Deprecated** (ADR-0029) · **NX-FE UYGULANDI** · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
+| Faz | F4–F8 **UYGULANDI** · F9 HTML **Deprecated** (ADR-0029) · **ADR-0031 Vite SPA Kabul** · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
 | ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** · **0018 Kabul** · **0019 Kabul** |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`fiyatlama.0019` / `tanimlar.0004` CAP-PIYASA) |
 
@@ -438,7 +438,7 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 | **B6** | Kullanıcı tarafından **Kabul** |
 | **B7** | Kullanıcı tarafından **Kabul** |
 
-Sabit kararlar (özet): ADR-0017 **Taslak**; NX-1…12 **madde Kabul** (Qubit, 2026-11-09); NX-3…12 **kod UYGULANDI/KISMİ** (TECH-NX-CONTRACT-01); CORS erteli; yeni Django HTML yok; **NX-FE** `frontend/` iskelet **UYGULANDI**; tam suite / prod migrate yalnız açık onay. Ayrıntı: [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md).
+Sabit kararlar (özet): ADR-0017 API NX-1…12 **madde Kabul**; UI runtime [ADR-0031](decisions/ADR-0031-vite-spa-portal.md) **Kabul** (Vite SPA); CORS erteli; yeni Django HTML yok; tam suite / prod migrate yalnız açık onay.
 
 ### 12.2 YAPILDI (kodda var)
 
@@ -535,8 +535,8 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | API-B7 | API dondurma / frontend-ready | **Kabul** (Qubit 2026-11-09); OpenAPI + [API_CONTRACT](API_CONTRACT.md); odaklı **1 OK** |
 | TECH-OPENAPI-01 | OpenAPI çift önek | **UYGULANDI** (B3 sonrası bakım; NX-4 madde **Kabul**) |
 | TECH-NX-CONTRACT-01 | NX-3…12 kod kanıt + `application/problem+json` | **UYGULANDI**; `test_api_nx_contract` **4 OK**; NX-3…12 madde **Kabul** (Qubit) |
-| NX-FE | Next.js `frontend/` iskelet | App Router + TS + Tailwind v4; `/api/v1` rewrite; session/CSRF client; `/` + `/login`; `npm run build` OK |
-| NX-ARCH | Feature/domain FE mimarisi | `features/*` ↔ Django apps; `app/(portal)/*` page/loading/error; `FRONTEND_ARCHITECTURE.md`; Zod |
+| NX-FE / ADR-0031 | Vite SPA portal | RR + Query + toast; CSRF/Idempotency; SW network-first; OpenAPI kök `docs/` · **Kabul** 2026-11-12 |
+| NX-ARCH | Feature/domain FE mimarisi | `features/*` ↔ Django apps; route pages under `app/(portal)/*`; Zod |
 | NX-SHELL | App shell + shadcn temel | `PortalShell` + light/dark; Button/Input/Label/Dialog; kör havuz notu; **UYGULANDI** 2026-11-11 |
 | CAP-OFFER-CREATE | Supplier teklif create HTTP | `POST /supplier/offers/` · **UYGULANDI** 2026-11-11 |
 | CAP-RFQ-MATCH-HTTP | RFQ eşleştirme HTTP (F10-021) | `/ops/rfq-lines|rfq-matches/` · **UYGULANDI** 2026-11-11 |
@@ -547,7 +547,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
-> **FRONTEND READY** (2026-11-10; hardening 2026-11-11). Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md). Next dilimleri ayrı açık talimatla.
+> **FRONTEND READY** + [ADR-0031](decisions/ADR-0031-vite-spa-portal.md) Vite SPA. Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md).
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
@@ -559,7 +559,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
 Celery/Redis · gerçek ödeme/kargo/SAP · Dynamic Pricing (U-015 kilitli) · GraphQL/websocket · yeni Django app yağmuru.  
-Next.js ürün portalı (katalog+): NX-SHELL sonrası ayrı dilimler. Django HTML portal **yok** (ADR-0029).
+Vite portal dilimleri ADR-0031 altında devam eder. Django HTML portal **yok** (ADR-0029).
 
 ### 12.5 Yeni oturum başlangıcı
 

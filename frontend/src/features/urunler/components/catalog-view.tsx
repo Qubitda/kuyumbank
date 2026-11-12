@@ -1,11 +1,21 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Link, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/features/auth";
 import { urunlerService } from "../services";
+import {
+  useCatalogQuery,
+  useOpsProductsQuery,
+  useCreateOpsProductMutation,
+  useOpsProductActionMutation,
+  urunlerKeys,
+} from "../hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { useUrlState } from "@/lib/hooks/use-url-state";
 import {
   opsProductCreateSchema,
   opsVariantCreateSchema,
@@ -67,29 +77,45 @@ type DetailTab = "general" | "tech" | "variants" | "commerce" | "images";
 const PAGE_SIZE = 20;
 
 export function CatalogView() {
+  const { id: routeId } = useParams<{ id?: string }>();
   const { user } = useAuth();
+  const actionToast = useActionToast();
+  const queryClient = useQueryClient();
   const canOps = Boolean(user?.capabilities?.can_view_ops && user?.firma?.platform_mu);
   const canCatalog = Boolean(user?.capabilities?.can_view_catalog || canOps);
   const canQuote = Boolean(user?.capabilities?.can_lock_quote || user?.capabilities?.can_view_cart);
   const canStock = Boolean(user?.capabilities?.can_view_supplier_stock);
 
-  const [scope, setScope] = useState<Scope>(canOps ? "ops" : "buyer");
+  const { get, setMany, page } = useUrlState();
+  const scopeParam = get("scope");
+  const scope: Scope =
+    scopeParam === "ops" && canOps
+      ? "ops"
+      : scopeParam === "buyer"
+        ? "buyer"
+        : canOps
+          ? "ops"
+          : "buyer";
+  const setScope = (next: Scope) =>
+    setMany({
+      scope: next,
+      page: 1,
+      onay: undefined,
+      yayin: undefined,
+    });
+
   const [viewMode, setViewMode] = useState<ViewMode>("table");
 
-  const [qInput, setQInput] = useState("");
-  const [q, setQ] = useState("");
-  const [ordering, setOrdering] = useState("pk");
-  const [page, setPage] = useState(1);
-  const [onayDurumu, setOnayDurumu] = useState("");
-  const [yayinDurumu, setYayinDurumu] = useState("");
+  const q = get("q");
+  const ordering = get("ordering", scope === "ops" ? "-pk" : "pk") || "pk";
+  const onayDurumu = get("onay");
+  const yayinDurumu = get("yayin");
+  const [qInput, setQInput] = useState(q);
 
-  const [buyerItems, setBuyerItems] = useState<BuyerCatalogItem[]>([]);
-  const [opsItems, setOpsItems] = useState<OpsProduct[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const createOpsMutation = useCreateOpsProductMutation();
+  const opsActionMutation = useOpsProductActionMutation();
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<DetailTab>("general");
@@ -120,68 +146,86 @@ export function CatalogView() {
   >({});
 
   useEffect(() => {
-    if (canOps) setScope("ops");
-    else setScope("buyer");
-  }, [canOps]);
+    if (!canOps && scope === "ops") setScope("buyer");
+  }, [canOps, scope]);
 
-  // Debounce search → API
+  useEffect(() => {
+    setQInput(q);
+  }, [q]);
+
+  // Debounce search → URL
   useEffect(() => {
     const t = window.setTimeout(() => {
-      setQ(qInput.trim());
-      setPage(1);
+      const next = qInput.trim();
+      if (next === q) return;
+      setMany({ q: next || undefined, page: 1 });
     }, 350);
     return () => window.clearTimeout(t);
-  }, [qInput]);
+  }, [qInput, q, setMany]);
 
+  const catalogFilters = useMemo(
+    () => ({
+      q: q || undefined,
+      ordering: ordering || undefined,
+      page: String(page),
+      page_size: String(PAGE_SIZE),
+    }),
+    [q, ordering, page]
+  );
+
+  const opsFilters = useMemo(
+    () => ({
+      ...catalogFilters,
+      onay_durumu: onayDurumu || undefined,
+      yayin_durumu: yayinDurumu || undefined,
+    }),
+    [catalogFilters, onayDurumu, yayinDurumu]
+  );
+
+  const catalogQuery = useCatalogQuery(
+    catalogFilters,
+    scope === "buyer" && (canCatalog || canOps)
+  );
+  const opsQuery = useOpsProductsQuery(opsFilters, scope === "ops" && canOps);
+
+  const buyerItems = catalogQuery.data?.results || [];
+  const opsItems = opsQuery.data?.results || [];
+  const totalCount =
+    scope === "ops"
+      ? opsQuery.data?.count ?? 0
+      : catalogQuery.data?.count ?? 0;
+  const pageSize =
+    (scope === "ops"
+      ? opsQuery.data?.page_size
+      : catalogQuery.data?.page_size) || PAGE_SIZE;
+  const loading =
+    (scope === "ops" ? opsQuery.isLoading : catalogQuery.isLoading) ||
+    (scope === "ops" ? opsQuery.isFetching : catalogQuery.isFetching);
+  const listError =
+    scope === "ops"
+      ? opsQuery.error
+      : catalogQuery.error;
   const fetchList = useCallback(async () => {
-    if (!canCatalog && !canOps) {
-      setLoading(false);
-      setBuyerItems([]);
-      setOpsItems([]);
-      setTotalCount(0);
-      return;
-    }
-    setLoading(true);
     setError(null);
-    try {
-      if (scope === "ops" && canOps) {
-        const data = await urunlerService.getOpsProducts({
-          q: q || undefined,
-          ordering: ordering || undefined,
-          page: String(page),
-          page_size: String(PAGE_SIZE),
-          onay_durumu: onayDurumu || undefined,
-          yayin_durumu: yayinDurumu || undefined,
-        });
-        setOpsItems(data.results || []);
-        setBuyerItems([]);
-        setTotalCount(data.count ?? 0);
-        setPageSize(data.page_size || PAGE_SIZE);
-      } else {
-        const data = await urunlerService.getCatalog({
-          q: q || undefined,
-          ordering: ordering || undefined,
-          page: String(page),
-          page_size: String(PAGE_SIZE),
-        });
-        setBuyerItems(data.results || []);
-        setOpsItems([]);
-        setTotalCount(data.count ?? 0);
-        setPageSize(data.page_size || PAGE_SIZE);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Katalog alınamadı.");
-      setBuyerItems([]);
-      setOpsItems([]);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [scope, canOps, canCatalog, q, ordering, page, onayDurumu, yayinDurumu]);
+    await queryClient.invalidateQueries({ queryKey: urunlerKeys.all });
+  }, [queryClient]);
 
   useEffect(() => {
-    void fetchList();
-  }, [fetchList]);
+    if (listError) {
+      setError(
+        listError instanceof Error ? listError.message : "Katalog alınamadı."
+      );
+    }
+  }, [listError]);
+
+  useEffect(() => {
+    if (!routeId) return;
+    const n = Number(routeId);
+    if (!Number.isFinite(n) || n <= 0) return;
+    if (scope === "ops" && canOps) void openOpsDetail(n);
+    else void openBuyerDetail(n);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deep-link once per id/scope
+  }, [routeId, scope, canOps]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -207,11 +251,13 @@ export function CatalogView() {
 
   const clearFilters = () => {
     setQInput("");
-    setQ("");
-    setOrdering(scope === "ops" ? "-pk" : "pk");
-    setOnayDurumu("");
-    setYayinDurumu("");
-    setPage(1);
+    setMany({
+      q: undefined,
+      ordering: scope === "ops" ? "-pk" : "pk",
+      onay: undefined,
+      yayin: undefined,
+      page: 1,
+    });
   };
 
   const openBuyerDetail = async (id: number) => {
@@ -351,14 +397,15 @@ export function CatalogView() {
         fiyat_tipi: data.fiyat_tipi || "gram",
         ...(data.satis_kanali_id ? { satis_kanali_id: data.satis_kanali_id } : {}),
       };
-      const created = await urunlerService.createOpsProduct(body);
+      const created = await createOpsMutation.mutateAsync(body);
       setCreateOpen(false);
       resetCreate();
       setSuccessMsg(`Taslak ürün #${created.id} oluşturuldu.`);
-      await fetchList();
+      actionToast.success("Ürün oluşturuldu", `#${created.id}`);
       await openOpsDetail(created.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ürün oluşturulamadı.");
+      actionToast.error("Ürün oluşturulamadı", err);
     }
   };
 
@@ -366,18 +413,23 @@ export function CatalogView() {
     if (!opsDetail) return;
     setError(null);
     try {
-      await urunlerService.addOpsVariant(opsDetail.id, {
-        gram: data.gram || undefined,
-        renk_id: data.renk_id,
-        ek_bedel: data.ek_bedel || undefined,
+      await opsActionMutation.mutateAsync({
+        action: "addVariant",
+        id: opsDetail.id,
+        variant: {
+          gram: data.gram || undefined,
+          renk_id: data.renk_id,
+          ek_bedel: data.ek_bedel || undefined,
+        },
       });
       setVariantOpen(false);
       resetVariant();
       setSuccessMsg("Varyant eklendi.");
+      actionToast.success("Varyant eklendi");
       await openOpsDetail(opsDetail.id);
-      await fetchList();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Varyant eklenemedi.");
+      actionToast.error("Varyant eklenemedi", err);
     }
   };
 
@@ -387,29 +439,36 @@ export function CatalogView() {
   ) => {
     setError(null);
     try {
-      if (action === "submit") await urunlerService.submitOpsProduct(id);
-      if (action === "approve") await urunlerService.approveOpsProduct(id);
-      if (action === "publish") await urunlerService.publishOpsProduct(id, "aktif");
-      if (action === "unpublish") await urunlerService.unpublishOpsProduct(id);
+      await opsActionMutation.mutateAsync({
+        action,
+        id,
+        durum: action === "publish" ? "aktif" : undefined,
+      });
       setSuccessMsg(`İşlem tamamlandı: ${action}`);
-      await fetchList();
+      actionToast.success("İşlem tamamlandı", action);
       if (opsDetail?.id === id) await openOpsDetail(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "İşlem başarısız.");
+      actionToast.error("İşlem başarısız", err);
     }
   };
 
   const onReject = async (data: RejectInput) => {
     if (!opsDetail) return;
     try {
-      await urunlerService.rejectOpsProduct(opsDetail.id, data.neden);
+      await opsActionMutation.mutateAsync({
+        action: "reject",
+        id: opsDetail.id,
+        neden: data.neden,
+      });
       setRejectOpen(false);
       resetReject();
       setSuccessMsg("Ürün reddedildi.");
-      await fetchList();
+      actionToast.success("Ürün reddedildi");
       await openOpsDetail(opsDetail.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reddetme başarısız.");
+      actionToast.error("Reddetme başarısız", err);
     }
   };
 
@@ -447,9 +506,7 @@ export function CatalogView() {
                   scope === "buyer" ? "bg-card shadow-xs" : "text-muted-foreground"
                 }`}
                 onClick={() => {
-                  setScope("buyer");
-                  setPage(1);
-                  setOrdering("pk");
+                  setMany({ scope: "buyer", page: 1, ordering: "pk", onay: undefined, yayin: undefined });
                 }}
               >
                 Alıcı katalog
@@ -460,9 +517,7 @@ export function CatalogView() {
                   scope === "ops" ? "bg-card shadow-xs" : "text-muted-foreground"
                 }`}
                 onClick={() => {
-                  setScope("ops");
-                  setPage(1);
-                  setOrdering("-pk");
+                  setMany({ scope: "ops", page: 1, ordering: "-pk" });
                 }}
               >
                 Ops ürünler
@@ -515,8 +570,7 @@ export function CatalogView() {
           <select
             value={ordering}
             onChange={(e) => {
-              setOrdering(e.target.value);
-              setPage(1);
+              setMany({ ordering: e.target.value, page: 1 });
             }}
             className="h-9 rounded-[6px] border border-border bg-background px-2 text-xs"
           >
@@ -532,8 +586,7 @@ export function CatalogView() {
               <select
                 value={onayDurumu}
                 onChange={(e) => {
-                  setOnayDurumu(e.target.value);
-                  setPage(1);
+                  setMany({ onay: e.target.value || undefined, page: 1 });
                 }}
                 className="h-9 rounded-[6px] border border-border bg-background px-2 text-xs"
               >
@@ -546,8 +599,7 @@ export function CatalogView() {
               <select
                 value={yayinDurumu}
                 onChange={(e) => {
-                  setYayinDurumu(e.target.value);
-                  setPage(1);
+                  setMany({ yayin: e.target.value || undefined, page: 1 });
                 }}
                 className="h-9 rounded-[6px] border border-border bg-background px-2 text-xs"
               >
@@ -801,7 +853,7 @@ export function CatalogView() {
             size="sm"
             className="h-8"
             disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setMany({ page: Math.max(1, page - 1) })}
           >
             Önceki
           </Button>
@@ -810,7 +862,7 @@ export function CatalogView() {
             size="sm"
             className="h-8"
             disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => setMany({ page: page + 1 })}
           >
             Sonraki
           </Button>
@@ -942,11 +994,12 @@ export function CatalogView() {
                   />
                   <p className="text-[11px] text-muted-foreground">
                     Sabit satış/alış fiyatı katalogda yok. Alıcı fiyatı quote ile
-                    alınır; maliyet alanları kör havuzda gizlidir.
+                    alınır; maliyet/marj/tedarikçi alanları kör havuzda
+                    gizlidir (yalnız net toplam / gram başı).
                   </p>
                   {canStock ? (
                     <Link
-                      href="/stok"
+                      to="/stok"
                       className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
                     >
                       <Boxes className="h-3.5 w-3.5" />

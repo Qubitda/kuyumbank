@@ -11,6 +11,7 @@ export {
   RequireAuth,
   useAuthContext,
 } from "./components/auth-provider";
+export { RequireCapability } from "./components/require-capability";
 export { authService } from "./services/auth-service";
 export { useAuth } from "./hooks/use-auth";
 export { loginSchema, type LoginInput } from "./schemas/login";

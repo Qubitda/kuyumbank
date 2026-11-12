@@ -10,7 +10,7 @@
 |------|-------|
 | Yeni Django HTML | **Yok** |
 | Mevcut `/buyer/`, `/ops/` | **Supersede** → [ADR-0029](ADR-0029-api-only-html-portal-kaldirma.md) **Kabul** (HTML kaldırıldı; API + Admin) |
-| Yeni ürün UI | **Next.js** (`frontend/` — NX-FE iskelet UYGULANDI; portal dilimleri sonra) |
+| Yeni ürün UI | **Vite SPA** — [ADR-0031](ADR-0031-vite-spa-portal.md) **Kabul** (Qubit, 2026-11-12); Next App Router bu ADR’de supersede. API NX-1…12 aynı |
 | Backend | Mevcut servisleri güvenli REST ile sunmak |
 | Deploy | Aynı-origin reverse proxy tercih |
 

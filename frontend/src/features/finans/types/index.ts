@@ -1,42 +1,8 @@
-export interface FinanceSummary {
-  para_birimi?: string;
-  server_now: string;
-  allowed_actions?: string[];
-}
+import type { components } from "@/lib/api/schema";
 
-export interface CariHesap {
-  id: number;
-  para_birimi: string;
-  bakiye: string;
-  kredi_limiti?: string;
-  guncelleme_tarihi?: string | null;
-  allowed_actions?: string[];
-  server_now?: string;
-}
-
-export interface LedgerEntry {
-  id: number;
-  tutar: string;
-  para_birimi: string;
-  yon?: string;
-  hareket_tipi?: string;
-  referans_tip?: string;
-  referans_id?: number | null;
-  olusturma_tarihi?: string | null;
-}
-
-export interface CreditInfo {
-  para_birimi: string;
-  bakiye: string;
-  kredi_limiti: string;
-  kullanilabilir?: string | null;
-  limit_aktif: boolean;
-}
-
-export interface PaymentIntent {
-  id: number;
-  tutar?: string;
-  para_birimi?: string;
-  durum?: string;
-  client_secret?: string;
-}
+export type FinanceSummary = components["schemas"]["BuyerFinanceSummary"];
+export type CariHesap = components["schemas"]["BuyerCari"];
+export type LedgerEntry = components["schemas"]["BuyerLedger"];
+export type CreditInfo = components["schemas"]["BuyerCredit"];
+export type PaymentIntent = components["schemas"]["BuyerPaymentIntent"];
+export type OpsFinanceSummary = components["schemas"]["OpsFinanceSummary"];

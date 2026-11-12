@@ -73,6 +73,9 @@ export const fiyatlamaService = {
   getSupplierRfqs(): Promise<SupplierRfqPage> {
     return apiFetch<SupplierRfqPage>("/supplier/rfqs/");
   },
+  getSupplierRfq(id: number | string): Promise<SupplierRfq> {
+    return apiFetch<SupplierRfq>(`/supplier/rfqs/${id}/`);
+  },
   getSupplierOffers(): Promise<SupplierOfferPage> {
     return apiFetch<SupplierOfferPage>("/supplier/offers/");
   },

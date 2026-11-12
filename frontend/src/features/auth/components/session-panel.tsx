@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "react-router-dom";
 import { apiFetch, fetchMe, logout, ApiError } from "@/lib/api/client";
 import type { HealthResponse, MeResponse } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ type LoadState =
   | { kind: "error"; message: string };
 
 export function SessionPanel() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [state, setState] = useState<LoadState>({ kind: "loading" });
   const [pending, startTransition] = useTransition();
 
@@ -67,8 +66,7 @@ export function SessionPanel() {
       } catch {
         // Oturum zaten düşmüş olabilir
       }
-      router.push("/login");
-      router.refresh();
+      navigate("/login");
     });
   };
 
@@ -93,7 +91,7 @@ export function SessionPanel() {
         </p>
         <div className="pt-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="/login">Giriş Sayfası</Link>
+            <Link to="/login">Giriş Sayfası</Link>
           </Button>
         </div>
       </div>
@@ -122,7 +120,7 @@ export function SessionPanel() {
 
         <div>
           <Button asChild size="default">
-            <Link href="/login">Oturum Aç</Link>
+            <Link to="/login">Oturum Aç</Link>
           </Button>
         </div>
       </div>

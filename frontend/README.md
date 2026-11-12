@@ -1,50 +1,55 @@
-# Kuyumbank frontend (NX-FE)
+# Kuyumbank frontend (Vite SPA)
 
-Next.js App Router + TypeScript iskeleti. Normatif API: repo kökü [`docs/API_CONTRACT.md`](../docs/API_CONTRACT.md) + [`docs/api/openapi-v1.json`](../docs/api/openapi-v1.json). Politika: [ADR-0017](../docs/decisions/ADR-0017-nextjs-api-sozlesmesi.md).
+Vite + React + TypeScript portal. Normatif API: [`docs/API_CONTRACT.md`](../docs/API_CONTRACT.md) + [`docs/api/openapi-v1.json`](../docs/api/openapi-v1.json) — **repo kökünde** (`frontend/` içinde kopya yok).  
+UI runtime: [ADR-0031](../docs/decisions/ADR-0031-vite-spa-portal.md) **Kabul**. API sözleşmesi: [ADR-0017](../docs/decisions/ADR-0017-nextjs-api-sozlesmesi.md) NX-1…12.
 
 ## Mimari
 
-Feature/domain rehberi: [`docs/FRONTEND_ARCHITECTURE.md`](docs/FRONTEND_ARCHITECTURE.md).
-
 - `src/features/<django-app>` — components / types / services / hooks / schemas
-- `src/app/(portal)/<domain>` — `page` / `loading` / `error` (+ `_components`)
-- `src/lib/api` — session + CSRF istemci
+- `src/app/(portal)/…` — sayfa girişleri (React Router `Routes` ile bağlanır)
+- `src/lib/api` — session + CSRF + otomatik Idempotency-Key (yazma; auth exempt)
+- Routing: **react-router-dom** (dinamik segment + 404)
+- Veri önbellek: **@tanstack/react-query**
+- Bildirim: `ToastProvider` / `useToast`
+- Hata: `AppErrorBoundary` (Next `error.tsx` yok)
 
-## Ne var / ne yok
+## API tipleri
 
-| Var | Yok (bilinçli) |
-|-----|----------------|
-| App Router, Tailwind v4, Geist, Zod | shadcn tam kit (NX-SHELL) |
-| Aynı-origin `/api/v1/*` rewrite → Django | CORS |
-| Session + CSRF istemci (`lib/api`) | Tarayıcıda Token |
-| Domain route iskeleti (10 app) | Dolu katalog/sepet UI |
-| OKLCH grayscale token’lar | Celery / GraphQL |
-| Handoff: [`docs/FRONTEND_HANDOFF.md`](../docs/FRONTEND_HANDOFF.md) | — |
+```bash
+npm run generate:api   # ../docs/api/openapi-v1.json → src/lib/api/schema.d.ts
+```
 
-Django ürün HTML portal yok (ADR-0029). Backend: `/admin/` + `/api/v1/`.
+`src/lib/api/types.ts` şemadan re-export eder. Feature `types/` alan adları OpenAPI ile birebir kalır.
+
+## Test / lint
+
+```bash
+npm run lint           # eslint + tsc
+npm test               # vitest
+npm run test:e2e       # playwright (dev sunucu)
+```
 
 ## Yerel çalıştırma
 
-1. Backend: `backend/config` → `runserver` (PG + migrate zaten).
-2. Django `.env`:
-   ```text
-   CSRF_TRUSTED_ORIGINS=http://localhost:3000
-   ALLOWED_HOSTS=localhost,127.0.0.1
-   ```
+1. Backend: `backend/config` → `runserver` (PG).
+2. Django `.env`: `CSRF_TRUSTED_ORIGINS=http://localhost:3000`
 3. Frontend:
    ```bash
-   cp .env.example .env.local
+   cp .env.example .env.local   # DJANGO_ORIGIN=http://127.0.0.1:8000
    npm install
-   npm run dev
+   npm run dev                  # http://localhost:3000 → /api proxy
    ```
-4. Aç: http://localhost:3000 — health/me smoke; giriş `/login`.
 
-`DJANGO_ORIGIN` varsayılan `http://127.0.0.1:8000`.
+## PWA / cache
 
-## Komutlar
+`public/sw.js` **network-first**; HTML cache’lenmez. `CACHE_NAME` sürümü deploy’da artırılır. `npm run dev` altında kayıtlı SW unregister edilir.
 
-```bash
-npm run generate:api   # OpenAPI → lib/api/schema.d.ts
-npm run lint
-npm run build
-```
+## Build artefaktları
+
+`.next/` (Next kalıntısı) ve `dist/` (Vite çıktısı) **gitignore**’dadır; commit edilmez. Yerelde silinebilir; `npm run build` `dist/` üretir.
+
+## Yasak
+
+- `next/*` import / shim
+- Sahte endpoint / mock KPI
+- AI Studio kalıntıları (`GEMINI_*`, `metadata.json`, `DISABLE_HMR`)

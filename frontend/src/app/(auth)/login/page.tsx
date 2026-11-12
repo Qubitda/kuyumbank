@@ -25,9 +25,15 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="flex h-[56px] w-full items-center justify-between border-b border-border px-4 sm:px-6">
+      <header
+        className="flex h-[56px] w-full items-center justify-between border-b border-border px-4 sm:px-6"
+        role="banner"
+      >
         <div className="flex items-center gap-2 font-semibold text-foreground tracking-tight text-base">
-          <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-primary text-primary-foreground font-mono text-xs">
+          <span
+            className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-primary text-primary-foreground font-mono text-xs"
+            aria-hidden="true"
+          >
             K
           </span>
           <span>Kuyumbank</span>
@@ -35,10 +41,17 @@ export default function LoginPage() {
         <ThemeToggle />
       </header>
 
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-8">
+      <main
+        id="login-main"
+        className="flex flex-1 items-center justify-center p-4 sm:p-8"
+        aria-labelledby="login-heading"
+      >
         <div className="flex w-full max-w-[420px] flex-col items-center gap-6">
           <div className="flex flex-col items-center gap-1.5 text-center px-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1
+              id="login-heading"
+              className="text-2xl font-semibold tracking-tight text-foreground"
+            >
               Kuyumbank
             </h1>
             <p className="text-xs text-muted-foreground max-w-[32ch] leading-relaxed">

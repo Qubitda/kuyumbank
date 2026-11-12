@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/features/auth";
-import { useDocuments } from "../hooks";
+import { useDocuments, useSubmitPodDocumentMutation } from "../hooks";
 import { belgelerService } from "../services";
 import { podAttachSchema, type PodAttachInput } from "../schemas";
 import type { DocumentItem } from "../types";
 import { formatDateTime } from "@/lib/format";
 import { unwrapResults } from "@/lib/api/client";
+import { useActionToast } from "@/hooks/use-action-toast";
 import {
   Table,
   TableHeader,
@@ -90,7 +91,9 @@ export function DocumentsView() {
     user?.capabilities?.can_manage_shipment || user?.capabilities?.can_view_ops
   );
 
+  const actionToast = useActionToast();
   const { documents, errors, loading, error, refresh } = useDocuments();
+  const podMut = useSubmitPodDocumentMutation();
 
   const [q, setQ] = useState("");
   const [tip, setTip] = useState("all");
@@ -203,7 +206,7 @@ export function DocumentsView() {
   const onPodSave = async (data: PodAttachInput) => {
     setActionError(null);
     try {
-      await belgelerService.submitPod({
+      await podMut.mutateAsync({
         shipment_id: data.shipment_id,
         teslim_alan: data.teslim_alan,
         notlar: data.notlar,
@@ -212,9 +215,11 @@ export function DocumentsView() {
       setPodOpen(false);
       resetPod();
       setSuccessMsg("POD kaydı oluşturuldu (belgeler_ref saklandı).");
+      actionToast.success("POD kaydedildi");
       await refresh();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "POD kaydı başarısız.");
+      actionToast.error("POD kaydı başarısız", err);
     }
   };
 
@@ -632,7 +637,7 @@ export function DocumentsView() {
                 ) : null}
                 {detail.href ? (
                   <Button size="sm" variant="outline" className="h-8 text-xs gap-1" asChild>
-                    <Link href={detail.href}>
+                    <Link to={detail.href}>
                       İlgili modül
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>

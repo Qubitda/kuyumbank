@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fiyatlamaService } from "../services";
 import type { PriceLock, PriceQuote } from "../types";
 
@@ -32,50 +33,146 @@ export function rememberLockId(id: number) {
   writeIds(LOCK_KEY, [...readIds(LOCK_KEY), id]);
 }
 
-/** OpenAPI'de quote/lock listesi yok; oturumda üretilen id'ler + cart quote_id'leri. */
+export const fiyatlamaKeys = {
+  all: ["fiyatlama"] as const,
+  session: (extraQuoteIds: number[] = []) =>
+    [...fiyatlamaKeys.all, "session", [...extraQuoteIds].sort((a, b) => a - b)] as const,
+  quote: (id: number | string) =>
+    [...fiyatlamaKeys.all, "quote", String(id)] as const,
+  lock: (id: number | string) =>
+    [...fiyatlamaKeys.all, "lock", String(id)] as const,
+  supplierRfqs: () => [...fiyatlamaKeys.all, "supplier-rfqs"] as const,
+  supplierRfq: (id: number | string) =>
+    [...fiyatlamaKeys.all, "supplier-rfq", String(id)] as const,
+  supplierOffers: () => [...fiyatlamaKeys.all, "supplier-offers"] as const,
+  buyerRfqs: () => [...fiyatlamaKeys.all, "buyer-rfqs"] as const,
+};
+
+async function loadSessionQuotesAndLocks(
+  extraQuoteIds: number[] = []
+): Promise<{ quotes: PriceQuote[]; locks: PriceLock[] }> {
+  const quoteIds = [...new Set([...readIds(QUOTE_KEY), ...extraQuoteIds])];
+  const lockIds = readIds(LOCK_KEY);
+
+  const quoteSettled = await Promise.allSettled(
+    quoteIds.map((id) => fiyatlamaService.getQuote(id))
+  );
+  const lockSettled = await Promise.allSettled(
+    lockIds.map((id) => fiyatlamaService.getPriceLock(id))
+  );
+
+  const quotes = quoteSettled
+    .filter((r): r is PromiseFulfilledResult<PriceQuote> => r.status === "fulfilled")
+    .map((r) => r.value);
+  const locks = lockSettled
+    .filter((r): r is PromiseFulfilledResult<PriceLock> => r.status === "fulfilled")
+    .map((r) => r.value);
+
+  writeIds(
+    QUOTE_KEY,
+    quotes.map((q) => q.id)
+  );
+  writeIds(
+    LOCK_KEY,
+    locks.map((l) => l.id)
+  );
+
+  return { quotes, locks };
+}
+
+/** OpenAPI'de quote/lock listesi yok; oturum id + cart quote_id. */
+export function useSessionQuotesAndLocksQuery(extraQuoteIds: number[] = []) {
+  return useQuery({
+    queryKey: fiyatlamaKeys.session(extraQuoteIds),
+    queryFn: () => loadSessionQuotesAndLocks(extraQuoteIds),
+  });
+}
+
+/** Geriye uyum: pricing-quotes-view için. */
 export function useSessionQuotesAndLocks() {
-  const [quotes, setQuotes] = useState<PriceQuote[]>([]);
-  const [locks, setLocks] = useState<PriceLock[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const query = useSessionQuotesAndLocksQuery();
 
-  const refresh = useCallback(async (extraQuoteIds: number[] = []) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const quoteIds = [...new Set([...readIds(QUOTE_KEY), ...extraQuoteIds])];
-      const lockIds = readIds(LOCK_KEY);
+  const refresh = useCallback(
+    async (extraQuoteIds: number[] = []) => {
+      writeIds(QUOTE_KEY, [...readIds(QUOTE_KEY), ...extraQuoteIds]);
+      await qc.invalidateQueries({ queryKey: fiyatlamaKeys.all });
+      return qc.fetchQuery({
+        queryKey: fiyatlamaKeys.session(extraQuoteIds),
+        queryFn: () => loadSessionQuotesAndLocks(extraQuoteIds),
+      });
+    },
+    [qc]
+  );
 
-      const quoteSettled = await Promise.allSettled(
-        quoteIds.map((id) => fiyatlamaService.getQuote(id))
-      );
-      const lockSettled = await Promise.allSettled(
-        lockIds.map((id) => fiyatlamaService.getPriceLock(id))
-      );
+  return {
+    quotes: query.data?.quotes ?? [],
+    locks: query.data?.locks ?? [],
+    loading: query.isLoading || query.isFetching,
+    error: query.error
+      ? query.error instanceof Error
+        ? query.error.message
+        : "Fiyatlama kayıtları alınamadı."
+      : null,
+    refresh,
+    setError: (_msg: string | null) => {
+      /* Query hataları query.error üzerinden; satır içi set için no-op uyum. */
+    },
+  };
+}
 
-      const nextQuotes = quoteSettled
-        .filter((r): r is PromiseFulfilledResult<PriceQuote> => r.status === "fulfilled")
-        .map((r) => r.value);
-      const nextLocks = lockSettled
-        .filter((r): r is PromiseFulfilledResult<PriceLock> => r.status === "fulfilled")
-        .map((r) => r.value);
+export function useCreatePriceLockMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (quoteId: number) => fiyatlamaService.createPriceLock(quoteId),
+    onSuccess: (lock) => {
+      rememberLockId(lock.id);
+      void qc.invalidateQueries({ queryKey: fiyatlamaKeys.all });
+    },
+  });
+}
 
-      setQuotes(nextQuotes);
-      setLocks(nextLocks);
-      writeIds(
-        QUOTE_KEY,
-        nextQuotes.map((q) => q.id)
-      );
-      writeIds(
-        LOCK_KEY,
-        nextLocks.map((l) => l.id)
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Fiyatlama kayıtları alınamadı.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+export function useSupplierRfqsQuery(enabled = true) {
+  return useQuery({
+    queryKey: fiyatlamaKeys.supplierRfqs(),
+    queryFn: () => fiyatlamaService.getSupplierRfqs(),
+    enabled,
+  });
+}
 
-  return { quotes, locks, loading, error, refresh, setError };
+export function useSupplierRfqQuery(id: number | string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: fiyatlamaKeys.supplierRfq(id ?? ""),
+    queryFn: () => fiyatlamaService.getSupplierRfq(id!),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+export function useSupplierOffersQuery(enabled = true) {
+  return useQuery({
+    queryKey: fiyatlamaKeys.supplierOffers(),
+    queryFn: () => fiyatlamaService.getSupplierOffers(),
+    enabled,
+  });
+}
+
+export function useBuyerRfqsQuery(enabled = true) {
+  return useQuery({
+    queryKey: fiyatlamaKeys.buyerRfqs(),
+    queryFn: () => fiyatlamaService.getBuyerRfqs(),
+    enabled,
+  });
+}
+
+export function useBuyerRfqQuery(id: number | string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: [...fiyatlamaKeys.buyerRfqs(), "detail", String(id ?? "")] as const,
+    queryFn: () => fiyatlamaService.getBuyerRfqDetail(id!),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+export function useFiyatlamaInvalidate() {
+  const qc = useQueryClient();
+  return () => void qc.invalidateQueries({ queryKey: fiyatlamaKeys.all });
 }

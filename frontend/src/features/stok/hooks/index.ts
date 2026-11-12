@@ -1,23 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { stokService } from "../services";
-import type { StockBalance } from "../types";
+import type { StockAdjustmentRequest } from "../types";
 
-export function useSupplierStock() {
-  const [balances, setBalances] = useState<StockBalance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const stokKeys = {
+  all: ["stok"] as const,
+  supplier: () => [...stokKeys.all, "supplier"] as const,
+};
 
-  useEffect(() => {
-    stokService
-      .listSupplierStock()
-      .then(setBalances)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : "Stok verisi alınamadı")
-      )
-      .finally(() => setLoading(false));
-  }, []);
+export function useSupplierStockQuery(enabled = true) {
+  return useQuery({
+    queryKey: stokKeys.supplier(),
+    queryFn: () => stokService.listSupplierStock(),
+    enabled,
+  });
+}
 
-  return { balances, loading, error };
+export function useAdjustStockMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: StockAdjustmentRequest) => stokService.adjustStock(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: stokKeys.all });
+    },
+  });
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Capabilities } from "@/lib/api/types";
@@ -22,7 +21,7 @@ export function Sidebar({
   collapsed = false,
   onToggleCollapse,
 }: SidebarProps) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
 
   return (
     <aside
@@ -36,7 +35,7 @@ export function Sidebar({
       <div className="flex h-[56px] items-center justify-between border-b border-border px-4">
         {!collapsed ? (
           <Link
-            href="/"
+            to="/"
             className="flex items-center gap-2 font-semibold text-foreground tracking-tight text-base hover:opacity-90"
           >
             <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-primary text-primary-foreground font-mono text-xs">
@@ -46,7 +45,7 @@ export function Sidebar({
           </Link>
         ) : (
           <Link
-            href="/"
+            to="/"
             className="mx-auto flex h-7 w-7 items-center justify-center rounded-[4px] bg-primary text-primary-foreground font-mono text-xs font-semibold"
             title="Kuyumbank Ana Sayfa"
           >
@@ -82,22 +81,30 @@ export function Sidebar({
         {DOMAIN_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
+          const needsCap = Boolean(item.requiredCapability || item.requiredAnyOf?.length);
           const hasCap =
-            !item.requiredCapability ||
+            !needsCap ||
             !capabilities ||
-            Boolean(capabilities[item.requiredCapability]);
+            (item.requiredCapability
+              ? Boolean(capabilities[item.requiredCapability])
+              : false) ||
+            Boolean(item.requiredAnyOf?.some((k) => Boolean(capabilities[k])));
+
+          // Menü gizleme güvenlik değildir; yine de yetkisiz kısayol göstermeyiz.
+          if (needsCap && capabilities && !hasCap) {
+            return null;
+          }
 
           return (
             <Link
               key={item.href}
-              href={item.href}
+              to={item.href}
               title={item.label}
               className={cn(
                 "group flex items-center gap-3 rounded-[6px] px-2.5 py-2 text-sm transition-colors duration-150 relative",
                 isActive
                   ? "bg-secondary text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
-                !hasCap && "opacity-75"
+                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
               )}
             >
               <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")} />

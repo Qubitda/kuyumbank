@@ -1,10 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { siparisService } from "../services";
-import type { BuyerCart, BuyerOrder } from "../types";
-import { unwrapResults } from "@/lib/api/client";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import type { BuyerOrder } from "../types";
 import { formatMoney, formatDateTime } from "@/lib/format";
+import {
+  useCartQuery,
+  useOrdersQuery,
+  useRemoveCartLineMutation,
+  useUpdateCartLineMutation,
+  useCheckoutMutation,
+  useCancelOrderMutation,
+  useBulkOrderMutation,
+  useOrderDetailQuery,
+  siparisKeys,
+} from "../hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { QuoteCountdown, isQuoteExpired } from "@/components/commerce/quote-countdown";
+import { mapCommerceError } from "@/lib/api/commerce-errors";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableHeader,
@@ -36,19 +50,53 @@ import {
   FileSpreadsheet,
   Upload,
 } from "lucide-react";
-import Link from "next/link";
 import { firmalarService, type FirmaAdresi } from "@/features/firmalar";
 import { finansService } from "@/features/finans";
+import { useActionToast } from "@/hooks/use-action-toast";
 import type { BulkOrderResult } from "../types";
 
-export function OrderWorkflowView() {
-  const [activeTab, setActiveTab] = useState<"cart" | "orders" | "bulk">("cart");
+type TabId = "cart" | "orders" | "bulk";
 
-  const [cart, setCart] = useState<BuyerCart | null>(null);
-  const [orders, setOrders] = useState<BuyerOrder[]>([]);
+export function OrderWorkflowView() {
+  const actionToast = useActionToast();
+  const navigate = useNavigate();
+  const { id: routeOrderId } = useParams<{ id?: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  const cartQuery = useCartQuery();
+  const ordersQuery = useOrdersQuery();
+  const removeLineMutation = useRemoveCartLineMutation();
+  const updateLineMutation = useUpdateCartLineMutation();
+  const checkoutMutation = useCheckoutMutation();
+  const cancelMutation = useCancelOrderMutation();
+  const bulkMutation = useBulkOrderMutation();
+
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabId =
+    tabParam === "orders" || tabParam === "bulk" || tabParam === "cart"
+      ? tabParam
+      : routeOrderId
+        ? "orders"
+        : "cart";
+  const setActiveTab = (tab: TabId) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", tab);
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
+  const cart = cartQuery.data ?? null;
+  const orders = ordersQuery.data ?? [];
   const [addresses, setAddresses] = useState<FirmaAdresi[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loading =
+    cartQuery.isLoading || ordersQuery.isLoading || cartQuery.isFetching;
   const [error, setError] = useState<string | null>(null);
+  const [lineDrafts, setLineDrafts] = useState<Record<number, string>>({});
+  const [savingLineId, setSavingLineId] = useState<number | null>(null);
 
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [selectedDeliveryAddr, setSelectedDeliveryAddr] = useState<number | undefined>(undefined);
@@ -57,9 +105,17 @@ export function OrderWorkflowView() {
 
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
   const [paymentMsg, setPaymentMsg] = useState<string | null>(null);
+
+  const routeIdNum =
+    routeOrderId && Number.isFinite(Number(routeOrderId))
+      ? Number(routeOrderId)
+      : undefined;
+  const orderDetailQuery = useOrderDetailQuery(
+    routeIdNum,
+    Boolean(routeIdNum)
+  );
 
   // Toplu Sipariş State'leri
   const [bulkText, setBulkText] = useState("");
@@ -85,16 +141,18 @@ export function OrderWorkflowView() {
     });
 
     try {
-      const result = await siparisService.createBulkOrder({
+      const result = await bulkMutation.mutateAsync({
         satis_kanali_id: 1,
         rows,
       });
       setBulkResult(result);
+      actionToast.success("Toplu sipariş işlendi");
       if (result.order_id) {
         await refreshData();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Toplu sipariş işlenemedi.");
+      setError(mapCommerceError(err, "Toplu sipariş işlenemedi."));
+      actionToast.error("Toplu sipariş işlenemedi", err);
     } finally {
       setIsSubmittingBulk(false);
     }
@@ -104,52 +162,79 @@ export function OrderWorkflowView() {
     try {
       await finansService.createPaymentIntent(orderId);
       setPaymentMsg("Ödeme niyeti başarıyla oluşturuldu. Havale / Cari Mahsup kaydı bekleniyor.");
+      actionToast.success("Ödeme niyeti oluşturuldu");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ödeme işlemi başlatılamadı.");
+      setError(mapCommerceError(err, "Ödeme işlemi başlatılamadı."));
+      actionToast.error("Ödeme başlatılamadı", err);
     }
   };
 
   const refreshData = async () => {
-    setLoading(true);
     setError(null);
+    await queryClient.invalidateQueries({ queryKey: siparisKeys.all });
     try {
-      const [cartData, ordersData, addressData] = await Promise.allSettled([
-        siparisService.getMyCart(),
-        siparisService.getOrders(),
-        firmalarService.getAddresses(),
-      ]);
-
-      if (cartData.status === "fulfilled") {
-        setCart(cartData.value);
-      }
-      if (ordersData.status === "fulfilled") {
-        setOrders(unwrapResults(ordersData.value));
-      }
-      if (addressData.status === "fulfilled") {
-        const addrList = addressData.value?.results || [];
-        setAddresses(addrList);
-        const defDelivery = addrList.find((a) => a.tip === "TESLIMAT" && a.varsayilan) || addrList.find((a) => a.tip === "TESLIMAT");
-        const defInvoice = addrList.find((a) => a.tip === "FATURA" && a.varsayilan) || addrList.find((a) => a.tip === "FATURA");
-        if (defDelivery) setSelectedDeliveryAddr(defDelivery.id);
-        if (defInvoice) setSelectedInvoiceAddr(defInvoice.id);
-      }
+      const addressData = await firmalarService.getAddresses();
+      const addrList = addressData?.results || [];
+      setAddresses(addrList);
+      const defDelivery =
+        addrList.find((a) => a.tip === "TESLIMAT" && a.varsayilan) ||
+        addrList.find((a) => a.tip === "TESLIMAT");
+      const defInvoice =
+        addrList.find((a) => a.tip === "FATURA" && a.varsayilan) ||
+        addrList.find((a) => a.tip === "FATURA");
+      if (defDelivery) setSelectedDeliveryAddr(defDelivery.id);
+      if (defInvoice) setSelectedInvoiceAddr(defInvoice.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sipariş verileri alınamadı.");
-    } finally {
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Adresler alınamadı.");
     }
   };
 
   useEffect(() => {
-    refreshData();
+    void refreshData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount once for addresses
   }, []);
 
+  useEffect(() => {
+    const err = cartQuery.error || ordersQuery.error || orderDetailQuery.error;
+    if (err) {
+      setError(mapCommerceError(err, "Sipariş verileri alınamadı."));
+    }
+  }, [cartQuery.error, ordersQuery.error, orderDetailQuery.error]);
+
+  useEffect(() => {
+    if (!cart?.lines) return;
+    const next: Record<number, string> = {};
+    for (const line of cart.lines) {
+      next[line.id] = line.miktar;
+    }
+    setLineDrafts(next);
+  }, [cart?.lines]);
+
+  useEffect(() => {
+    if (!routeIdNum) return;
+    setActiveTab("orders");
+    setOrderDetailOpen(true);
+    if (orderDetailQuery.data) {
+      setSelectedOrder(orderDetailQuery.data);
+    }
+  }, [routeIdNum, orderDetailQuery.data]);
+
+  const cartHasExpiredQuote = Boolean(
+    cart?.lines?.some((l) => isQuoteExpired(l.gecerlilik_sonu))
+  );
+
   const handleConfirmCheckout = async () => {
+    if (cartHasExpiredQuote) {
+      const msg =
+        "Sepette süresi dolmuş quote var. Miktarı güncelleyin veya satırı silip yeni fiyat alın.";
+      setError(msg);
+      actionToast.error("Checkout engellendi", msg);
+      return;
+    }
     setIsSubmittingCheckout(true);
     setError(null);
     try {
-      // OpenAPI: POST /checkouts/ (EmptyRequest) → POST /orders/from-checkout/
-      const createdOrder = await siparisService.checkout();
+      const createdOrder = await checkoutMutation.mutateAsync();
       setCheckoutModalOpen(false);
       setOrderNotes("");
       void selectedDeliveryAddr;
@@ -158,8 +243,12 @@ export function OrderWorkflowView() {
       setActiveTab("orders");
       setSelectedOrder(createdOrder);
       setOrderDetailOpen(true);
+      navigate(`/siparis/${createdOrder.id}?tab=orders`, { replace: true });
+      actionToast.success("Sipariş oluşturuldu");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout işlemi başarısız.");
+      const msg = mapCommerceError(err, "Checkout işlemi başarısız.");
+      setError(msg);
+      actionToast.error("Checkout başarısız", msg);
     } finally {
       setIsSubmittingCheckout(false);
     }
@@ -167,36 +256,48 @@ export function OrderWorkflowView() {
 
   const handleRemoveLine = async (lineId: number) => {
     try {
-      await siparisService.removeCartLine(lineId);
-      await refreshData();
+      await removeLineMutation.mutateAsync(lineId);
+      actionToast.success("Satır silindi");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Satır silinemedi.");
+      setError(mapCommerceError(err, "Satır silinemedi."));
+      actionToast.error("Satır silinemedi", err);
     }
   };
 
-  const handleOpenOrderDetail = async (orderId: number) => {
-    setLoadingDetail(true);
-    setOrderDetailOpen(true);
-    try {
-      const detail = await siparisService.getOrderDetail(orderId);
-      setSelectedOrder(detail);
-    } catch {
-      const basic = orders.find((o) => o.id === orderId);
-      if (basic) setSelectedOrder(basic);
-    } finally {
-      setLoadingDetail(false);
+  const handleSaveLineQty = async (lineId: number) => {
+    const miktar = (lineDrafts[lineId] || "").trim();
+    if (!miktar) {
+      setError("Miktar boş olamaz.");
+      return;
     }
+    setSavingLineId(lineId);
+    setError(null);
+    try {
+      await updateLineMutation.mutateAsync({ lineId, miktar });
+      actionToast.success("Miktar güncellendi");
+    } catch (err) {
+      setError(mapCommerceError(err, "Miktar güncellenemedi."));
+      actionToast.error("Miktar güncellenemedi", err);
+    } finally {
+      setSavingLineId(null);
+    }
+  };
+
+  const handleOpenOrderDetail = (orderId: number) => {
+    navigate(`/siparis/${orderId}?tab=orders`);
+    setOrderDetailOpen(true);
   };
 
   const handleCancelOrder = async (orderId: number) => {
     try {
-      await siparisService.cancelOrder(orderId);
-      await refreshData();
+      await cancelMutation.mutateAsync(orderId);
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder((prev) => (prev ? { ...prev, durum: "IPTAL" } : null));
       }
+      actionToast.success("Sipariş iptal edildi");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sipariş iptal edilemedi.");
+      setError(mapCommerceError(err, "Sipariş iptal edilemedi."));
+      actionToast.error("Sipariş iptal edilemedi", err);
     }
   };
 
@@ -320,13 +421,15 @@ export function OrderWorkflowView() {
                     <TableHead className="text-right">Miktar</TableHead>
                     <TableHead className="text-right">Birim Fiyat (Vergisiz)</TableHead>
                     <TableHead>Para Birimi</TableHead>
-                    <TableHead>Kilit Son Kullanma</TableHead>
+                    <TableHead>Quote kalan</TableHead>
                     <TableHead className="text-right">İşlem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cart.lines.map((line) => (
-                    <TableRow key={line.id}>
+                  {cart.lines.map((line) => {
+                    const expired = isQuoteExpired(line.gecerlilik_sonu);
+                    return (
+                    <TableRow key={line.id} className={expired ? "bg-destructive/5" : undefined}>
                       <TableCell className="font-mono text-xs text-muted-foreground">
                         #{line.id}
                       </TableCell>
@@ -336,8 +439,37 @@ export function OrderWorkflowView() {
                       <TableCell className="font-mono text-xs text-muted-foreground">
                         {line.quote_id ? `Q-${line.quote_id}` : "—"}
                       </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums text-foreground">
-                        {line.miktar} {line.birim || "ADET"}
+                      <TableCell className="text-right">
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <Input
+                            value={lineDrafts[line.id] ?? line.miktar}
+                            onChange={(e) =>
+                              setLineDrafts((prev) => ({
+                                ...prev,
+                                [line.id]: e.target.value,
+                              }))
+                            }
+                            inputMode="decimal"
+                            className="h-8 w-24 text-right font-mono tabular-nums"
+                            aria-label={`Satır ${line.id} miktar`}
+                          />
+                          <span className="text-[11px] text-muted-foreground">
+                            {line.birim || "ADET"}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            disabled={
+                              savingLineId === line.id ||
+                              (lineDrafts[line.id] ?? line.miktar) === line.miktar
+                            }
+                            onClick={() => void handleSaveLineQty(line.id)}
+                          >
+                            Kaydet
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums text-foreground font-medium">
                         {formatMoney(line.birim_fiyat_vergisiz, line.para_birimi)}
@@ -345,14 +477,14 @@ export function OrderWorkflowView() {
                       <TableCell className="font-mono text-xs">
                         {line.para_birimi}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {line.gecerlilik_sonu ? formatDateTime(line.gecerlilik_sonu) : "Süresiz"}
+                      <TableCell className="text-xs">
+                        <QuoteCountdown expiresAt={line.gecerlilik_sonu} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveLine(line.id)}
+                          onClick={() => void handleRemoveLine(line.id)}
                           className="h-8 w-8 text-destructive hover:bg-destructive/10"
                           aria-label="Satırı sepetten sil"
                         >
@@ -360,7 +492,8 @@ export function OrderWorkflowView() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -368,14 +501,19 @@ export function OrderWorkflowView() {
 
           {/* Checkout Aksiyon Paneli - Tek Primary Buton Kuralı */}
           {cart && cart.lines.length > 0 && (
-            <div className="flex items-center justify-between rounded-[8px] border border-border bg-card p-4">
-              <div className="text-xs text-muted-foreground">
-                <span>Checkout anında fiyat snapshot'ı alınarak değişmez hale getirilir.</span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-[8px] border border-border bg-card p-4">
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>Checkout anında fiyat snapshot&apos;ı alınır.</p>
+                {cartHasExpiredQuote ? (
+                  <p className="text-destructive" role="alert">
+                    Süresi dolmuş quote satırı var — checkout kapalı.
+                  </p>
+                ) : null}
               </div>
               <Button
                 type="button"
                 onClick={() => setCheckoutModalOpen(true)}
-                disabled={isSubmittingCheckout}
+                disabled={isSubmittingCheckout || cartHasExpiredQuote}
                 className="gap-2"
               >
                 <CheckCircle2 className="h-4 w-4" />
@@ -572,18 +710,30 @@ export function OrderWorkflowView() {
       )}
 
       {/* Sipariş Detay ve İptal Dialog */}
-      <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+      <Dialog
+        open={orderDetailOpen}
+        onOpenChange={(open) => {
+          setOrderDetailOpen(open);
+          if (!open && routeOrderId) {
+            navigate("/siparis?tab=orders", { replace: true });
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Sipariş #{selectedOrder?.id}</DialogTitle>
+            <DialogTitle>Sipariş #{selectedOrder?.id ?? routeOrderId}</DialogTitle>
             <DialogDescription>
               Tarih: {selectedOrder?.olusturma_tarihi ? formatDateTime(selectedOrder.olusturma_tarihi) : "—"} ·{" "}
               Durum: {selectedOrder?.durum}
             </DialogDescription>
           </DialogHeader>
 
-          {loadingDetail ? (
-            <div className="flex h-32 items-center justify-center">
+          {orderDetailQuery.isLoading || orderDetailQuery.isFetching ? (
+            <div
+              className="flex h-32 items-center justify-center"
+              role="status"
+              aria-live="polite"
+            >
               <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : selectedOrder ? (
@@ -683,7 +833,7 @@ export function OrderWorkflowView() {
                   <span>Teslimat Adresi (Zırhlı Kargo)</span>
                 </span>
                 <Link
-                  href="/profil"
+                  to="/profil"
                   className="text-[11px] text-primary hover:underline underline-offset-2"
                 >
                   Yeni Adres Ekle
@@ -693,7 +843,7 @@ export function OrderWorkflowView() {
               {addresses.filter((a) => a.tip === "TESLIMAT").length === 0 ? (
                 <div className="rounded-[6px] border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
                   Kayıtlı teslimat adresi bulunamadı. Lütfen{" "}
-                  <Link href="/profil" className="text-foreground underline">
+                  <Link to="/profil" className="text-foreground underline">
                     Profil & Adresler
                   </Link>{" "}
                   sayfasından adres ekleyin.

@@ -5,6 +5,7 @@ import type {
   CreditInfo,
   FinanceSummary,
   LedgerEntry,
+  OpsFinanceSummary,
   PaymentIntent,
 } from "../types";
 
@@ -26,6 +27,9 @@ export const finansService = {
   getLedger(params?: Record<string, string>): Promise<Paginated<LedgerEntry>> {
     const query = params ? `?${new URLSearchParams(params).toString()}` : "";
     return apiFetch<Paginated<LedgerEntry>>(`/finance/ledger/${query}`);
+  },
+  getOpsFinance(): Promise<OpsFinanceSummary> {
+    return apiFetch<OpsFinanceSummary>("/ops/finance/");
   },
   createPaymentIntent(orderId: number): Promise<PaymentIntent> {
     return apiFetch<PaymentIntent>("/payments/intents/", {

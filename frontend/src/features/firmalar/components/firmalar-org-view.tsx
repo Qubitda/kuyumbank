@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { firmalarService } from "../services";
+import {
+  useAddressesQuery,
+  useApprovalsQuery,
+  useInvitesQuery,
+  useMeDashboardQuery,
+  useMeQuery,
+  useOrgMembersQuery,
+  useOrgUnitsQuery,
+} from "../hooks";
 import {
   orgUnitSchema,
   inviteSchema,
@@ -12,14 +21,8 @@ import {
   type InviteInput,
   type MemberInput,
 } from "../schemas";
-import type {
-  Approval,
-  FirmaAdresi,
-  InviteItem,
-  OrgMember,
-  OrgUnit,
-} from "../types";
-import type { MeDashboard, MeResponse } from "@/lib/api/types";
+import type { OrgMember, OrgUnit } from "../types";
+import type { MeResponse } from "@/lib/api/types";
 import { formatMoney, formatDateTime } from "@/lib/format";
 import {
   Table,
@@ -56,6 +59,7 @@ import {
   Eye,
   UserPlus,
 } from "lucide-react";
+import { useActionToast } from "@/hooks/use-action-toast";
 
 const PAGE_SIZE = 10;
 
@@ -72,17 +76,32 @@ function firmTypeLabel(firma: MeResponse["firma"]): string {
 }
 
 export function FirmalarOrgView() {
+  const actionToast = useActionToast();
   const [activeTab, setActiveTab] = useState<TabId>("units");
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [dashboard, setDashboard] = useState<MeDashboard | null>(null);
-  const [addresses, setAddresses] = useState<FirmaAdresi[]>([]);
-  const [units, setUnits] = useState<OrgUnit[]>([]);
-  const [approvals, setApprovals] = useState<Approval[]>([]);
-  const [invites, setInvites] = useState<InviteItem[]>([]);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const meQ = useMeQuery();
+  const dashQ = useMeDashboardQuery();
+  const unitsQ = useOrgUnitsQuery();
+  const approvalsQ = useApprovalsQuery();
+  const invitesQ = useInvitesQuery();
+  const addressesQ = useAddressesQuery();
+
+  const me = meQ.data ?? null;
+  const dashboard = dashQ.data ?? null;
+  const units = unitsQ.data ?? [];
+  const approvals = approvalsQ.data ?? [];
+  const invites = invitesQ.data ?? [];
+  const addresses = addressesQ.data ?? [];
+  const loading = meQ.isLoading || unitsQ.isLoading;
+  const error =
+    meQ.isError && unitsQ.isError
+      ? meQ.error instanceof Error
+        ? meQ.error.message
+        : "Firma verileri alınamadı."
+      : null;
+
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -91,9 +110,25 @@ export function FirmalarOrgView() {
   const [createUnitOpen, setCreateUnitOpen] = useState(false);
   const [createInviteOpen, setCreateInviteOpen] = useState(false);
   const [detailUnit, setDetailUnit] = useState<OrgUnit | null>(null);
-  const [members, setMembers] = useState<OrgMember[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+
+  const membersQ = useOrgMembersQuery(detailUnit?.id ?? null, Boolean(detailUnit));
+  const members: OrgMember[] = membersQ.data ?? [];
+  const membersLoading = membersQ.isLoading;
+
+  const fetchData = async () => {
+    await Promise.all([
+      meQ.refetch(),
+      dashQ.refetch(),
+      unitsQ.refetch(),
+      approvalsQ.refetch(),
+      invitesQ.refetch(),
+      addressesQ.refetch(),
+      ...(detailUnit ? [membersQ.refetch()] : []),
+    ]);
+  };
+
+  const displayError = actionError || error;
 
   const {
     register: registerUnit,
@@ -124,53 +159,6 @@ export function FirmalarOrgView() {
     resolver: zodResolver(memberSchema),
     defaultValues: { kullanici_id: 0 },
   });
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [meRes, dashRes, unitsRes, approvalsRes, invitesRes, addrRes] =
-        await Promise.allSettled([
-          firmalarService.getMe(),
-          firmalarService.getMeDashboard(),
-          firmalarService.getOrgUnits(),
-          firmalarService.getApprovals(),
-          firmalarService.getInvites(),
-          firmalarService.getAddresses(),
-        ]);
-
-      if (meRes.status === "fulfilled") setMe(meRes.value);
-      if (dashRes.status === "fulfilled") setDashboard(dashRes.value);
-      if (unitsRes.status === "fulfilled") setUnits(unitsRes.value.results || []);
-      if (approvalsRes.status === "fulfilled") {
-        setApprovals(approvalsRes.value.results || []);
-      }
-      if (invitesRes.status === "fulfilled") {
-        setInvites(invitesRes.value.results || []);
-      }
-      if (addrRes.status === "fulfilled") {
-        setAddresses(addrRes.value.results || []);
-      }
-
-      const hardFails = [meRes, unitsRes].filter((r) => r.status === "rejected");
-      if (hardFails.length === 2) {
-        const first = hardFails[0] as PromiseRejectedResult;
-        setError(
-          first.reason instanceof Error
-            ? first.reason.message
-            : "Firma verileri alınamadı."
-        );
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Firma verileri alınamadı.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void fetchData();
-  }, []);
 
   const pendingApprovals = useMemo(
     () => approvals.filter((a) => a.durum === "BEKLEMEDE").length,
@@ -206,7 +194,7 @@ export function FirmalarOrgView() {
     addresses.find((a) => a.varsayilan)?.il || addresses[0]?.il || null;
 
   const onCreateUnitSubmit = async (formData: OrgUnitInput) => {
-    setError(null);
+    setActionError(null);
     try {
       await firmalarService.createOrgUnit({
         kod: formData.kod,
@@ -215,14 +203,16 @@ export function FirmalarOrgView() {
       setCreateUnitOpen(false);
       resetUnit();
       setSuccessMsg("Organizasyon birimi oluşturuldu.");
+      actionToast.success("Birim oluşturuldu");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Birim oluşturulamadı.");
+      setActionError(err instanceof Error ? err.message : "Birim oluşturulamadı.");
+      actionToast.error("Birim oluşturulamadı", err);
     }
   };
 
   const onCreateInviteSubmit = async (formData: InviteInput) => {
-    setError(null);
+    setActionError(null);
     try {
       await firmalarService.createInvite({
         email: formData.email,
@@ -231,31 +221,30 @@ export function FirmalarOrgView() {
       setCreateInviteOpen(false);
       resetInvite();
       setSuccessMsg(`${formData.email} adresine davet gönderildi.`);
+      actionToast.success("Davet gönderildi", formData.email);
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Davet gönderilemedi.");
+      setActionError(err instanceof Error ? err.message : "Davet gönderilemedi.");
+      actionToast.error("Davet gönderilemedi", err);
     }
   };
 
   const openUnitDetail = async (unit: OrgUnit) => {
     setDetailUnit(unit);
-    setMembersLoading(true);
-    setMembers([]);
+    setActionError(null);
     try {
       const detail = await firmalarService.getOrgUnit(unit.id);
       setDetailUnit(detail);
-      const mem = await firmalarService.getOrgMembers(unit.id);
-      setMembers(mem.results || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Birim detayı alınamadı.");
-    } finally {
-      setMembersLoading(false);
+      setActionError(
+        err instanceof Error ? err.message : "Birim detayı alınamadı."
+      );
     }
   };
 
   const onAddMemberSubmit = async (formData: MemberInput) => {
     if (!detailUnit) return;
-    setError(null);
+    setActionError(null);
     try {
       await firmalarService.addOrgMember(detailUnit.id, {
         kullanici_id: Number(formData.kullanici_id),
@@ -263,10 +252,11 @@ export function FirmalarOrgView() {
       setAddMemberOpen(false);
       resetMember();
       setSuccessMsg("Üye birime eklendi.");
-      const mem = await firmalarService.getOrgMembers(detailUnit.id);
-      setMembers(mem.results || []);
+      actionToast.success("Üye eklendi");
+      await membersQ.refetch();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Üye eklenemedi.");
+      setActionError(err instanceof Error ? err.message : "Üye eklenemedi.");
+      actionToast.error("Üye eklenemedi", err);
     }
   };
 
@@ -274,9 +264,11 @@ export function FirmalarOrgView() {
     try {
       await firmalarService.approveApproval(id);
       setSuccessMsg("Onay talebi onaylandı.");
+      actionToast.success("Onaylandı");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Onaylama başarısız.");
+      setActionError(err instanceof Error ? err.message : "Onaylama başarısız.");
+      actionToast.error("Onaylama başarısız", err);
     }
   };
 
@@ -284,9 +276,11 @@ export function FirmalarOrgView() {
     try {
       await firmalarService.rejectApproval(id);
       setSuccessMsg("Onay talebi reddedildi.");
+      actionToast.success("Reddedildi");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reddetme başarısız.");
+      setActionError(err instanceof Error ? err.message : "Reddetme başarısız.");
+      actionToast.error("Reddetme başarısız", err);
     }
   };
 
@@ -294,9 +288,11 @@ export function FirmalarOrgView() {
     try {
       await firmalarService.submitApproval(id);
       setSuccessMsg("Onay talebi gönderildi.");
+      actionToast.success("Onay talebi gönderildi");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gönderim başarısız.");
+      setActionError(err instanceof Error ? err.message : "Gönderim başarısız.");
+      actionToast.error("Gönderim başarısız", err);
     }
   };
 
@@ -399,14 +395,14 @@ export function FirmalarOrgView() {
         </div>
       )}
 
-      {error && (
+      {displayError && (
         <div
           className="flex items-center justify-between rounded-[8px] border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive"
           role="alert"
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
+            <span>{displayError}</span>
           </div>
           <Button
             variant="outline"
@@ -847,7 +843,6 @@ export function FirmalarOrgView() {
         onOpenChange={(open) => {
           if (!open) {
             setDetailUnit(null);
-            setMembers([]);
             setAddMemberOpen(false);
           }
         }}

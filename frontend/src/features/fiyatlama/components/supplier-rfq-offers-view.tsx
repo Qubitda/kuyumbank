@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { fiyatlamaService } from "../services";
-import type { SupplierRfq, SupplierOffer } from "../types";
+import type { SupplierRfq } from "../types";
 import { formatMoney } from "@/lib/format";
+import {
+  useSupplierRfqsQuery,
+  useSupplierOffersQuery,
+  useBuyerRfqsQuery,
+  useSupplierRfqQuery,
+  useFiyatlamaInvalidate,
+} from "../hooks";
 import {
   Table,
   TableHeader,
@@ -36,14 +43,20 @@ import {
   EyeOff,
   CheckCircle2,
   Sparkles,
-  Layers,
 } from "lucide-react";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { BlindPoolCallout } from "./blind-pool-callout";
+import { RfqStatusTracker } from "./rfq-status-tracker";
+import { buildOzelUretimAciklama } from "../lib/ozel-uretim-aciklama";
 
 const offerSchema = z.object({
   varyant_id: z.number({ message: "Varyant ID zorunludur" }),
+  fiyat_modeli: z.enum(["ADET", "GRAM", "METAL_BAZLI"]),
   birim_fiyat: z.string().trim().min(1, "Birim teklif fiyatı zorunludur"),
+  gram: z.string().trim().optional(),
+  iscilik_override: z.string().trim().optional(),
   para_birimi: z.string(),
-  teslim_gunu: z.number().optional(),
+  uretim_suresi_gun: z.number().optional(),
 });
 
 type OfferFormValues = z.infer<typeof offerSchema>;
@@ -51,6 +64,9 @@ type OfferFormValues = z.infer<typeof offerSchema>;
 const buyerRfqSchema = z.object({
   baslik: z.string().trim().min(3, "Talep başlığı en az 3 karakter olmalıdır"),
   talep_tipi: z.enum(["STANDART", "KATALOG_DISI", "OZEL_URETIM"]),
+  montur_ad: z.string().trim().optional(),
+  montur_varyant_id: z.string().trim().optional(),
+  tas_ozeti: z.string().trim().optional(),
   hedef_ayar: z.string().trim().min(1, "Ayar bilgisi zorunludur (örn: 14, 18, 22)"),
   hedef_gram: z.string().trim().min(1, "Hedef gram zorunludur"),
   miktar: z.string().trim().min(1, "Talep adedi zorunludur"),
@@ -59,14 +75,29 @@ const buyerRfqSchema = z.object({
 
 type BuyerRfqFormValues = z.infer<typeof buyerRfqSchema>;
 
-export function SupplierRfqOffersView() {
+export function SupplierRfqOffersView({
+  focusRfqId,
+}: {
+  focusRfqId?: string;
+}) {
+  const actionToast = useActionToast();
+  const invalidateFiyatlama = useFiyatlamaInvalidate();
   const [activeTab, setActiveTab] = useState<"rfqs" | "offers" | "buyer_rfqs">("rfqs");
 
-  const [rfqs, setRfqs] = useState<SupplierRfq[]>([]);
-  const [offers, setOffers] = useState<SupplierOffer[]>([]);
-  const [buyerRfqs, setBuyerRfqs] = useState<SupplierRfq[]>([]);
+  const rfqsQuery = useSupplierRfqsQuery();
+  const offersQuery = useSupplierOffersQuery();
+  const buyerRfqsQuery = useBuyerRfqsQuery();
+  const focusIdNum =
+    focusRfqId && Number.isFinite(Number(focusRfqId))
+      ? Number(focusRfqId)
+      : undefined;
+  const focusRfqQuery = useSupplierRfqQuery(focusIdNum, Boolean(focusIdNum));
 
-  const [loading, setLoading] = useState(true);
+  const rfqs = rfqsQuery.data?.results || [];
+  const offers = offersQuery.data?.results || [];
+  const buyerRfqs = buyerRfqsQuery.data?.results || [];
+  const loading =
+    rfqsQuery.isLoading || offersQuery.isLoading || buyerRfqsQuery.isLoading;
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -86,9 +117,12 @@ export function SupplierRfqOffersView() {
     resolver: zodResolver(offerSchema),
     defaultValues: {
       varyant_id: 1,
+      fiyat_modeli: "GRAM",
       birim_fiyat: "",
+      gram: "",
+      iscilik_override: "",
       para_birimi: "TRY",
-      teslim_gunu: 3,
+      uretim_suresi_gun: 3,
     },
   });
 
@@ -103,6 +137,9 @@ export function SupplierRfqOffersView() {
     defaultValues: {
       baslik: "",
       talep_tipi: "OZEL_URETIM",
+      montur_ad: "",
+      montur_varyant_id: "",
+      tas_ozeti: "",
       hedef_ayar: "14",
       hedef_gram: "25.00",
       miktar: "1",
@@ -111,34 +148,26 @@ export function SupplierRfqOffersView() {
   });
 
   const fetchData = async () => {
-    setLoading(true);
     setError(null);
-    try {
-      const [rfqRes, offerRes, buyerRfqRes] = await Promise.allSettled([
-        fiyatlamaService.getSupplierRfqs(),
-        fiyatlamaService.getSupplierOffers(),
-        fiyatlamaService.getBuyerRfqs(),
-      ]);
-
-      if (rfqRes.status === "fulfilled") {
-        setRfqs(rfqRes.value?.results || []);
-      }
-      if (offerRes.status === "fulfilled") {
-        setOffers(offerRes.value?.results || []);
-      }
-      if (buyerRfqRes.status === "fulfilled") {
-        setBuyerRfqs(buyerRfqRes.value?.results || []);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Tedarikçi verileri alınamadı.");
-    } finally {
-      setLoading(false);
-    }
+    await invalidateFiyatlama();
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const err =
+      rfqsQuery.error || offersQuery.error || buyerRfqsQuery.error;
+    if (err) {
+      setError(
+        err instanceof Error ? err.message : "Tedarikçi verileri alınamadı."
+      );
+    }
+  }, [rfqsQuery.error, offersQuery.error, buyerRfqsQuery.error]);
+
+  useEffect(() => {
+    if (focusRfqQuery.data) {
+      setSelectedRfq(focusRfqQuery.data);
+      setActiveTab("rfqs");
+    }
+  }, [focusRfqQuery.data]);
 
   const handleOpenOfferModal = (rfq: SupplierRfq) => {
     setSelectedRfq(rfq);
@@ -151,20 +180,27 @@ export function SupplierRfqOffersView() {
     setError(null);
     setSuccessMsg(null);
     try {
+      // OpenAPI: rfq_id yok (GAP-F3-06). Teklif varyant + fiyat alanları.
       await fiyatlamaService.createSupplierOffer({
-        rfq_id: selectedRfq?.id,
         varyant_id: Number(data.varyant_id),
+        fiyat_modeli: data.fiyat_modeli,
         birim_fiyat: data.birim_fiyat,
+        gram: data.gram || undefined,
+        iscilik_override: data.iscilik_override || undefined,
         para_birimi: data.para_birimi,
-        teslim_gunu: data.teslim_gunu ? Number(data.teslim_gunu) : undefined,
+        uretim_suresi_gun: data.uretim_suresi_gun
+          ? Number(data.uretim_suresi_gun)
+          : undefined,
       });
       setOfferModalOpen(false);
       resetOffer();
       setSuccessMsg("Taslak teklif başarıyla oluşturuldu.");
+      actionToast.success("Taslak teklif oluşturuldu");
       await fetchData();
       setActiveTab("offers");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Teklif oluşturulamadı.");
+      actionToast.error("Teklif oluşturulamadı", err);
     }
   };
 
@@ -172,24 +208,39 @@ export function SupplierRfqOffersView() {
     setError(null);
     setSuccessMsg(null);
     try {
+      const monturId = data.montur_varyant_id
+        ? Number(data.montur_varyant_id)
+        : undefined;
+      const aciklama = buildOzelUretimAciklama({
+        monturAd: data.montur_ad,
+        monturVaryantId:
+          monturId && Number.isFinite(monturId) ? monturId : undefined,
+        tasOzeti: data.tas_ozeti,
+        hedefAyar: data.hedef_ayar,
+        hedefGram: data.hedef_gram,
+        not: data.aciklama,
+      });
       await fiyatlamaService.createBuyerRfq({
         baslik: data.baslik,
         talep_tipi: data.talep_tipi,
         lines: [
           {
             miktar: data.miktar,
-            hedef_ayar: data.hedef_ayar,
-            hedef_gram: data.hedef_gram,
-            aciklama: data.aciklama,
+            birim: "ADET",
+            varyant_id:
+              monturId && Number.isFinite(monturId) ? monturId : undefined,
+            aciklama,
           },
         ],
       });
       setBuyerRfqModalOpen(false);
       resetBuyerRfq();
       setSuccessMsg("Özel üretim / RFQ talebiniz taslak olarak oluşturuldu.");
+      actionToast.success("RFQ taslağı oluşturuldu");
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Özel talep oluşturulamadı.");
+      actionToast.error("RFQ oluşturulamadı", err);
     }
   };
 
@@ -197,9 +248,11 @@ export function SupplierRfqOffersView() {
     try {
       await fiyatlamaService.sendBuyerRfq(id);
       setSuccessMsg("RFQ talebiniz tedarikçi havuzuna başarıyla yayınlandı.");
+      actionToast.success("RFQ yayınlandı");
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "RFQ yayına gönderilemedi.");
+      actionToast.error("RFQ yayınlanamadı", err);
     }
   };
 
@@ -207,9 +260,11 @@ export function SupplierRfqOffersView() {
     try {
       await fiyatlamaService.submitSupplierOffer(id);
       setSuccessMsg("Teklif onay için başarıyla sisteme iletildi.");
+      actionToast.success("Teklif iletildi");
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Teklif iletilemedi.");
+      actionToast.error("Teklif iletilemedi", err);
     }
   };
 
@@ -217,9 +272,11 @@ export function SupplierRfqOffersView() {
     try {
       await fiyatlamaService.deactivateSupplierOffer(id);
       setSuccessMsg("Teklif pasif hale getirildi.");
+      actionToast.success("Teklif pasifleştirildi");
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Teklif pasifleştirilemedi.");
+      actionToast.error("Teklif pasifleştirilemedi", err);
     }
   };
 
@@ -232,7 +289,7 @@ export function SupplierRfqOffersView() {
             Tedarikçi Portalı & Özel Tasarım / RFQ
           </h1>
           <p className="text-xs text-muted-foreground">
-            Alıcı özel üretim talepleri (RFQ) ve tedarikçi teklif havuzu (Kör Havuz: Alıcı kimliği gizlidir).
+            Alıcı özel üretim talepleri (RFQ) ve tedarikçi teklif havuzu.
           </p>
         </div>
 
@@ -275,6 +332,8 @@ export function SupplierRfqOffersView() {
           </button>
         </div>
       </div>
+
+      <BlindPoolCallout role="both" />
 
       {successMsg && (
         <div className="flex items-center gap-2 rounded-[6px] border border-border bg-muted/60 p-3 text-xs text-foreground font-medium">
@@ -500,12 +559,15 @@ export function SupplierRfqOffersView() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={b.durum === "GONDERILDI" ? "default" : "outline"}
-                            className="font-mono text-[10px]"
-                          >
-                            {b.durum}
-                          </Badge>
+                          <div className="flex flex-col gap-1.5">
+                            <Badge
+                              variant={b.durum === "GONDERILDI" ? "default" : "outline"}
+                              className="font-mono text-[10px] w-fit"
+                            >
+                              {b.durum}
+                            </Badge>
+                            <RfqStatusTracker durum={b.durum} />
+                          </div>
                         </TableCell>
                         <TableCell className="text-right font-mono tabular-nums text-xs">
                           {b.lines?.length || 1}
@@ -541,13 +603,15 @@ export function SupplierRfqOffersView() {
       <Dialog open={offerModalOpen} onOpenChange={setOfferModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>RFQ-#{selectedRfq?.id} İçin Teklif Hazırla</DialogTitle>
+            <DialogTitle>RFQ-#{selectedRfq?.id} için teklif taslağı</DialogTitle>
             <DialogDescription>
-              Birim maliyet ve teslim gün süresi belirterek teklif sunun.
+              OpenAPI alanları: fiyat modeli, gram, birim fiyat, işçilik override.
+              RFQ bağlama API&apos;de yok (GAP-F3-06) — teklif varyanta yazılır.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleOfferSubmit(onOfferSubmit)} className="flex flex-col gap-4 pt-2">
+            <BlindPoolCallout role="supplier" />
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="offer-var">Hedef Varyant ID</Label>
               <Input
@@ -565,9 +629,36 @@ export function SupplierRfqOffersView() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="offer-price">Birim Fiyat</Label>
+                <Label htmlFor="offer-model">Fiyat modeli</Label>
+                <select
+                  id="offer-model"
+                  className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-sm"
+                  disabled={isOfferSubmitting}
+                  {...registerOffer("fiyat_modeli")}
+                >
+                  <option value="GRAM">GRAM</option>
+                  <option value="ADET">ADET</option>
+                  <option value="METAL_BAZLI">METAL_BAZLI</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="offer-gram">Gram</Label>
+                <Input
+                  id="offer-gram"
+                  className="font-mono tabular-nums text-right"
+                  placeholder="Örn: 12.500"
+                  disabled={isOfferSubmitting}
+                  {...registerOffer("gram")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="offer-price">Birim fiyat</Label>
                 <Input
                   id="offer-price"
+                  className="font-mono tabular-nums text-right"
                   placeholder="Örn: 2450.00"
                   disabled={isOfferSubmitting}
                   {...registerOffer("birim_fiyat")}
@@ -580,10 +671,23 @@ export function SupplierRfqOffersView() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="offer-curr">Para Birimi</Label>
+                <Label htmlFor="offer-isci">İşçilik override (gr)</Label>
+                <Input
+                  id="offer-isci"
+                  className="font-mono tabular-nums text-right"
+                  placeholder="Opsiyonel"
+                  disabled={isOfferSubmitting}
+                  {...registerOffer("iscilik_override")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="offer-curr">Para birimi</Label>
                 <select
                   id="offer-curr"
-                  className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-sm"
                   disabled={isOfferSubmitting}
                   {...registerOffer("para_birimi")}
                 >
@@ -592,17 +696,16 @@ export function SupplierRfqOffersView() {
                   <option value="EUR">EUR</option>
                 </select>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="offer-days">Teslim Süresi (İş Günü)</Label>
-              <Input
-                id="offer-days"
-                type="number"
-                placeholder="Örn: 3"
-                disabled={isOfferSubmitting}
-                {...registerOffer("teslim_gunu", { valueAsNumber: true })}
-              />
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="offer-days">Üretim süresi (gün)</Label>
+                <Input
+                  id="offer-days"
+                  type="number"
+                  placeholder="Örn: 3"
+                  disabled={isOfferSubmitting}
+                  {...registerOffer("uretim_suresi_gun", { valueAsNumber: true })}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -626,18 +729,21 @@ export function SupplierRfqOffersView() {
       <Dialog open={buyerRfqModalOpen} onOpenChange={setBuyerRfqModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Yeni Özel Üretim / RFQ Talebi</DialogTitle>
+            <DialogTitle>Özel üretim akışı</DialogTitle>
             <DialogDescription>
-              Katalog dışı veya özel tasarım mücevher siparişi için tedarikçi havuzuna talep açın.
+              Montür → taş → talep. Ayar/gram first-class API alanı yok;{" "}
+              <code className="font-mono text-[10px]">aciklama</code> içine
+              kodlanır (GAP-F3-05).
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleBuyerRfqSubmit(onBuyerRfqSubmit)} className="flex flex-col gap-4 pt-2">
+            <BlindPoolCallout role="buyer" />
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="rfq-title">Talep Başlığı</Label>
+              <Label htmlFor="rfq-title">Talep başlığı</Label>
               <Input
                 id="rfq-title"
-                placeholder="Örn: 22 Ayar Özel Burma Bilezik Koleksiyonu"
+                placeholder="Örn: 22 Ayar Özel Burma Bilezik"
                 disabled={isBuyerRfqSubmitting}
                 {...registerBuyerRfq("baslik")}
               />
@@ -649,45 +755,80 @@ export function SupplierRfqOffersView() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="rfq-type">Talep Türü</Label>
+              <Label htmlFor="rfq-type">Talep türü</Label>
               <select
                 id="rfq-type"
-                className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-sm"
                 disabled={isBuyerRfqSubmitting}
                 {...registerBuyerRfq("talep_tipi")}
               >
-                <option value="OZEL_URETIM">ÖZEL ÜRETİM / TASARIM</option>
-                <option value="KATALOG_DISI">KATALOG DIŞI MODEL TALEBİ</option>
-                <option value="STANDART">STANDART TOPLU ALIM</option>
+                <option value="OZEL_URETIM">Özel üretim / tasarım</option>
+                <option value="KATALOG_DISI">Katalog dışı model</option>
+                <option value="STANDART">Standart toplu alım</option>
               </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="rfq-montur">1. Montür (ad)</Label>
+                <Input
+                  id="rfq-montur"
+                  placeholder="Burma bilezik montürü"
+                  disabled={isBuyerRfqSubmitting}
+                  {...registerBuyerRfq("montur_ad")}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="rfq-montur-id">Montür varyant id</Label>
+                <Input
+                  id="rfq-montur-id"
+                  inputMode="numeric"
+                  placeholder="Opsiyonel katalog id"
+                  className="font-mono"
+                  disabled={isBuyerRfqSubmitting}
+                  {...registerBuyerRfq("montur_varyant_id")}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="rfq-tas">2. Taş seçimi</Label>
+              <Input
+                id="rfq-tas"
+                placeholder="Örn: 0.30ct baget, G-VS"
+                disabled={isBuyerRfqSubmitting}
+                {...registerBuyerRfq("tas_ozeti")}
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="rfq-ayar">Hedef Ayar</Label>
+                <Label htmlFor="rfq-ayar">Hedef ayar</Label>
                 <Input
                   id="rfq-ayar"
-                  placeholder="Örn: 14, 22"
+                  placeholder="14 / 18 / 22"
                   disabled={isBuyerRfqSubmitting}
                   {...registerBuyerRfq("hedef_ayar")}
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="rfq-gram">Hedef Gram</Label>
+                <Label htmlFor="rfq-gram">Hedef gram</Label>
                 <Input
                   id="rfq-gram"
-                  placeholder="Örn: 35.50"
+                  className="font-mono tabular-nums text-right"
+                  placeholder="35.50"
                   disabled={isBuyerRfqSubmitting}
                   {...registerBuyerRfq("hedef_gram")}
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="rfq-qty">Adet</Label>
+                <Label htmlFor="rfq-qty">3. Adet</Label>
                 <Input
                   id="rfq-qty"
-                  placeholder="Örn: 5"
+                  className="font-mono tabular-nums text-right"
+                  placeholder="5"
                   disabled={isBuyerRfqSubmitting}
                   {...registerBuyerRfq("miktar")}
                 />

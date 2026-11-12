@@ -37,6 +37,8 @@
 | [ADR-0028](ADR-0028-invite-email-verify.md) | Davet + e-posta doğrulama | FirmaInvite; email_verified_at; IE-3 yazma kapısı varsayılan kapalı | **Kabul** (2026-11-10, Qubit) | Identity / Auth | Identity | UYGULANDI | `firmalar.0012` · `test_invite_email_verify` |
 | [ADR-0029](ADR-0029-api-only-html-portal-kaldirma.md) | API-only; HTML portal kaldırma | `/buyer|/supplier|/ops` sil; Admin+API; act-as JSON | **Kabul** (2026-11-10, Qubit) | HTTP / Portal | Platform | UYGULANDI | Admin · `/api/v1` · act-as API |
 | [ADR-0030](ADR-0030-platform-urun-crud-http.md) | Platform ürün CRUD HTTP | `/ops/products/` + onay SM; buyer catalog salt okuma | **Kabul** (2026-11-11, Qubit) | Catalog / API | Catalog | UYGULANDI | `ops_products` · `test_ops_products_adr0030` |
+| [ADR-0031](ADR-0031-vite-spa-portal.md) | Vite SPA portal | Next shim yok; RR + Query; ADR-0017 API korunur | **Kabul** (2026-11-12, Qubit) | Experience | Experience | UYGULANDI | `frontend/` |
+| [ADR-0032](ADR-0032-openapi-typescript-codegen.md) | OpenAPI → TS codegen | `openapi-typescript` → `schema.d.ts`; CI drift | **Taslak** | Experience / API | Experience | — | Kabul + script ayrı |
 | [NOTE-PENDING](NOTE-PENDING-PRODUCT-DECISIONS.md) | FXQ / DYN / I18N / AI | ADR-0019’dan ayrı kapılar | **Açık** | — | Product | — | F12-001/011, CAP-DYNPRICE, F11-015 |
 | B-01 | Servis payı | v1 kapalı (0); hukuk metni gelene kadar kalem yok | **Kabul** (2026-11-09, Qubit) | 3+ | Pricing | Kod yok (bilinçli) | ADR-0008 |
 | B-02 | Alıcı görünürlük | Yalnız toplam (+ gram başı) | **Kabul** | 3.6 | Pricing | UYGULANDI | buyer_quote |

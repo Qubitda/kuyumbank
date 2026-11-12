@@ -1,25 +1,8 @@
-/**
- * OpenAPI normatif kalite kontrol tipleri (API_CONTRACT ve ADR-0021).
- */
+import type { components } from "@/lib/api/schema";
 
-export interface OpsInspection {
-  id: number;
-  order_id: number;
-  durum: "BEKLEMEDE" | "INCELEMEDE" | "GECTI" | "KALDI" | "IPTAL" | string;
-  allowed_actions: string[];
-  server_now?: string;
-  olculen_ayar?: string;
-  olculen_gram?: string;
-  notlar?: string;
-}
-
-export interface OpsInspectionPage {
-  count: number;
-  results: OpsInspection[];
-}
-
-export interface InspectionMeasurementRequest {
-  olculen_ayar?: string;
-  olculen_gram?: string;
-  notlar?: string;
-}
+export type OpsInspection = components["schemas"]["OpsInspection"];
+export type OpsInspectionPage = components["schemas"]["OpsInspectionPage"];
+export type InspectionMeasurementRequest =
+  components["schemas"]["OpsMeasurementRequest"];
+export type InspectionCreateRequest =
+  components["schemas"]["OpsInspectionCreateRequest"];

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, RefreshCw, Layers } from "lucide-react";
 
@@ -53,7 +53,7 @@ export function DomainError({
           Yeniden Dene
         </Button>
         <Button asChild variant="ghost" size="sm">
-          <Link href="/">Genel Bakışa Dön</Link>
+          <Link to="/">Genel Bakışa Dön</Link>
         </Button>
       </div>
     </div>
@@ -87,7 +87,7 @@ export function DomainPlaceholder({
         </div>
         <p className="text-sm text-muted-foreground">
           {description ||
-            `Django "${backendApp}" domain app ile birebir paralel Next.js modülü.`}
+            `Django "${backendApp}" domain app ile birebir paralel Vite portal modülü.`}
         </p>
       </div>
 

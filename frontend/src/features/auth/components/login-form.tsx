@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { loginSchema, type LoginInput } from "../schemas/login";
 import { authService } from "../services/auth-service";
@@ -29,7 +29,9 @@ function formatAuthError(err: unknown): string {
     const fieldErrors = err.problem.errors;
     if (fieldErrors) {
       const parts = Object.entries(fieldErrors).flatMap(([key, val]) => {
-        const messages = Array.isArray(val) ? val : [val];
+        const messages = Array.isArray(val)
+          ? val.map(String)
+          : [String(val)];
         return messages.map((m) => `${key}: ${m}`);
       });
       if (parts.length) return parts.join(" · ");
@@ -45,7 +47,7 @@ function formatAuthError(err: unknown): string {
 }
 
 export function LoginForm() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { setSessionUser, refresh } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +80,7 @@ export function LoginForm() {
         return;
       }
       setSessionUser(me, { mfaPending: false });
-      router.replace("/");
+      navigate("/", { replace: true });
     } catch (err) {
       setServerError(formatAuthError(err));
     }
@@ -89,7 +91,7 @@ export function LoginForm() {
     try {
       const me = await authService.verifyMfa(data.code);
       setSessionUser(me, { mfaPending: false });
-      router.replace("/");
+      navigate("/", { replace: true });
     } catch (err) {
       setServerError(formatAuthError(err));
     }
@@ -103,7 +105,7 @@ export function LoginForm() {
       setMfaHint(res.detail || "Doğrulama kodu yeniden gönderildi.");
       if (res.mfa_ok) {
         await refresh();
-        router.replace("/");
+        navigate("/", { replace: true });
       }
     } catch (err) {
       setServerError(formatAuthError(err));

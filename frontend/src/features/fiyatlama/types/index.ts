@@ -52,17 +52,16 @@ export interface SupplierRfqPage {
   results: SupplierRfq[];
 }
 
+/** OpenAPI RfqCreateRequest — line: miktar, birim?, varyant_id?, aciklama? */
 export interface BuyerRfqCreateRequest {
   baslik?: string;
-  talep_tipi: "STANDART" | "KATALOG_DISI" | "OZEL_URETIM";
+  talep_tipi: "STANDART" | "KATALOG_DISI" | "OZEL_URETIM" | string;
   sube_id?: number;
   lines: Array<{
     varyant_id?: number;
     miktar: string;
-    hedef_gram?: string;
-    hedef_ayar?: string;
+    birim?: string;
     aciklama?: string;
-    notlar?: string;
   }>;
 }
 
@@ -83,10 +82,17 @@ export interface SupplierOfferPage {
   results: SupplierOffer[];
 }
 
+/** OpenAPI SupplierOfferCreateRequest */
 export interface SupplierOfferCreateRequest {
-  rfq_id?: number;
   varyant_id: number;
-  birim_fiyat: string;
+  fiyat_modeli: string;
+  birim_fiyat?: string;
+  gram?: string;
+  iscilik_override?: string;
   para_birimi?: string;
-  teslim_gunu?: number;
+  tedarikci_kodu?: string;
+  temin_tipi?: string;
+  uretim_suresi_gun?: number;
+  gecerlilik_baslangic?: string;
+  gecerlilik_bitis?: string;
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { User, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -37,22 +36,31 @@ const ROUTE_TITLES: Record<string, string> = {
 };
 
 export function Header({ user, onLogout }: HeaderProps) {
-  const pathname = usePathname();
-  const currentTitle = ROUTE_TITLES[pathname] || "Kuyumbank Portal";
+  const { pathname } = useLocation();
+  const basePath = (() => {
+    const seg = pathname.split("/").filter(Boolean)[0];
+    return seg ? `/${seg}` : "/";
+  })();
+  const currentTitle =
+    ROUTE_TITLES[pathname] || ROUTE_TITLES[basePath] || "Kuyumbank Portal";
 
   return (
-    <header className="flex h-[56px] w-full items-center justify-between border-b border-border bg-card px-6">
-      {/* Sol: Mevcut Route ve Seviye */}
+    <header
+      className="flex h-[56px] w-full items-center justify-between border-b border-border bg-card px-6"
+      role="banner"
+    >
       <div className="flex items-center gap-3">
         <h1 className="text-base font-semibold tracking-tight text-foreground">
           {currentTitle}
         </h1>
-        <span className="font-mono text-xs text-muted-foreground border-l border-border pl-3">
+        <span
+          className="font-mono text-xs text-muted-foreground border-l border-border pl-3"
+          aria-hidden="true"
+        >
           {pathname}
         </span>
       </div>
 
-      {/* Sağ: Tema ve Kullanıcı Oturumu */}
       <div className="flex items-center gap-2">
         <ThemeToggle />
 
@@ -63,8 +71,9 @@ export function Header({ user, onLogout }: HeaderProps) {
                 variant="outline"
                 size="sm"
                 className="gap-2 h-9 border-border text-foreground"
+                aria-label={`Hesap menüsü: ${user.username}`}
               >
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4" aria-hidden="true" />
                 <span className="max-w-[120px] truncate text-xs font-medium">
                   {user.username}
                 </span>
@@ -88,13 +97,13 @@ export function Header({ user, onLogout }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profil" className="cursor-pointer text-xs">
+                <Link to="/profil" className="cursor-pointer text-xs">
                   <User className="mr-2 h-3.5 w-3.5" />
                   Profil & Adresler
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/" className="cursor-pointer text-xs">
+                <Link to="/" className="cursor-pointer text-xs">
                   <ShieldCheck className="mr-2 h-3.5 w-3.5" />
                   Oturum & Yetkiler
                 </Link>
@@ -113,7 +122,7 @@ export function Header({ user, onLogout }: HeaderProps) {
           </DropdownMenu>
         ) : (
           <Button asChild variant="outline" size="sm" className="gap-2 h-9">
-            <Link href="/login">
+            <Link to="/login">
               <LogIn className="h-4 w-4" />
               <span>Giriş Yap</span>
             </Link>

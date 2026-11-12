@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/features/auth";
 import { useTheme } from "@/components/layout";
 import { profilService } from "../services";
+import {
+  useProfileAddressesQuery,
+  useProfileDashboardQuery,
+  useProfileQuery,
+} from "../hooks";
 import {
   profileSchema,
   passwordChangeSchema,
@@ -17,8 +22,7 @@ import {
   type AddressInput,
   type EmailVerifyConfirmInput,
 } from "../schemas";
-import type { FirmaAdresi, MeProfile } from "../types";
-import type { MeDashboard } from "@/lib/api/types";
+import type { MeProfile } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +42,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { useActionToast } from "@/hooks/use-action-toast";
 import {
   User,
   Shield,
@@ -78,13 +83,24 @@ function initials(profile: MeProfile | null): string {
 export function ProfileView() {
   const { user, logout, refresh } = useAuth();
   const { theme, setTheme } = useTheme();
+  const actionToast = useActionToast();
 
   const [tab, setTab] = useState<TabId>("personal");
-  const [profile, setProfile] = useState<MeProfile | null>(null);
-  const [dashboard, setDashboard] = useState<MeDashboard | null>(null);
-  const [addresses, setAddresses] = useState<FirmaAdresi[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const profileQ = useProfileQuery();
+  const addressesQ = useProfileAddressesQuery();
+  const dashQ = useProfileDashboardQuery();
+  const profile = profileQ.data ?? null;
+  const dashboard = dashQ.data ?? null;
+  const addresses = addressesQ.data ?? [];
+  const loading = profileQ.isLoading;
+  const [actionError, setActionError] = useState<string | null>(null);
+  const error =
+    actionError ||
+    (profileQ.isError
+      ? profileQ.error instanceof Error
+        ? profileQ.error.message
+        : "Profil alınamadı."
+      : null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [editing, setEditing] = useState(false);
@@ -145,43 +161,28 @@ export function ProfileView() {
   });
 
   const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [profileRes, addrRes, dashRes] = await Promise.allSettled([
-        profilService.getProfile(),
-        profilService.getAddresses(),
-        profilService.getMeDashboard(),
-      ]);
-
-      if (profileRes.status === "fulfilled") {
-        setProfile(profileRes.value);
-        resetProfile({
-          first_name: profileRes.value.first_name || "",
-          last_name: profileRes.value.last_name || "",
-        });
-        setEditing(false);
-      } else {
-        setError(
-          profileRes.reason instanceof Error
-            ? profileRes.reason.message
-            : "Profil alınamadı."
-        );
-      }
-      if (addrRes.status === "fulfilled") {
-        setAddresses(addrRes.value.results || []);
-      }
-      if (dashRes.status === "fulfilled") setDashboard(dashRes.value);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Profil yüklenemedi.");
-    } finally {
-      setLoading(false);
+    setActionError(null);
+    const [p] = await Promise.all([
+      profileQ.refetch(),
+      addressesQ.refetch(),
+      dashQ.refetch(),
+    ]);
+    if (p.data) {
+      resetProfile({
+        first_name: p.data.first_name || "",
+        last_name: p.data.last_name || "",
+      });
+      setEditing(false);
     }
   };
 
   useEffect(() => {
-    void fetchData();
-  }, []);
+    if (!profileQ.data) return;
+    resetProfile({
+      first_name: profileQ.data.first_name || "",
+      last_name: profileQ.data.last_name || "",
+    });
+  }, [profileQ.data, resetProfile]);
 
   const caps = useMemo(() => {
     if (!user?.capabilities) return [];
@@ -191,23 +192,25 @@ export function ProfileView() {
   }, [user]);
 
   const onProfileSave = async (data: ProfileInput) => {
-    setError(null);
+    setActionError(null);
     setSuccessMsg(null);
     try {
       const updated = await profilService.updateProfile({
         first_name: data.first_name,
         last_name: data.last_name,
       });
-      setProfile(updated);
       resetProfile({
         first_name: updated.first_name || "",
         last_name: updated.last_name || "",
       });
       setEditing(false);
       setSuccessMsg("Profil güncellendi.");
+      actionToast.success("Profil güncellendi");
+      await profileQ.refetch();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Profil kaydedilemedi.");
+      setActionError(err instanceof Error ? err.message : "Profil kaydedilemedi.");
+      actionToast.error("Profil kaydedilemedi", err);
     }
   };
 
@@ -221,7 +224,7 @@ export function ProfileView() {
   };
 
   const onPasswordSave = async (data: PasswordChangeInput) => {
-    setError(null);
+    setActionError(null);
     setSuccessMsg(null);
     try {
       const res = await profilService.changePassword({
@@ -231,40 +234,46 @@ export function ProfileView() {
       });
       resetPassword();
       setSuccessMsg(res.detail || "Şifre değiştirildi.");
+      actionToast.success("Şifre değiştirildi");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Şifre değiştirilemedi.");
+      setActionError(err instanceof Error ? err.message : "Şifre değiştirilemedi.");
+      actionToast.error("Şifre değiştirilemedi", err);
     }
   };
 
   const onRequestEmailVerify = async () => {
-    setError(null);
+    setActionError(null);
     setSuccessMsg(null);
     try {
       const res = await profilService.requestEmailVerify();
       setSuccessMsg(res.detail || "Doğrulama e-postası gönderildi.");
+      actionToast.success("Doğrulama e-postası gönderildi");
     } catch (err) {
-      setError(
+      setActionError(
         err instanceof Error ? err.message : "Doğrulama isteği gönderilemedi."
       );
+      actionToast.error("Doğrulama isteği gönderilemedi", err);
     }
   };
 
   const onConfirmEmailVerify = async (data: EmailVerifyConfirmInput) => {
-    setError(null);
+    setActionError(null);
     setSuccessMsg(null);
     try {
       const res = await profilService.confirmEmailVerify(data);
       setSuccessMsg(res.detail || "E-posta doğrulandı.");
+      actionToast.success("E-posta doğrulandı");
       resetVerify();
       await fetchData();
       await refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Doğrulama başarısız.");
+      setActionError(err instanceof Error ? err.message : "Doğrulama başarısız.");
+      actionToast.error("Doğrulama başarısız", err);
     }
   };
 
   const onAddressSave = async (data: AddressInput) => {
-    setError(null);
+    setActionError(null);
     setSuccessMsg(null);
     try {
       await profilService.createAddress({
@@ -277,20 +286,24 @@ export function ProfileView() {
       setAddressModalOpen(false);
       resetAddress();
       setSuccessMsg("Adres kaydedildi.");
+      actionToast.success("Adres kaydedildi");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Adres kaydedilemedi.");
+      setActionError(err instanceof Error ? err.message : "Adres kaydedilemedi.");
+      actionToast.error("Adres kaydedilemedi", err);
     }
   };
 
   const onDeleteAddress = async (id: number) => {
-    setError(null);
+    setActionError(null);
     try {
       await profilService.deleteAddress(id);
       setSuccessMsg("Adres silindi.");
+      actionToast.success("Adres silindi");
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Adres silinemedi.");
+      setActionError(err instanceof Error ? err.message : "Adres silinemedi.");
+      actionToast.error("Adres silinemedi", err);
     }
   };
 
@@ -761,7 +774,7 @@ export function ProfileView() {
                 <div className="flex items-center justify-between border-b border-border pb-3">
                   <h2 className="text-sm font-semibold">Bağlı firma</h2>
                   <Link
-                    href="/firmalar"
+                    to="/firmalar"
                     className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
                   >
                     Firma yönetimi <ArrowRight className="h-3 w-3" />

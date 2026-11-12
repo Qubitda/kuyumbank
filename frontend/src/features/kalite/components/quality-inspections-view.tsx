@@ -1,11 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { kaliteService } from "../services";
-import { measurementSchema, type MeasurementInput } from "../schemas";
+import {
+  useAddMeasurementMutation,
+  useCancelInspectionMutation,
+  useFailInspectionMutation,
+  useInspectionsQuery,
+  usePassInspectionMutation,
+  useStartInspectionMutation,
+} from "../hooks";
+import {
+  measurementSchema,
+  toOpsMeasurementBody,
+  type MeasurementInput,
+} from "../schemas";
 import type { OpsInspection } from "../types";
+import { useActionToast } from "@/hooks/use-action-toast";
+import { mapCommerceError } from "@/lib/api/commerce-errors";
 import {
   Table,
   TableHeader,
@@ -25,15 +38,28 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CheckCircle2, XCircle, Play, Scale, RefreshCw, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Play,
+  Scale,
+  RefreshCw,
+  AlertCircle,
+  Ban,
+} from "lucide-react";
 
 export function QualityInspectionsView() {
-  const [inspections, setInspections] = useState<OpsInspection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const actionToast = useActionToast();
+  const listQ = useInspectionsQuery();
+  const startMut = useStartInspectionMutation();
+  const passMut = usePassInspectionMutation();
+  const failMut = useFailInspectionMutation();
+  const cancelMut = useCancelInspectionMutation();
+  const measureMut = useAddMeasurementMutation();
 
   const [measureModalOpen, setMeasureModalOpen] = useState(false);
-  const [selectedInspection, setSelectedInspection] = useState<OpsInspection | null>(null);
+  const [selectedInspection, setSelectedInspection] =
+    useState<OpsInspection | null>(null);
 
   const {
     register,
@@ -43,65 +69,41 @@ export function QualityInspectionsView() {
   } = useForm<MeasurementInput>({
     resolver: zodResolver(measurementSchema),
     defaultValues: {
+      order_line_id: undefined,
       olculen_ayar: "",
       olculen_gram: "",
-      notlar: "",
+      override_gerekce: "",
     },
   });
 
-  const fetchInspections = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await kaliteService.getInspections();
-      setInspections(data?.results || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Kalite kontrol listesi alınamadı.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const inspections = listQ.data ?? [];
+  const loading = listQ.isLoading;
+  const error = listQ.isError
+    ? mapCommerceError(listQ.error, "Kalite kontrol listesi alınamadı.")
+    : null;
 
-  useEffect(() => {
-    fetchInspections();
-  }, []);
-
-  const handleStart = async (id: number) => {
+  const runAction = async (
+    label: string,
+    fn: () => Promise<unknown>
+  ) => {
     try {
-      await kaliteService.startInspection(id);
-      await fetchInspections();
+      await fn();
+      actionToast.success(label);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "İnceleme başlatılamadı.");
-    }
-  };
-
-  const handlePass = async (id: number) => {
-    try {
-      await kaliteService.passInspection(id);
-      await fetchInspections();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Onaylama başarısız.");
-    }
-  };
-
-  const handleFail = async (id: number) => {
-    try {
-      await kaliteService.failInspection(id);
-      await fetchInspections();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ret işlemi başarısız.");
+      actionToast.error(label, err);
     }
   };
 
   const onMeasurementSubmit = async (formData: MeasurementInput) => {
     if (!selectedInspection) return;
     try {
-      await kaliteService.addMeasurement(selectedInspection.id, formData);
+      const body = toOpsMeasurementBody(formData);
+      await measureMut.mutateAsync({ id: selectedInspection.id, data: body });
+      actionToast.success("Ölçüm kaydedildi");
       setMeasureModalOpen(false);
       reset();
-      await fetchInspections();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ölçüm kaydedilemedi.");
+      actionToast.error("Ölçüm kaydedilemedi", err);
     }
   };
 
@@ -110,26 +112,38 @@ export function QualityInspectionsView() {
       case "GECTI":
         return <Badge variant="success">GEÇTİ</Badge>;
       case "KALDI":
-      case "IPTAL":
         return <Badge variant="destructive">KALDI</Badge>;
+      case "IPTAL":
+        return <Badge variant="destructive">İPTAL</Badge>;
       case "INCELEMEDE":
         return <Badge variant="secondary">İNCELEMEDE</Badge>;
       case "BEKLEMEDE":
       default:
-        return <Badge variant="outline">BEKLEMEDE</Badge>;
+        return <Badge variant="outline">{durum || "BEKLEMEDE"}</Badge>;
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Başlık */}
-      <div className="flex flex-col gap-1 border-b border-border pb-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Kalite Kontrol (QC Inspection SM)
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Sipariş bazlı ayar, gram ve tolerans kontrolleri. Durum makinesi platform denetimindedir.
-        </p>
+      <div className="flex flex-col gap-1 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            Kalite Kontrol (QC)
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            OpenAPI ölçüm: `order_line_id` + `olculen` (ayar/gram ayrı alan
+            GAP-F4-02 — UI birleştirir).
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void listQ.refetch()}
+          className="gap-1.5"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Yenile
+        </Button>
       </div>
 
       {error && (
@@ -144,7 +158,7 @@ export function QualityInspectionsView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchInspections}
+            onClick={() => void listQ.refetch()}
             className="h-8 border-destructive/30"
           >
             Yeniden Dene
@@ -152,7 +166,6 @@ export function QualityInspectionsView() {
         </div>
       )}
 
-      {/* Tablo */}
       <div className="rounded-[8px] border border-border bg-card overflow-hidden">
         {loading ? (
           <div className="flex h-48 w-full items-center justify-center">
@@ -172,7 +185,7 @@ export function QualityInspectionsView() {
                 <TableHead className="w-[100px]">İnceleme ID</TableHead>
                 <TableHead>Sipariş Ref</TableHead>
                 <TableHead>Durum</TableHead>
-                <TableHead className="text-right">İşlemler (Durum Makinesi)</TableHead>
+                <TableHead className="text-right">İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,24 +193,28 @@ export function QualityInspectionsView() {
                 const actions = item.allowed_actions || [];
                 return (
                   <TableRow key={item.id}>
-                    <TableCell className="font-mono text-xs font-semibold">
+                    <TableCell className="font-mono text-xs font-semibold tabular-nums">
                       QC-#{item.id}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      Sipariş #{item.order_id}
+                    <TableCell className="font-mono text-xs tabular-nums">
+                      {item.order_id != null ? `Sipariş #${item.order_id}` : "—"}
                     </TableCell>
                     <TableCell>{renderDurumBadge(item.durum)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
                         {actions.includes("start") && (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleStart(item.id)}
+                            onClick={() =>
+                              void runAction("İnceleme başlatıldı", () =>
+                                startMut.mutateAsync(item.id)
+                              )
+                            }
                             className="h-8 text-xs gap-1"
                           >
                             <Play className="h-3.5 w-3.5" />
-                            <span>Başlat</span>
+                            Başlat
                           </Button>
                         )}
                         {actions.includes("measure") && (
@@ -211,29 +228,52 @@ export function QualityInspectionsView() {
                             className="h-8 text-xs gap-1"
                           >
                             <Scale className="h-3.5 w-3.5" />
-                            <span>Ölçüm Gir</span>
+                            Ölçüm Gir
                           </Button>
                         )}
                         {actions.includes("pass") && (
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={() => handlePass(item.id)}
+                            onClick={() =>
+                              void runAction("Geçti olarak işaretlendi", () =>
+                                passMut.mutateAsync(item.id)
+                              )
+                            }
                             className="h-8 text-xs gap-1"
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" />
-                            <span>Onayla (Geçti)</span>
+                            Onayla
                           </Button>
                         )}
                         {actions.includes("fail") && (
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleFail(item.id)}
+                            onClick={() =>
+                              void runAction("Kaldı olarak işaretlendi", () =>
+                                failMut.mutateAsync(item.id)
+                              )
+                            }
                             className="h-8 text-xs gap-1"
                           >
                             <XCircle className="h-3.5 w-3.5" />
-                            <span>Reddet (Kaldı)</span>
+                            Reddet
+                          </Button>
+                        )}
+                        {actions.includes("cancel") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              void runAction("İnceleme iptal edildi", () =>
+                                cancelMut.mutateAsync(item.id)
+                              )
+                            }
+                            className="h-8 text-xs gap-1"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                            İptal
                           </Button>
                         )}
                       </div>
@@ -246,30 +286,45 @@ export function QualityInspectionsView() {
         )}
       </div>
 
-      {/* Ölçüm Giriş Dialog */}
       <Dialog open={measureModalOpen} onOpenChange={setMeasureModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Ölçüm Kaydı (QC-#{selectedInspection?.id})</DialogTitle>
             <DialogDescription>
-              Fiziksel ayar ve hassas terazi tartım değerlerini girin.
+              API `olculen` string bekler; ayar/gram burada birleştirilir
+              (GAP-F4-02).
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(onMeasurementSubmit)} className="flex flex-col gap-4 pt-2">
+          <form
+            onSubmit={handleSubmit(onMeasurementSubmit)}
+            className="flex flex-col gap-4 pt-2"
+          >
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="qc-line">Sipariş satırı (order_line_id)</Label>
+              <Input
+                id="qc-line"
+                type="number"
+                className="font-mono tabular-nums"
+                disabled={isSubmitting}
+                {...register("order_line_id", { valueAsNumber: true })}
+              />
+              {errors.order_line_id && (
+                <span className="text-[11px] text-destructive">
+                  {errors.order_line_id.message}
+                </span>
+              )}
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="qc-ayar">Ölçülen Ayar</Label>
               <Input
                 id="qc-ayar"
-                placeholder="Örn: 14 veya 585 milyem"
+                placeholder="Örn: 14"
+                className="font-mono tabular-nums"
                 disabled={isSubmitting}
                 {...register("olculen_ayar")}
               />
-              {errors.olculen_ayar && (
-                <span className="text-[11px] text-destructive">
-                  {errors.olculen_ayar.message}
-                </span>
-              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -277,23 +332,23 @@ export function QualityInspectionsView() {
               <Input
                 id="qc-gram"
                 placeholder="Örn: 12.450"
+                className="font-mono tabular-nums"
                 disabled={isSubmitting}
                 {...register("olculen_gram")}
               />
-              {errors.olculen_gram && (
+              {errors.olculen && (
                 <span className="text-[11px] text-destructive">
-                  {errors.olculen_gram.message}
+                  {errors.olculen.message}
                 </span>
               )}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="qc-notes">Kontrol Notları</Label>
+              <Label htmlFor="qc-override">Override gerekçe</Label>
               <Input
-                id="qc-notes"
-                placeholder="Görsel kusur yok, damga kontrolü tamam"
+                id="qc-override"
                 disabled={isSubmitting}
-                {...register("notlar")}
+                {...register("override_gerekce")}
               />
             </div>
 
@@ -306,8 +361,14 @@ export function QualityInspectionsView() {
               >
                 İptal
               </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Kaydediliyor…" : "Ölçümü Kaydet"}
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting || measureMut.isPending}
+              >
+                {isSubmitting || measureMut.isPending
+                  ? "Kaydediliyor…"
+                  : "Ölçümü Kaydet"}
               </Button>
             </div>
           </form>

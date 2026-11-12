@@ -8,7 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/lib/api/client";
 import type { MeResponse } from "@/lib/api/types";
 import { authService } from "../services/auth-service";
@@ -30,8 +30,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const PUBLIC_PATHS = new Set(["/login"]);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [user, setUser] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,8 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setMfaPending(false);
     setError(null);
-    router.replace("/login");
-  }, [router]);
+    navigate("/login", { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     void refresh();
@@ -99,33 +99,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setMfaPending(true);
         if (!PUBLIC_PATHS.has(pathname)) {
-          router.replace("/login");
+          navigate("/login", { replace: true });
         }
         return;
       }
       setUser(null);
       setMfaPending(false);
       if (!PUBLIC_PATHS.has(pathname)) {
-        router.replace("/login");
+        navigate("/login", { replace: true });
       }
     };
     window.addEventListener("kuyumbank:auth-expired", onExpired);
     return () => window.removeEventListener("kuyumbank:auth-expired", onExpired);
-  }, [pathname, router]);
+  }, [pathname, navigate]);
 
   useEffect(() => {
     if (loading) return;
     const isPublic = PUBLIC_PATHS.has(pathname);
 
     if ((!user || mfaPending) && !isPublic) {
-      router.replace("/login");
+      navigate("/login", { replace: true });
       return;
     }
 
     if (user && !mfaPending && isPublic) {
-      router.replace("/");
+      navigate("/", { replace: true });
     }
-  }, [loading, user, mfaPending, pathname, router]);
+  }, [loading, user, mfaPending, pathname, navigate]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

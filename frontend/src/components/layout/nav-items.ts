@@ -22,6 +22,8 @@ export interface NavItem {
   backendApp: string;
   icon: ComponentType<{ className?: string }>;
   requiredCapability?: keyof Capabilities;
+  /** Herhangi biri yeterli (route guard ile aynı mantık). */
+  requiredAnyOf?: (keyof Capabilities)[];
 }
 
 export const DOMAIN_NAV_ITEMS: NavItem[] = [
@@ -93,6 +95,12 @@ export const DOMAIN_NAV_ITEMS: NavItem[] = [
     label: "Belgeler",
     backendApp: "belgeler",
     icon: FileText,
+    requiredAnyOf: [
+      "can_view_shipments",
+      "can_view_orders",
+      "can_view_ops",
+      "can_manage_shipment",
+    ],
   },
   {
     href: "/teklifler",
@@ -112,5 +120,6 @@ export const DOMAIN_NAV_ITEMS: NavItem[] = [
     label: "Raporlar & Analitik",
     backendApp: "siparis",
     icon: BarChart3,
+    requiredCapability: "can_view_ops",
   },
 ];

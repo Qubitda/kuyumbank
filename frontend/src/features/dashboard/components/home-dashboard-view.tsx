@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { dashboardService } from "../services";
+import { useDashboardSnapshotQuery } from "../hooks";
 import type {
   DashboardFilters,
   DashboardSnapshot,
@@ -110,35 +110,22 @@ export function HomeDashboardView() {
     dateTo: initialRange.to,
     orderDurum: "all",
   });
-  const [snap, setSnap] = useState<DashboardSnapshot>(emptySnap);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const snapQ = useDashboardSnapshotQuery(caps, filters);
+  const snap: DashboardSnapshot = snapQ.data ?? emptySnap();
+  const loading = snapQ.isLoading;
+  const refreshing = snapQ.isFetching && !snapQ.isLoading;
+  const error =
+    snapQ.isError
+      ? snapQ.error instanceof Error
+        ? snapQ.error.message
+        : "Dashboard yüklenemedi."
+      : !snap.meDashboard && snap.errors.meDashboard
+        ? snap.errors.meDashboard
+        : null;
 
-  const load = useCallback(
-    async (mode: "full" | "soft" = "full") => {
-      if (mode === "full") setLoading(true);
-      else setRefreshing(true);
-      setError(null);
-      try {
-        const next = await dashboardService.loadSnapshot(caps, filters);
-        setSnap(next);
-        if (!next.meDashboard && next.errors.meDashboard) {
-          setError(next.errors.meDashboard);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Dashboard yüklenemedi.");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [caps, filters]
-  );
-
-  useEffect(() => {
-    void load("full");
-  }, [load]);
+  const load = async (_mode: "full" | "soft" = "full") => {
+    await snapQ.refetch();
+  };
 
   const setPreset = (preset: DatePreset) => {
     if (preset === "custom") {
@@ -625,7 +612,7 @@ export function HomeDashboardView() {
                 <Tooltip key={k.key}>
                   <TooltipTrigger asChild>
                     <Link
-                      href={k.href}
+                      to={k.href}
                       className="rounded-[8px] border border-border bg-card p-4 space-y-1 hover:bg-muted/40 transition-colors"
                     >
                       <div className="text-[11px] text-muted-foreground">
@@ -665,7 +652,7 @@ export function HomeDashboardView() {
               return (
                 <Link
                   key={l.href + l.label}
-                  href={l.href}
+                  to={l.href}
                   className="inline-flex items-center gap-1.5 rounded-[6px] border border-border bg-card px-3 py-2 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <Icon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -773,7 +760,7 @@ export function HomeDashboardView() {
                 {attention.map((item) => (
                   <li key={item.id}>
                     <Link
-                      href={item.href}
+                      to={item.href}
                       className="flex items-center justify-between gap-3 py-2.5 hover:bg-muted/30 -mx-1 px-1 rounded-[4px]"
                     >
                       <div className="min-w-0">
@@ -883,7 +870,7 @@ export function HomeDashboardView() {
               {snap.cari.slice(0, 6).map((c) => (
                 <Link
                   key={c.id}
-                  href="/finans"
+                  to="/finans"
                   className="flex items-center justify-between rounded-[6px] border border-border px-3 py-2 text-xs hover:bg-muted/40"
                 >
                   <span className="font-mono text-muted-foreground">#{c.id}</span>
@@ -929,7 +916,7 @@ function RecentBlock({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold text-foreground">{title}</h2>
         <Link
-          href={href}
+          to={href}
           className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
         >
           Tümü <ArrowRight className="h-3 w-3" />
@@ -948,7 +935,7 @@ function RecentBlock({
           {rows.map((r) => (
             <li key={r.id}>
               <Link
-                href={r.href}
+                to={r.href}
                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors"
               >
                 <div className="min-w-0 flex-1">

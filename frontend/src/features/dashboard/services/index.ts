@@ -184,7 +184,7 @@ export const dashboardService = {
             snap.shipments = rows.map(
               (s): OpsShipment => ({
                 id: s.id,
-                order_id: s.order_id ?? 0,
+                ...(s.order_id != null ? { order_id: s.order_id } : {}),
                 durum: s.durum,
                 allowed_actions: s.allowed_actions || [],
               })

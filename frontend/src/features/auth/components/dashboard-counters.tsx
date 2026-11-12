@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { fetchMeDashboard } from "@/lib/api/client";
 import type { MeDashboard } from "@/lib/api/types";
 import { ShoppingCart, Package, Building, Hash } from "lucide-react";
@@ -49,7 +49,7 @@ export function DashboardCounters() {
       </div>
 
       <Link
-        href="/siparis"
+        to="/siparis"
         className="rounded-[8px] border border-border bg-card p-4 space-y-1 hover:bg-muted/40 transition-colors"
       >
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -62,7 +62,7 @@ export function DashboardCounters() {
       </Link>
 
       <Link
-        href="/siparis"
+        to="/siparis"
         className="rounded-[8px] border border-border bg-card p-4 space-y-1 hover:bg-muted/40 transition-colors"
       >
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

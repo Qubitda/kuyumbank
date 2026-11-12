@@ -1,5 +1,10 @@
-import { apiFetch } from "@/lib/api/client";
-import type { OpsInspection, OpsInspectionPage, InspectionMeasurementRequest } from "../types";
+import { apiFetch, newIdempotencyKey } from "@/lib/api/client";
+import type {
+  InspectionCreateRequest,
+  InspectionMeasurementRequest,
+  OpsInspection,
+  OpsInspectionPage,
+} from "../types";
 
 export const kaliteService = {
   getInspections(): Promise<OpsInspectionPage> {
@@ -8,29 +13,45 @@ export const kaliteService = {
   getInspectionDetail(id: number | string): Promise<OpsInspection> {
     return apiFetch<OpsInspection>(`/ops/inspections/${id}/`);
   },
+  createInspection(data: InspectionCreateRequest): Promise<OpsInspection> {
+    return apiFetch<OpsInspection>("/ops/inspections/", {
+      method: "POST",
+      body: data,
+      idempotencyKey: newIdempotencyKey(),
+    });
+  },
   startInspection(id: number | string): Promise<OpsInspection> {
     return apiFetch<OpsInspection>(`/ops/inspections/${id}/start/`, {
       method: "POST",
-      idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      idempotencyKey: newIdempotencyKey(),
     });
   },
-  addMeasurement(id: number | string, data: InspectionMeasurementRequest): Promise<OpsInspection> {
+  addMeasurement(
+    id: number | string,
+    data: InspectionMeasurementRequest
+  ): Promise<OpsInspection> {
     return apiFetch<OpsInspection>(`/ops/inspections/${id}/measurements/`, {
       method: "POST",
       body: data,
-      idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      idempotencyKey: newIdempotencyKey(),
     });
   },
   passInspection(id: number | string): Promise<OpsInspection> {
     return apiFetch<OpsInspection>(`/ops/inspections/${id}/pass/`, {
       method: "POST",
-      idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      idempotencyKey: newIdempotencyKey(),
     });
   },
   failInspection(id: number | string): Promise<OpsInspection> {
     return apiFetch<OpsInspection>(`/ops/inspections/${id}/fail/`, {
       method: "POST",
-      idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+      idempotencyKey: newIdempotencyKey(),
+    });
+  },
+  cancelInspection(id: number | string): Promise<OpsInspection> {
+    return apiFetch<OpsInspection>(`/ops/inspections/${id}/cancel/`, {
+      method: "POST",
+      idempotencyKey: newIdempotencyKey(),
     });
   },
 };

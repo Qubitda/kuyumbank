@@ -1,39 +1,65 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth";
 import { belgelerService } from "../services";
-import type { DocumentItem, DocumentsSnapshot } from "../types";
+import type { PodAttachRequest } from "../types";
 
-export function useDocuments() {
+export const belgelerKeys = {
+  all: ["belgeler"] as const,
+  list: (capKey: string) => [...belgelerKeys.all, "list", capKey] as const,
+  opsShipments: () => [...belgelerKeys.all, "ops-shipments"] as const,
+};
+
+function capKey(caps: Record<string, boolean> | null | undefined): string {
+  if (!caps) return "anon";
+  return Object.keys(caps)
+    .filter((k) => caps[k])
+    .sort()
+    .join(",");
+}
+
+export function useDocumentsQuery(enabled = true) {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [errors, setErrors] = useState<DocumentsSnapshot["errors"]>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const key = capKey(user?.capabilities as Record<string, boolean> | undefined);
+  return useQuery({
+    queryKey: belgelerKeys.list(key),
+    queryFn: () => belgelerService.getDocuments(user?.capabilities),
+    enabled: enabled && Boolean(user),
+  });
+}
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const snap = await belgelerService.getDocuments(user?.capabilities);
-      setDocuments(snap.items);
-      setErrors(snap.errors);
-      const failKeys = Object.keys(snap.errors);
-      if (snap.items.length === 0 && failKeys.length > 0) {
-        setError(Object.values(snap.errors).filter(Boolean).join(" · "));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Belgeler alınamadı.");
-      setDocuments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.capabilities]);
+/** Belgeler ekranı uyumluluk sarmalayıcısı. */
+export function useDocuments() {
+  const q = useDocumentsQuery();
+  const snap = q.data;
+  const failKeys = snap ? Object.keys(snap.errors) : [];
+  const aggregateError =
+    snap && snap.items.length === 0 && failKeys.length > 0
+      ? Object.values(snap.errors).filter(Boolean).join(" · ")
+      : null;
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  return {
+    documents: snap?.items ?? [],
+    errors: snap?.errors ?? {},
+    loading: q.isLoading,
+    error: q.isError
+      ? q.error instanceof Error
+        ? q.error.message
+        : "Belgeler alınamadı."
+      : aggregateError,
+    refresh: async () => {
+      await q.refetch();
+    },
+  };
+}
 
-  return { documents, errors, loading, error, refresh };
+export function useSubmitPodDocumentMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: PodAttachRequest) => belgelerService.submitPod(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: belgelerKeys.all });
+    },
+  });
 }

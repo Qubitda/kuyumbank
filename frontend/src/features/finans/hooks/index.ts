@@ -1,31 +1,64 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unwrapResults } from "@/lib/api/client";
 import { finansService } from "../services";
-import type { CariHesap, CreditInfo } from "../types";
 
-export function useFinance() {
-  const [cariList, setCariList] = useState<CariHesap[]>([]);
-  const [credit, setCredit] = useState<CreditInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const finansKeys = {
+  all: ["finans"] as const,
+  me: (pb = "TRY") => [...finansKeys.all, "me", pb] as const,
+  credit: (pb = "TRY") => [...finansKeys.all, "credit", pb] as const,
+  cari: () => [...finansKeys.all, "cari"] as const,
+  ledger: () => [...finansKeys.all, "ledger"] as const,
+  ops: () => [...finansKeys.all, "ops"] as const,
+};
 
-  useEffect(() => {
-    Promise.allSettled([finansService.getCariList(), finansService.getMyCredit()])
-      .then(([cariRes, creditRes]) => {
-        if (cariRes.status === "fulfilled") {
-          setCariList(unwrapResults(cariRes.value));
-        }
-        if (creditRes.status === "fulfilled") {
-          setCredit(creditRes.value);
-        }
-        if (cariRes.status === "rejected" && creditRes.status === "rejected") {
-          setError("Finans bilgisi alınamadı");
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+export function useFinanceMeQuery(paraBirimi = "TRY", enabled = true) {
+  return useQuery({
+    queryKey: finansKeys.me(paraBirimi),
+    queryFn: () => finansService.getMyFinance(paraBirimi),
+    enabled,
+  });
+}
 
-  return { cariList, credit, loading, error };
+export function useCreditQuery(paraBirimi = "TRY", enabled = true) {
+  return useQuery({
+    queryKey: finansKeys.credit(paraBirimi),
+    queryFn: () => finansService.getMyCredit(paraBirimi),
+    enabled,
+  });
+}
+
+export function useCariListQuery(enabled = true) {
+  return useQuery({
+    queryKey: finansKeys.cari(),
+    queryFn: async () => unwrapResults(await finansService.getCariList()),
+    enabled,
+  });
+}
+
+export function useLedgerQuery(enabled = true) {
+  return useQuery({
+    queryKey: finansKeys.ledger(),
+    queryFn: async () => unwrapResults(await finansService.getLedger()),
+    enabled,
+  });
+}
+
+export function useOpsFinanceQuery(enabled = false) {
+  return useQuery({
+    queryKey: finansKeys.ops(),
+    queryFn: () => finansService.getOpsFinance(),
+    enabled,
+  });
+}
+
+export function useCreatePaymentIntentMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: number) => finansService.createPaymentIntent(orderId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: finansKeys.all });
+    },
+  });
 }
