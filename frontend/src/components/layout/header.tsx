@@ -88,6 +88,12 @@ export function Header({ user, onLogout }: HeaderProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
+                <Link href="/profil" className="cursor-pointer text-xs">
+                  <User className="mr-2 h-3.5 w-3.5" />
+                  Profil & Adresler
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/" className="cursor-pointer text-xs">
                   <ShieldCheck className="mr-2 h-3.5 w-3.5" />
                   Oturum & Yetkiler

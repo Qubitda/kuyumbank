@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { urunlerService } from "../services";
-import { fiyatlamaService } from "@/features/fiyatlama";
+import { fiyatlamaService, rememberQuoteId } from "@/features/fiyatlama";
 import { siparisService } from "@/features/siparis";
+import { tanimlarService } from "@/features/tanimlar";
 import type { BuyerCatalogItem, BuyerCatalogDetail } from "../types";
 import { formatGram, formatMoney } from "@/lib/format";
 import {
@@ -24,7 +25,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Search, Eye, AlertCircle, RefreshCw, Gem, Tag, ShoppingCart, Check } from "lucide-react";
+import { Search, Eye, AlertCircle, RefreshCw, Gem, Tag, ShoppingCart, Check, Scale } from "lucide-react";
+import { VariantCompareModal } from "./variant-compare-modal";
 
 export function CatalogView() {
   const [items, setItems] = useState<BuyerCatalogItem[]>([]);
@@ -35,6 +37,15 @@ export function CatalogView() {
   const [selectedProduct, setSelectedProduct] = useState<BuyerCatalogDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const [selectedForCompare, setSelectedForCompare] = useState<number[]>([]);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+
+  const toggleCompare = (id: number) => {
+    setSelectedForCompare((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : prev.length < 4 ? [...prev, id] : prev
+    );
+  };
   const [quoteState, setQuoteState] = useState<
     Record<
       number,
@@ -55,13 +66,26 @@ export function CatalogView() {
       [variantId]: { loading: true },
     }));
     try {
-      const quote = await fiyatlamaService.createQuote({ varyant_id: variantId });
+      const channels = await tanimlarService.getSalesChannels();
+      const channelId = Array.isArray(channels) ? channels[0]?.id : undefined;
+      if (!channelId) {
+        throw new Error("Satış kanalı bulunamadı. Quote için satis_kanali_id zorunlu.");
+      }
+      const quote = await fiyatlamaService.createQuote({
+        varyant_id: variantId,
+        satis_kanali_id: channelId,
+      });
+      const price = quote.toplam_vergisiz || quote.gram_basi_vergisiz || quote.birim_fiyat;
+      if (!price) {
+        throw new Error("Backend fiyat alanı dönmedi.");
+      }
+      rememberQuoteId(quote.id);
       setQuoteState((prev) => ({
         ...prev,
         [variantId]: {
           loading: false,
-          price: quote.birim_fiyat || quote.has_maliyeti || "1500.00",
-          currency: quote.para_birimi || "TRY",
+          price,
+          currency: quote.para_birimi,
           quoteId: quote.id,
         },
       }));
@@ -213,6 +237,7 @@ export function CatalogView() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]"></TableHead>
                 <TableHead className="w-[120px]">Platform Kodu</TableHead>
                 <TableHead>Ürün Adı</TableHead>
                 <TableHead>Kategori</TableHead>
@@ -225,6 +250,15 @@ export function CatalogView() {
             <TableBody>
               {items.map((item) => (
                 <TableRow key={item.id}>
+                  <TableCell className="w-[40px] pr-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedForCompare.includes(item.id)}
+                      onChange={() => toggleCompare(item.id)}
+                      className="h-4 w-4 rounded-[4px] border-border text-primary focus:ring-ring cursor-pointer"
+                      aria-label={`${item.ad} karşılaştırma seçimi`}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-foreground font-medium">
                     {item.platform_kodu}
                   </TableCell>
@@ -369,6 +403,49 @@ export function CatalogView() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Karşılaştırma Çubuğu (CAP-COMPARE) */}
+      {selectedForCompare.length > 0 && (
+        <div className="sticky bottom-4 z-20 flex items-center justify-between rounded-[8px] border border-border bg-card/95 backdrop-blur-sm p-4 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">
+              {selectedForCompare.length} ürün seçildi
+            </span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">
+              (Maksimum 4 ürün karşılaştırılabilir)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedForCompare([])}
+              className="h-8 text-xs"
+            >
+              Temizle
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setCompareModalOpen(true)}
+              className="h-8 text-xs gap-1.5"
+            >
+              <Scale className="h-3.5 w-3.5" />
+              <span>Karşılaştır ({selectedForCompare.length})</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Karşılaştırma Modalı */}
+      <VariantCompareModal
+        open={compareModalOpen}
+        onOpenChange={setCompareModalOpen}
+        selectedItems={items.filter((i) => selectedForCompare.includes(i.id))}
+        onRemoveItem={(id) => setSelectedForCompare((prev) => prev.filter((i) => i !== id))}
+        onInspectItem={(id) => handleOpenDetail(id)}
+      />
     </div>
   );
 }

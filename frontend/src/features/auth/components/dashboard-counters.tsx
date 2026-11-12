@@ -2,24 +2,16 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api/client";
+import { fetchMeDashboard } from "@/lib/api/client";
+import type { MeDashboard } from "@/lib/api/types";
 import { ShoppingCart, Package, Building, Hash } from "lucide-react";
-
-interface MeDashboard {
-  cart_id: number;
-  cart_line_count: number;
-  firma_ad: string;
-  firma_id: number | null;
-  firma_kodu: string;
-  order_count: number;
-}
 
 export function DashboardCounters() {
   const [data, setData] = useState<MeDashboard | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<MeDashboard>("/me/dashboard/")
+    fetchMeDashboard()
       .then((res) => {
         if (!cancelled) setData(res);
       })
@@ -65,7 +57,7 @@ export function DashboardCounters() {
           <span>Sepetteki Kalem</span>
         </div>
         <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
-          {data.cart_line_count}
+          {data.cart_line_count ?? "—"}
         </p>
       </Link>
 
@@ -78,7 +70,7 @@ export function DashboardCounters() {
           <span>Toplam Sipariş</span>
         </div>
         <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
-          {data.order_count}
+          {data.order_count ?? "—"}
         </p>
       </Link>
     </div>

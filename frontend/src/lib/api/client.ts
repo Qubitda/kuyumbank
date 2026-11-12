@@ -1,6 +1,22 @@
-import type { CsrfResponse, MeResponse, ProblemDetail } from "./types";
+import type {
+  CsrfResponse,
+  MeDashboard,
+  MeResponse,
+  Paginated,
+  ProblemDetail,
+} from "./types";
 
 const API_PREFIX = "/api/v1";
+
+export function newIdempotencyKey(): string {
+  return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+}
+
+export function unwrapResults<T>(data: Paginated<T> | T[] | null | undefined): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return data.results ?? [];
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -132,4 +148,45 @@ export function logout(): Promise<{ ok: boolean }> {
 
 export function fetchMe(): Promise<MeResponse> {
   return apiFetch<MeResponse>("/me/");
+}
+
+export function fetchMeDashboard(): Promise<MeDashboard> {
+  return apiFetch<MeDashboard>("/me/dashboard/");
+}
+
+/**
+ * Same-origin binary/download helper (session cookie).
+ * Yalnızca OpenAPI'de var olan path'ler için kullanın.
+ */
+export async function apiDownload(path: string, filename?: string): Promise<void> {
+  const headers: Record<string, string> = { Accept: "*/*" };
+  try {
+    headers["X-CSRFToken"] = await ensureCsrfToken();
+  } catch {
+    // GET indirmede CSRF opsiyonel
+  }
+
+  const res = await fetch(`${API_PREFIX}${path}`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+    headers,
+  });
+
+  if (!res.ok) {
+    throw new ApiError(await parseProblem(res));
+  }
+
+  const blob = await res.blob();
+  const cd = res.headers.get("Content-Disposition") || "";
+  const match = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(cd);
+  const name = filename || (match ? decodeURIComponent(match[1]) : `download-${Date.now()}`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

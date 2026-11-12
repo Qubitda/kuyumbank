@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { firmalarService } from "../services";
 import { orgUnitSchema, type OrgUnitInput } from "../schemas";
-import type { OrgUnit, Approval } from "../types";
-import { formatMoney } from "@/lib/format";
+import type { OrgUnit, Approval, InviteItem } from "../types";
+import { formatMoney, formatDateTime } from "@/lib/format";
 import {
   Table,
   TableHeader,
@@ -26,23 +27,48 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Building2, CheckSquare, Plus, RefreshCw, AlertCircle, Check, X } from "lucide-react";
+import {
+  Building2,
+  CheckSquare,
+  Users,
+  Plus,
+  RefreshCw,
+  AlertCircle,
+  Check,
+  X,
+  Mail,
+  Send,
+  CheckCircle2,
+} from "lucide-react";
+
+const inviteSchema = z.object({
+  email: z.string().email("Geçerli bir e-posta adresi girin"),
+  rol: z.string().min(1, "Rol seçimi zorunludur"),
+  sube_id: z.string().optional(),
+});
+
+type InviteFormValues = z.infer<typeof inviteSchema>;
 
 export function FirmalarOrgView() {
-  const [activeTab, setActiveTab] = useState<"units" | "approvals">("units");
+  const [activeTab, setActiveTab] = useState<"units" | "approvals" | "invites">("units");
 
   const [units, setUnits] = useState<OrgUnit[]>([]);
   const [approvals, setApprovals] = useState<Approval[]>([]);
+  const [invites, setInvites] = useState<InviteItem[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [createUnitOpen, setCreateUnitOpen] = useState(false);
+  const [createInviteOpen, setCreateInviteOpen] = useState(false);
 
+  // Birim Oluşturma Formu
   const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
+    register: registerUnit,
+    handleSubmit: handleUnitSubmit,
+    reset: resetUnit,
+    formState: { errors: unitErrors, isSubmitting: isUnitSubmitting },
   } = useForm<OrgUnitInput>({
     resolver: zodResolver(orgUnitSchema),
     defaultValues: {
@@ -51,13 +77,29 @@ export function FirmalarOrgView() {
     },
   });
 
+  // Davet Oluşturma Formu
+  const {
+    register: registerInvite,
+    handleSubmit: handleInviteSubmit,
+    reset: resetInvite,
+    formState: { errors: inviteErrors, isSubmitting: isInviteSubmitting },
+  } = useForm<InviteFormValues>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: {
+      email: "",
+      rol: "ALICI_SATINALMA",
+      sube_id: "",
+    },
+  });
+
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [unitsRes, approvalsRes] = await Promise.allSettled([
+      const [unitsRes, approvalsRes, invitesRes] = await Promise.allSettled([
         firmalarService.getOrgUnits(),
         firmalarService.getApprovals(),
+        firmalarService.getInvites(),
       ]);
 
       if (unitsRes.status === "fulfilled") {
@@ -65,6 +107,9 @@ export function FirmalarOrgView() {
       }
       if (approvalsRes.status === "fulfilled") {
         setApprovals(approvalsRes.value?.results || []);
+      }
+      if (invitesRes.status === "fulfilled") {
+        setInvites(invitesRes.value?.results || []);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Organizasyon verileri alınamadı.");
@@ -84,10 +129,27 @@ export function FirmalarOrgView() {
         ad: formData.ad,
       });
       setCreateUnitOpen(false);
-      reset();
+      resetUnit();
+      setSuccessMsg("Organizasyon birimi başarıyla oluşturuldu.");
       await fetchData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Organizasyon birimi oluşturulamadı.");
+    }
+  };
+
+  const onCreateInviteSubmit = async (formData: InviteFormValues) => {
+    try {
+      await firmalarService.createInvite({
+        email: formData.email,
+        rol: formData.rol,
+        sube_id: formData.sube_id ? Number(formData.sube_id) : undefined,
+      });
+      setCreateInviteOpen(false);
+      resetInvite();
+      setSuccessMsg(`${formData.email} adresine davet gönderildi.`);
+      await fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Davet gönderilemedi.");
     }
   };
 
@@ -95,6 +157,7 @@ export function FirmalarOrgView() {
     try {
       await firmalarService.approveApproval(id);
       await fetchData();
+      setSuccessMsg("Onay talebi onaylandı.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Onaylama işlemi başarısız.");
     }
@@ -104,6 +167,7 @@ export function FirmalarOrgView() {
     try {
       await firmalarService.rejectApproval(id);
       await fetchData();
+      setSuccessMsg("Onay talebi reddedildi.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reddetme işlemi başarısız.");
     }
@@ -115,10 +179,10 @@ export function FirmalarOrgView() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Firmalar & Organizasyon
+            Firmalar, Şubeler & Onaylar
           </h1>
           <p className="text-xs text-muted-foreground">
-            Birim hiyerarşisi, şubeler ve sipariş harcama onay mekanizması (Approvals).
+            Organizasyon birim hiyerarşisi, ekip davetleri ve harcama limit onay mekanizması (Approvals).
           </p>
         </div>
 
@@ -133,7 +197,7 @@ export function FirmalarOrgView() {
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
-            <span>Organizasyon Birimleri ({units.length})</span>
+            <span>Şubeler & Birimler ({units.length})</span>
           </button>
           <button
             type="button"
@@ -147,8 +211,27 @@ export function FirmalarOrgView() {
             <CheckSquare className="h-3.5 w-3.5" />
             <span>Onay Talepleri ({approvals.length})</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("invites")}
+            className={`flex items-center gap-2 rounded-[4px] px-3 py-1.5 text-xs font-medium transition-colors ${
+              activeTab === "invites"
+                ? "bg-card text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span>Ekip & Davetler ({invites.length})</span>
+          </button>
         </div>
       </div>
+
+      {successMsg && (
+        <div className="flex items-center gap-2 rounded-[6px] border border-border bg-muted/60 p-3 text-xs text-foreground font-medium">
+          <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {error && (
         <div
@@ -174,7 +257,7 @@ export function FirmalarOrgView() {
         <div className="flex h-48 w-full items-center justify-center">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            <span>Veriler alınıyor…</span>
+            <span>Organizasyon verileri alınıyor…</span>
           </div>
         </div>
       ) : activeTab === "units" ? (
@@ -215,7 +298,7 @@ export function FirmalarOrgView() {
                         {u.ad}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {u.parent_id ? `Birim #${u.parent_id}` : "Ana Birim (Kök)"}
+                        {u.parent_id ? `Birim #${u.parent_id}` : "Ana Merkez (Kök)"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -224,7 +307,7 @@ export function FirmalarOrgView() {
             )}
           </div>
         </div>
-      ) : (
+      ) : activeTab === "approvals" ? (
         /* Approvals Tablosu */
         <div className="rounded-[8px] border border-border bg-card overflow-hidden">
           {approvals.length === 0 ? (
@@ -307,6 +390,73 @@ export function FirmalarOrgView() {
             </Table>
           )}
         </div>
+      ) : (
+        /* Ekip & Davetler Tablosu */
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-muted-foreground">
+              Şube çalışanlarınızı ve departman yetkililerini platforma davet edin.
+            </span>
+            <Button
+              size="sm"
+              onClick={() => setCreateInviteOpen(true)}
+              className="gap-1.5"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Yeni Ekip Üyesi Davet Et</span>
+            </Button>
+          </div>
+
+          <div className="rounded-[8px] border border-border bg-card overflow-hidden">
+            {invites.length === 0 ? (
+              <div className="p-8 text-center text-xs text-muted-foreground">
+                Kayıtlı davet bulunmamaktadır.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>E-posta</TableHead>
+                    <TableHead>Atanan Rol</TableHead>
+                    <TableHead>Durum</TableHead>
+                    <TableHead>Gönderilme Tarihi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invites.map((inv) => (
+                    <TableRow key={inv.id}>
+                      <TableCell className="font-medium text-foreground">
+                        {inv.email}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono text-[10px]">
+                          {inv.rol}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            inv.durum === "KABUL_EDILDI"
+                              ? "success"
+                              : inv.durum === "IPTAL"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                          className="font-mono text-[10px]"
+                        >
+                          {inv.durum}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {inv.olusturma_tarihi ? formatDateTime(inv.olusturma_tarihi) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Yeni Birim Ekleme Dialog */}
@@ -319,18 +469,18 @@ export function FirmalarOrgView() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit(onCreateUnitSubmit)} className="flex flex-col gap-4 pt-2">
+          <form onSubmit={handleUnitSubmit(onCreateUnitSubmit)} className="flex flex-col gap-4 pt-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="unit-kod">Birim Kodu</Label>
               <Input
                 id="unit-kod"
                 placeholder="Örn: IST-MERKEZ veya SUBE-01"
-                disabled={isSubmitting}
-                {...register("kod")}
+                disabled={isUnitSubmitting}
+                {...registerUnit("kod")}
               />
-              {errors.kod && (
+              {unitErrors.kod && (
                 <span className="text-[11px] text-destructive">
-                  {errors.kod.message}
+                  {unitErrors.kod.message}
                 </span>
               )}
             </div>
@@ -340,12 +490,12 @@ export function FirmalarOrgView() {
               <Input
                 id="unit-ad"
                 placeholder="Örn: Kapalıçarşı Ana Toptan Şubesi"
-                disabled={isSubmitting}
-                {...register("ad")}
+                disabled={isUnitSubmitting}
+                {...registerUnit("ad")}
               />
-              {errors.ad && (
+              {unitErrors.ad && (
                 <span className="text-[11px] text-destructive">
-                  {errors.ad.message}
+                  {unitErrors.ad.message}
                 </span>
               )}
             </div>
@@ -359,8 +509,87 @@ export function FirmalarOrgView() {
               >
                 İptal
               </Button>
-              <Button type="submit" size="sm" disabled={isSubmitting}>
-                {isSubmitting ? "Kaydediliyor…" : "Kaydet"}
+              <Button type="submit" size="sm" disabled={isUnitSubmitting}>
+                {isUnitSubmitting ? "Kaydediliyor…" : "Kaydet"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Ekip Üyesi Davet Etme Dialog */}
+      <Dialog open={createInviteOpen} onOpenChange={setCreateInviteOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Yeni Ekip Üyesi Davet Et</DialogTitle>
+            <DialogDescription>
+              Kullanıcının e-posta adresine ve şubesine rol bazlı yetkilendirme bağlantısı iletilir.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleInviteSubmit(onCreateInviteSubmit)} className="flex flex-col gap-4 pt-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="inv-email">E-posta Adresi</Label>
+              <Input
+                id="inv-email"
+                type="email"
+                placeholder="calisan@firma.com"
+                disabled={isInviteSubmitting}
+                {...registerInvite("email")}
+              />
+              {inviteErrors.email && (
+                <span className="text-[11px] text-destructive">
+                  {inviteErrors.email.message}
+                </span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="inv-role">Kullanıcı Rolü</Label>
+              <select
+                id="inv-role"
+                className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                disabled={isInviteSubmitting}
+                {...registerInvite("rol")}
+              >
+                <option value="ALICI_SATINALMA">Alıcı Satın Alma Yetkilisi</option>
+                <option value="ALICI_FINANS">Alıcı Finans / Muhasebe</option>
+                <option value="ALICI_YONETICI">Alıcı Firma Yöneticisi</option>
+                <option value="TEDARIKCI_SATIS">Tedarikçi Satış Temsilcisi</option>
+                <option value="TEDARIKCI_ATOLYE">Tedarikçi Atölye / Üretim</option>
+                <option value="TEDARIKCI_YONETICI">Tedarikçi Firma Yöneticisi</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="inv-sube">Bağlı Şube / Birim (Opsiyonel)</Label>
+              <select
+                id="inv-sube"
+                className="h-9 w-full rounded-[6px] border border-input bg-background px-3 py-1 text-xs shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                disabled={isInviteSubmitting}
+                {...registerInvite("sube_id")}
+              >
+                <option value="">Merkez / Tüm Birimler</option>
+                {units.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.ad} ({u.kod})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setCreateInviteOpen(false)}
+              >
+                İptal
+              </Button>
+              <Button type="submit" size="sm" disabled={isInviteSubmitting} className="gap-1.5">
+                <Send className="h-3.5 w-3.5" />
+                <span>{isInviteSubmitting ? "Gönderiliyor…" : "Daveti Gönder"}</span>
               </Button>
             </div>
           </form>

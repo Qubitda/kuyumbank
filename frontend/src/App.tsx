@@ -19,6 +19,9 @@ import FinansPage from "@/app/(portal)/finans/page";
 import KalitePage from "@/app/(portal)/kalite/page";
 import LojistikPage from "@/app/(portal)/lojistik/page";
 import BelgelerPage from "@/app/(portal)/belgeler/page";
+import ProfilPage from "@/app/(portal)/profil/page";
+import TekliflerPage from "@/app/(portal)/teklifler/page";
+import RaporlarPage from "@/app/(portal)/raporlar/page";
 import { DomainLoading } from "@/components/route-states";
 
 export default function App() {
@@ -86,6 +89,24 @@ export default function App() {
         return (
           <PortalLayout>
             <BelgelerPage />
+          </PortalLayout>
+        );
+      case "/profil":
+        return (
+          <PortalLayout>
+            <ProfilPage />
+          </PortalLayout>
+        );
+      case "/teklifler":
+        return (
+          <PortalLayout>
+            <TekliflerPage />
+          </PortalLayout>
+        );
+      case "/raporlar":
+        return (
+          <PortalLayout>
+            <RaporlarPage />
           </PortalLayout>
         );
       case "/":

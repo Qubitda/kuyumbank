@@ -1,19 +1,16 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
-
-const rootDir = path.dirname(fileURLToPath(import.meta.url));
+import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(rootDir, './src'),
-        'next/link': path.resolve(rootDir, './src/lib/next-shims/link.tsx'),
-        'next/navigation': path.resolve(rootDir, './src/lib/next-shims/navigation.tsx'),
+        '@': path.resolve(process.cwd(), './src'),
+        'next/link': path.resolve(process.cwd(), './src/lib/next-shims/link.tsx'),
+        'next/navigation': path.resolve(process.cwd(), './src/lib/next-shims/navigation.tsx'),
       },
     },
     server: {

@@ -1,16 +1,18 @@
+/** OpenAPI SupplierStock */
 export interface StockBalance {
-  id: number;
   varyant_id: number;
-  depo_id: number;
-  mevcut_miktar: string; // Decimal string
-  rezerve_miktar: string;
-  kullanilabilir_miktar: string;
+  birim: string;
+  available: string;
+  on_hand?: string;
+  reserved?: string;
+  blocked?: string;
+  teklif_id?: number;
+  warehouse_id?: number;
 }
 
-export interface StockMovement {
-  id: number;
-  varyant_id: number;
-  hareket_tipi: "GIRIS" | "CIKIS" | "SATIS" | "IADE" | "DUZELTME";
+export interface StockAdjustmentRequest {
+  warehouse_id: number;
+  teklif_id: number;
   miktar: string;
-  tarih: string;
+  neden?: string;
 }

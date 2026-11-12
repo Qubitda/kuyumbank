@@ -54,7 +54,7 @@ export function LogisticsManagementView() {
   } = useForm<ShipmentDispatchInput>({
     resolver: zodResolver(shipmentDispatchSchema),
     defaultValues: {
-      tasiyici: "Loomis / Brinks Sigortalı Değerli Kargo",
+      tasiyici: "",
       takip_no: "",
     },
   });

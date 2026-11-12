@@ -10,6 +10,9 @@ import {
   CheckCircle,
   Truck,
   FileText,
+  Briefcase,
+  User,
+  BarChart3,
 } from "lucide-react";
 import type { Capabilities } from "@/lib/api/types";
 
@@ -90,5 +93,24 @@ export const DOMAIN_NAV_ITEMS: NavItem[] = [
     label: "Belgeler",
     backendApp: "belgeler",
     icon: FileText,
+  },
+  {
+    href: "/teklifler",
+    label: "Tedarikçi RFQ",
+    backendApp: "fiyatlama",
+    icon: Briefcase,
+    requiredCapability: "can_manage_offers",
+  },
+  {
+    href: "/profil",
+    label: "Profil & Adres",
+    backendApp: "firmalar",
+    icon: User,
+  },
+  {
+    href: "/raporlar",
+    label: "Raporlar & Analitik",
+    backendApp: "siparis",
+    icon: BarChart3,
   },
 ];

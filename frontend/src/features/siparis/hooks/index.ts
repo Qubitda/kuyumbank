@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { unwrapResults } from "@/lib/api/client";
 import { siparisService } from "../services";
 import type { BuyerOrder } from "../types";
 
@@ -12,8 +13,10 @@ export function useOrders() {
   useEffect(() => {
     siparisService
       .getOrders()
-      .then(setOrders)
-      .catch((err) => setError(err instanceof Error ? err.message : "Siparişler alınamadı"))
+      .then((page) => setOrders(unwrapResults(page)))
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Siparişler alınamadı")
+      )
       .finally(() => setLoading(false));
   }, []);
 

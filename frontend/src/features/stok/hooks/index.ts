@@ -11,9 +11,11 @@ export function useSupplierStock() {
 
   useEffect(() => {
     stokService
-      .getSupplierStock()
+      .listSupplierStock()
       .then(setBalances)
-      .catch((err) => setError(err instanceof Error ? err.message : "Stok verisi alınamadı"))
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Stok verisi alınamadı")
+      )
       .finally(() => setLoading(false));
   }, []);
 

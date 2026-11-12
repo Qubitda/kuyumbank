@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { finansService } from "../services";
-import type { CariHesap, CreditInfo } from "../types";
-import { formatMoney } from "@/lib/format";
+import type { CariHesap, CreditInfo, LedgerEntry } from "../types";
+import { unwrapResults } from "@/lib/api/client";
+import { formatMoney, formatDateTime } from "@/lib/format";
 import {
   Table,
   TableHeader,
@@ -14,30 +15,63 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wallet, CreditCard, RefreshCw, AlertCircle, ArrowUpRight } from "lucide-react";
+import { Wallet, CreditCard, RefreshCw, AlertCircle, BookOpen } from "lucide-react";
 
 export function FinanceDashboardView() {
-  const [cari, setCari] = useState<CariHesap | null>(null);
   const [credit, setCredit] = useState<CreditInfo | null>(null);
   const [cariList, setCariList] = useState<CariHesap[]>([]);
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasAnyData, setHasAnyData] = useState(false);
 
   const fetchFinanceData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [myCari, myCredit, allCari] = await Promise.allSettled([
-        finansService.getMyFinance(),
+      const [myCredit, allCari, ledgerPage] = await Promise.allSettled([
         finansService.getMyCredit(),
         finansService.getCariList(),
+        finansService.getLedger(),
       ]);
 
-      if (myCari.status === "fulfilled") setCari(myCari.value);
-      if (myCredit.status === "fulfilled") setCredit(myCredit.value);
-      if (allCari.status === "fulfilled") setCariList(allCari.value || []);
+      let found = false;
+      if (myCredit.status === "fulfilled") {
+        setCredit(myCredit.value);
+        found = true;
+      } else {
+        setCredit(null);
+      }
+      if (allCari.status === "fulfilled") {
+        const rows = unwrapResults(allCari.value);
+        setCariList(rows);
+        if (rows.length) found = true;
+      } else {
+        setCariList([]);
+      }
+      if (ledgerPage.status === "fulfilled") {
+        const rows = unwrapResults(ledgerPage.value);
+        setLedger(rows);
+        if (rows.length) found = true;
+      } else {
+        setLedger([]);
+      }
+
+      const failures = [myCredit, allCari, ledgerPage].filter(
+        (r) => r.status === "rejected"
+      );
+      if (failures.length === 3) {
+        const first = failures[0] as PromiseRejectedResult;
+        setError(
+          first.reason instanceof Error
+            ? first.reason.message
+            : "Finansal veriler alınamadı."
+        );
+      }
+      setHasAnyData(found);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Finansal veriler alınamadı.");
+      setHasAnyData(false);
     } finally {
       setLoading(false);
     }
@@ -49,17 +83,15 @@ export function FinanceDashboardView() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Başlık Alanı */}
       <div className="flex flex-col gap-1 border-b border-border pb-4">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Finans & Cari Hesaplar
         </h1>
         <p className="text-xs text-muted-foreground">
-          Cari bakiye durumu, kredi limitleri ve çift taraflı defter (Ledger) takibi.
+          Cari bakiye, kredi limiti ve ledger — yalnızca backend yanıtı.
         </p>
       </div>
 
-      {/* Hata Bildirimi */}
       {error && (
         <div
           className="flex items-center justify-between rounded-[8px] border border-destructive/20 bg-destructive/10 p-4 text-xs text-destructive"
@@ -87,95 +119,146 @@ export function FinanceDashboardView() {
             <span>Finansal veriler yükleniyor…</span>
           </div>
         </div>
+      ) : !hasAnyData ? (
+        <div className="flex h-48 flex-col items-center justify-center gap-2 text-center p-6 text-xs text-muted-foreground border border-border rounded-[8px]">
+          <Wallet className="h-8 w-8 opacity-40 mb-1" />
+          <span className="text-sm font-medium text-foreground">Veri bulunamadı</span>
+          <span className="max-w-sm">
+            Cari, kredi veya ledger kaydı dönmedi. Yetki veya hesap tanımlarını kontrol edin.
+          </span>
+        </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Özet Kartları */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Cari Bakiye */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-[8px] border border-border bg-card p-5 space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium">Cari Hesap Bakiyesi</span>
+                <span className="font-medium">Kredi Özeti</span>
+                <CreditCard className="h-4 w-4" />
+              </div>
+              {credit ? (
+                <>
+                  <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
+                    {formatMoney(credit.kredi_limiti, credit.para_birimi)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Bakiye:{" "}
+                    <span className="font-mono text-foreground">
+                      {formatMoney(credit.bakiye, credit.para_birimi)}
+                    </span>
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Kullanılabilir:{" "}
+                    <span className="font-mono text-foreground">
+                      {credit.kullanilabilir != null
+                        ? formatMoney(credit.kullanilabilir, credit.para_birimi)
+                        : "—"}
+                    </span>
+                  </p>
+                  <Badge variant="outline" className="font-mono text-[10px]">
+                    {credit.limit_aktif ? "LIMIT_AKTIF" : "LIMIT_KAPALI"}
+                  </Badge>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Kredi verisi bulunamadı.</p>
+              )}
+            </div>
+
+            <div className="rounded-[8px] border border-border bg-card p-5 space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="font-medium">Cari Hesaplar</span>
                 <Wallet className="h-4 w-4" />
               </div>
               <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
-                {formatMoney(cari?.bakiye ?? "0.00", cari?.para_birimi || "TRY")}
+                {cariList.length}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Has Altın Karşılığı:{" "}
-                <span className="font-mono text-foreground font-medium">
-                  {cari?.has_bakiye ? `${cari.has_bakiye} g` : "—"}
-                </span>
-              </p>
-            </div>
-
-            {/* Kredi Limiti */}
-            <div className="rounded-[8px] border border-border bg-card p-5 space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium">Tahsis Edilen Kredi</span>
-                <CreditCard className="h-4 w-4" />
-              </div>
-              <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
-                {formatMoney(credit?.kredi_limiti ?? "0.00", "TRY")}
-              </p>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>Durum:</span>
-                <Badge variant="outline" className="font-mono text-[10px]">
-                  {credit?.durum || "AKTIF"}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Kalan Kredi Limiti */}
-            <div className="rounded-[8px] border border-border bg-card p-5 space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium">Kullanılabilir Limit</span>
-                <ArrowUpRight className="h-4 w-4" />
-              </div>
-              <p className="text-2xl font-semibold font-mono tabular-nums text-foreground">
-                {formatMoney(credit?.kalan_limit ?? "0.00", "TRY")}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                Kullanılan: {formatMoney(credit?.kullanilan_limit ?? "0.00", "TRY")}
+                `/finance/cari/` sonuç sayısı
               </p>
             </div>
           </div>
 
-          {/* Cari Hesaplar Tablosu */}
           <div className="rounded-[8px] border border-border bg-card overflow-hidden">
             <div className="border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold text-foreground">
-                Cari Hesap ve Bakiye Dökümü
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">Cari Hesap Dökümü</h2>
             </div>
-            {cariList.length === 0 && !cari ? (
+            {cariList.length === 0 ? (
               <div className="flex h-36 flex-col items-center justify-center gap-1 text-center p-6 text-xs text-muted-foreground">
-                <Wallet className="h-6 w-6 opacity-40 mb-1" />
                 <span>Kayıtlı cari hesap verisi bulunamadı.</span>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Firma / Hesap</TableHead>
+                    <TableHead>Hesap</TableHead>
                     <TableHead>Para Birimi</TableHead>
-                    <TableHead className="text-right">Has Bakiye</TableHead>
-                    <TableHead className="text-right">Cari Bakiye</TableHead>
+                    <TableHead>Güncelleme</TableHead>
+                    <TableHead className="text-right">Bakiye</TableHead>
+                    <TableHead className="text-right">Kredi Limiti</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(cariList.length > 0 ? cariList : cari ? [cari] : []).map((c) => (
+                  {cariList.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell className="font-mono text-xs font-medium">
-                        Firma #{c.firma_id}
+                        #{c.id}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {c.para_birimi}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {c.has_bakiye ? `${c.has_bakiye} g` : "—"}
+                      <TableCell className="font-mono text-xs">{c.para_birimi}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {c.guncelleme_tarihi ? formatDateTime(c.guncelleme_tarihi) : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums font-semibold">
                         {formatMoney(c.bakiye, c.para_birimi)}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
+                        {c.kredi_limiti != null
+                          ? formatMoney(c.kredi_limiti, c.para_birimi)
+                          : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+
+          <div className="rounded-[8px] border border-border bg-card overflow-hidden">
+            <div className="border-b border-border px-4 py-3 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground">Ledger</h2>
+            </div>
+            {ledger.length === 0 ? (
+              <div className="flex h-36 flex-col items-center justify-center gap-1 text-center p-6 text-xs text-muted-foreground">
+                <span>Ledger kaydı bulunamadı.</span>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Yön / Tip</TableHead>
+                    <TableHead>Referans</TableHead>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead className="text-right">Tutar</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ledger.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-mono text-xs">#{row.id}</TableCell>
+                      <TableCell className="font-mono text-[11px]">
+                        {[row.yon, row.hareket_tipi].filter(Boolean).join(" · ") || "—"}
+                      </TableCell>
+                      <TableCell className="font-mono text-[11px] text-muted-foreground">
+                        {row.referans_tip || "—"}
+                        {row.referans_id != null ? ` #${row.referans_id}` : ""}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {row.olusturma_tarihi
+                          ? formatDateTime(row.olusturma_tarihi)
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums font-semibold">
+                        {formatMoney(row.tutar, row.para_birimi)}
                       </TableCell>
                     </TableRow>
                   ))}

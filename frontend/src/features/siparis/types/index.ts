@@ -45,8 +45,45 @@ export interface BuyerOrder {
   lines?: BuyerOrderLine[];
 }
 
+/** OpenAPI CheckoutResult — POST /checkouts/ */
+export interface CheckoutResult {
+  checkout_id: number;
+  durum?: string;
+  order_id?: number | null;
+  server_now?: string;
+}
+
+/** Eski UI alanı; checkout EmptyRequest — gönderilmez. */
 export interface CheckoutRequest {
   teslimat_adresi_id?: number;
   fatura_adresi_id?: number;
   notlar?: string;
+}
+
+export interface BulkOrderRowInput {
+  sku: string;
+  miktar: string;
+  birim?: string;
+}
+
+export interface BulkOrderCreateRequest {
+  satis_kanali_id: number;
+  rows?: BulkOrderRowInput[];
+  csv?: string;
+}
+
+export interface BulkOrderResult {
+  order_id: number | null;
+  replayed: boolean;
+  accepted: Array<{
+    satir_no: number;
+    sku: string;
+    miktar: string;
+    birim?: string;
+  }>;
+  errors: Array<{
+    satir_no: number;
+    sku: string;
+    hata: string;
+  }>;
 }

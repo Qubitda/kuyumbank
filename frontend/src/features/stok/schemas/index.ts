@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 export const stockAdjustmentSchema = z.object({
-  varyant_id: z.number().int().positive("Varyant seçilmelidir."),
+  warehouse_id: z.number().int().positive("Depo (warehouse_id) zorunlu."),
+  teklif_id: z.number().int().positive("Teklif id zorunlu."),
   miktar: z.string().min(1, "Miktar girilmelidir."),
-  aciklama: z.string().optional(),
+  neden: z.string().optional(),
 });
 
 export type StockAdjustmentInput = z.infer<typeof stockAdjustmentSchema>;

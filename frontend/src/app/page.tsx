@@ -9,13 +9,13 @@ export default function HomePage() {
       {/* Başlık Alanı */}
       <div className="flex flex-col gap-2 border-b border-border pb-6">
         <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-          Next.js Frontend · Domain Paralel Mimari
+          Vite Frontend · Domain Paralel Mimari
         </span>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Kuyumbank Platformu
         </h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Django modular monolith ile birebir paralel Next.js App Router arayüzü.
+          Django modular monolith ile paralel Vite + React portal.
           Veri, fiyat, milyem ve yetkilendirmede tek yetkili backend otoritesidir.
         </p>
       </div>
