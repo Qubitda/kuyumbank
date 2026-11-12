@@ -6,6 +6,7 @@
 import React, { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { ThemeProvider } from "@/components/layout";
+import { AuthProvider } from "@/features/auth";
 import PortalLayout from "@/app/(portal)/layout";
 import HomePage from "@/app/page";
 import LoginPage from "@/app/(auth)/login/page";
@@ -121,9 +122,11 @@ export default function App() {
 
   return (
     <ThemeProvider defaultTheme="light">
-      <Suspense fallback={<DomainLoading label="Uygulama" />}>
-        {renderContent()}
-      </Suspense>
+      <AuthProvider>
+        <Suspense fallback={<DomainLoading label="Uygulama" />}>
+          {renderContent()}
+        </Suspense>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

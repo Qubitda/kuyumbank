@@ -1,21 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { tanimlarService } from "../services";
-import type { SalesChannel } from "../types";
+import type { SalesChannel, SalesChannelPage } from "../types";
 
 export function useSalesChannels() {
+  const [page, setPage] = useState<SalesChannelPage | null>(null);
   const [channels, setChannels] = useState<SalesChannel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    tanimlarService
-      .getSalesChannels()
-      .then(setChannels)
-      .catch((err) => setError(err instanceof Error ? err.message : "Veri alınamadı"))
-      .finally(() => setLoading(false));
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await tanimlarService.getSalesChannelsPage();
+      setPage(data);
+      setChannels(data.results);
+    } catch (err) {
+      setPage(null);
+      setChannels([]);
+      setError(err instanceof Error ? err.message : "Tanım verileri alınamadı.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { channels, loading, error };
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { page, channels, loading, error, refresh };
 }

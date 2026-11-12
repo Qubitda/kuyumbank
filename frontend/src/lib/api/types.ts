@@ -59,7 +59,20 @@ export interface MeResponse {
   firma: FirmaMasked | null;
   firma_id: number | null;
   capabilities: Capabilities;
+  email_verified?: boolean;
+  act_as?: {
+    active: boolean;
+    actor_id?: number | null;
+    actor_username?: string | null;
+    target_id?: number | null;
+    target_username?: string | null;
+  };
+  /** Yalnız login yanıtında */
+  mfa_required?: boolean;
+  mfa_ok?: boolean;
 }
+
+export type LoginResponse = MeResponse;
 
 export interface MeDashboard {
   cart_id?: number;

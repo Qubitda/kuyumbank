@@ -60,8 +60,6 @@ export function ProfileAddressesView() {
     defaultValues: {
       first_name: "",
       last_name: "",
-      email: "",
-      phone: "",
     },
   });
 
@@ -95,8 +93,6 @@ export function ProfileAddressesView() {
         resetProfile({
           first_name: profileRes.value.first_name || "",
           last_name: profileRes.value.last_name || "",
-          email: profileRes.value.email || "",
-          phone: profileRes.value.phone || "",
         });
       }
       if (addressRes.status === "fulfilled") {
@@ -238,19 +234,20 @@ export function ProfileAddressesView() {
                 <Input
                   id="prof-email"
                   type="email"
-                  placeholder="eposta@firma.com"
-                  disabled={isProfileSubmitting}
-                  {...registerProfile("email")}
+                  value={profile?.email || ""}
+                  disabled
+                  readOnly
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="prof-phone">Telefon</Label>
+                <Label htmlFor="prof-username">Kullanıcı adı</Label>
                 <Input
-                  id="prof-phone"
-                  placeholder="+90 5XX XXX XX XX"
-                  disabled={isProfileSubmitting}
-                  {...registerProfile("phone")}
+                  id="prof-username"
+                  value={profile?.username || ""}
+                  disabled
+                  readOnly
+                  className="font-mono"
                 />
               </div>
 

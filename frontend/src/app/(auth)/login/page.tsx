@@ -1,46 +1,56 @@
-import Link from "next/link";
-import { LoginForm } from "@/features/auth";
+"use client";
+
+import { LoginForm, useAuth } from "@/features/auth";
 import { ThemeToggle } from "@/components/layout";
+import { DomainLoading } from "@/components/route-states";
 
 export default function LoginPage() {
+  const { loading, isAuthenticated, mfaPending } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <DomainLoading label="Oturum" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated && !mfaPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <DomainLoading label="Panele yönlendirme" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
-      {/* Basit Header */}
-      <header className="flex h-[56px] w-full items-center justify-between border-b border-border px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-semibold text-foreground tracking-tight text-base hover:opacity-90"
-        >
+      <header className="flex h-[56px] w-full items-center justify-between border-b border-border px-4 sm:px-6">
+        <div className="flex items-center gap-2 font-semibold text-foreground tracking-tight text-base">
           <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-primary text-primary-foreground font-mono text-xs">
             K
           </span>
           <span>Kuyumbank</span>
-        </Link>
+        </div>
         <ThemeToggle />
       </header>
 
-      {/* Merkez Form */}
-      <main className="flex flex-1 items-center justify-center p-6">
+      <main className="flex flex-1 items-center justify-center p-4 sm:p-8">
         <div className="flex w-full max-w-[420px] flex-col items-center gap-6">
-          <div className="flex flex-col items-center gap-1 text-center">
+          <div className="flex flex-col items-center gap-1.5 text-center px-2">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Kuyumbank
             </h1>
-            <p className="text-xs text-muted-foreground">
-              Jewelry B2B Commerce & Trading Platform
+            <p className="text-xs text-muted-foreground max-w-[32ch] leading-relaxed">
+              Jewelry B2B Commerce & Trading Platform — güvenli firma oturumu
             </p>
           </div>
 
           <LoginForm />
 
-          <div className="text-xs text-muted-foreground text-center">
-            <Link
-              href="/"
-              className="text-foreground underline-offset-4 hover:underline font-medium"
-            >
-              ← Portala Dön
-            </Link>
-          </div>
+          <p className="text-[11px] text-muted-foreground text-center max-w-[36ch]">
+            Yetki matrisi, tenant izolasyonu ve MFA kontrolü backend otoritesindedir.
+          </p>
         </div>
       </main>
     </div>

@@ -1,5 +1,5 @@
-import { ProfileAddressesView } from "@/features/firmalar";
+import { ProfileView } from "@/features/profil";
 
 export default function ProfilPage() {
-  return <ProfileAddressesView />;
+  return <ProfileView />;
 }

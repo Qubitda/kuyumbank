@@ -126,7 +126,29 @@ export async function apiFetch<T>(
   }
 
   if (!res.ok) {
-    throw new ApiError(await parseProblem(res));
+    const problem = await parseProblem(res);
+    // /me/ oturum sondası AuthProvider.refresh tarafından yönetilir; event üretme.
+    const isAuthProbe =
+      path === "/me/" ||
+      path === "/auth/login/" ||
+      path === "/auth/csrf/" ||
+      path === "/auth/logout/" ||
+      path.startsWith("/auth/password-reset") ||
+      path.startsWith("/auth/mfa/");
+
+    if (
+      typeof window !== "undefined" &&
+      !isAuthProbe &&
+      (res.status === 401 ||
+        (res.status === 403 && problem.code === "mfa_required"))
+    ) {
+      window.dispatchEvent(
+        new CustomEvent("kuyumbank:auth-expired", {
+          detail: { status: res.status, code: problem.code, path },
+        })
+      );
+    }
+    throw new ApiError(problem);
   }
 
   return (await res.json()) as T;
@@ -136,6 +158,20 @@ export function login(username: string, password: string): Promise<MeResponse> {
   return apiFetch<MeResponse>("/auth/login/", {
     method: "POST",
     body: { username, password },
+  });
+}
+
+export function verifyMfa(code: string): Promise<MeResponse> {
+  return apiFetch<MeResponse>("/auth/mfa/verify/", {
+    method: "POST",
+    body: { code },
+  });
+}
+
+export function resendMfa(): Promise<{ detail?: string; mfa_ok?: boolean }> {
+  return apiFetch<{ detail?: string; mfa_ok?: boolean }>("/auth/mfa/resend/", {
+    method: "POST",
+    body: {},
   });
 }
 
