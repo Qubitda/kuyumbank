@@ -1,3 +1,11 @@
+export interface BuyerQuoteNetOzet {
+  toplam_vergisiz?: string | null;
+  gram?: string | null;
+  gram_basi_vergisiz?: string | null;
+  iscilik_vergisiz?: string | null;
+  has_gram?: string | null;
+}
+
 export interface PriceQuote {
   id: number;
   varyant_id: number;
@@ -10,6 +18,11 @@ export interface PriceQuote {
   gram?: string;
   gram_basi_vergisiz?: string;
   toplam_vergisiz?: string;
+  /** GAP-F3-03 — ISCILIK satır tutarı (marj/maliyet yok) */
+  iscilik_vergisiz?: string | null;
+  /** GAP-F3-03 — gram × katalog milyem */
+  has_gram?: string | null;
+  net_ozet?: BuyerQuoteNetOzet;
   varyant_sku?: string;
   urun?: string;
 }

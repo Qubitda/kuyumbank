@@ -43,6 +43,20 @@ export function BuyerNetPriceCard({ quote }: { quote: PriceQuote }) {
           </dd>
         </div>
         <div>
+          <dt className="text-muted-foreground">İşçilik (net)</dt>
+          <dd className="text-right font-mono tabular-nums text-foreground">
+            {quote.iscilik_vergisiz
+              ? formatMoney(quote.iscilik_vergisiz, quote.para_birimi)
+              : "—"}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Has (g)</dt>
+          <dd className="text-right font-mono tabular-nums">
+            {quote.has_gram ? formatGram(quote.has_gram) : "—"}
+          </dd>
+        </div>
+        <div>
           <dt className="text-muted-foreground">Gram</dt>
           <dd className="text-right font-mono tabular-nums">
             {formatGram(quote.gram)}

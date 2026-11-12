@@ -1106,6 +1106,16 @@
           "gram_basi_vergisiz": {
             "type": "string"
           },
+          "has_gram": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "hesap_zamani": {
             "oneOf": [
               {
@@ -1118,6 +1128,71 @@
           },
           "id": {
             "type": "integer"
+          },
+          "iscilik_vergisiz": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "net_ozet": {
+            "properties": {
+              "gram": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "gram_basi_vergisiz": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "has_gram": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "iscilik_vergisiz": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "toplam_vergisiz": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "type": "object"
           },
           "para_birimi": {
             "type": "string"

@@ -12,6 +12,7 @@ import type {
 } from "../types";
 
 function mapQuote(q: BuyerQuote): PriceQuote {
+  const net = q.net_ozet;
   return {
     id: q.id,
     varyant_id: q.varyant_id ?? 0,
@@ -23,8 +24,19 @@ function mapQuote(q: BuyerQuote): PriceQuote {
     gram: q.gram,
     gram_basi_vergisiz: q.gram_basi_vergisiz,
     toplam_vergisiz: q.toplam_vergisiz,
+    iscilik_vergisiz: q.iscilik_vergisiz ?? net?.iscilik_vergisiz ?? null,
+    has_gram: q.has_gram ?? net?.has_gram ?? null,
+    net_ozet: net
+      ? {
+          toplam_vergisiz: net.toplam_vergisiz,
+          gram: net.gram,
+          gram_basi_vergisiz: net.gram_basi_vergisiz,
+          iscilik_vergisiz: net.iscilik_vergisiz,
+          has_gram: net.has_gram,
+        }
+      : undefined,
     varyant_sku: q.varyant_sku,
-    urun: q.urun,
+    urun: typeof q.urun === "string" ? q.urun : undefined,
   };
 }
 

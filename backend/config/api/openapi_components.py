@@ -330,6 +330,15 @@ BUYER_CATALOG_DETAIL = _obj(
     ["id", "ad", "varyantlar", "allowed_actions"],
 )
 
+BUYER_QUOTE_NET_OZET = _obj(
+    {
+        "toplam_vergisiz": _null_str(),
+        "gram": _null_str(),
+        "gram_basi_vergisiz": _null_str(),
+        "iscilik_vergisiz": _null_str(),
+        "has_gram": _null_str(),
+    }
+)
 BUYER_QUOTE = _obj(
     {
         "id": _int(),
@@ -343,6 +352,9 @@ BUYER_QUOTE = _obj(
         "para_birimi": _str(),
         "gram": _str(),
         "gram_basi_vergisiz": _str(),
+        "iscilik_vergisiz": _null_str(),
+        "has_gram": _null_str(),
+        "net_ozet": BUYER_QUOTE_NET_OZET,
         "expires_at": _null_str(),
         "hesap_zamani": _null_str(),
         "server_now": _str(),

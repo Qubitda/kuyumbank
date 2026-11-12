@@ -65,6 +65,14 @@ def BuyerQuotePresenter(quote: PriceQuote, *, now=None) -> dict:
     now = now or timezone.now()
     raw = present_buyer_quote(quote, now=now)
     gecerli = raw["durum"] == "gecerli"
+    net_raw = raw.get("net_ozet") or {}
+    net_ozet = {
+        "toplam_vergisiz": _dec(net_raw.get("toplam_vergisiz")),
+        "gram": _dec(net_raw.get("gram")),
+        "gram_basi_vergisiz": _dec(net_raw.get("gram_basi_vergisiz")),
+        "iscilik_vergisiz": _dec(net_raw.get("iscilik_vergisiz")),
+        "has_gram": _dec(net_raw.get("has_gram")),
+    }
     data = {
         "id": raw["id"],
         "belge_turu": raw["belge_turu"],
@@ -77,6 +85,9 @@ def BuyerQuotePresenter(quote: PriceQuote, *, now=None) -> dict:
         "para_birimi": raw["para_birimi"],
         "gram": _dec(raw["gram"]),
         "gram_basi_vergisiz": _dec(raw["gram_basi_vergisiz"]),
+        "iscilik_vergisiz": _dec(raw.get("iscilik_vergisiz")),
+        "has_gram": _dec(raw.get("has_gram")),
+        "net_ozet": net_ozet,
         "expires_at": _dt(raw["gecerlilik_sonu"]),
         "hesap_zamani": _dt(raw["hesap_zamani"]),
         "server_now": now.isoformat(),

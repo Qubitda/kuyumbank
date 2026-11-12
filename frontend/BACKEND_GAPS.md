@@ -30,16 +30,16 @@ OpenAPI kaynağı: `docs/api/openapi-v1.json`. Aşağıdakiler **HTTP yüzünde 
 
 ---
 
-## GAP-F3-03 — İşçilik (gr) + has hesabı (alıcı net)
+## GAP-F3-03 — İşçilik (gr) + has hesabı (alıcı net) — **UYGULANDI** (2026-11-12)
 
 | | |
 |--|--|
-| **İhtiyaç** | Quote yanıtında veya ayrı hesap API’sinde işçilik/has kırılımı; alıcı yalnız **net** görür |
-| **Önerilen** | Mevcut `POST /quotes/` yanıtına opsiyonel `net_ozet` **veya** `POST /api/v1/quotes/preview/` |
-| **Yanıt (alıcı)** | `{ "toplam_vergisiz": "...", "gram": "...", "gram_basi_vergisiz": "..." }` — maliyet/marj/tedarikçi **yok** |
-| **Yanıt (yasak)** | `maliyet`, `marj`, `tedarikci_*`, iç işçilik kırılımı |
-| **Ekran** | Katalog quote kartı; fiyatlama |
-| **Not** | Bugün `BuyerQuote` net alanları var; işçilik/has ayrı satır olarak yok. Tedarikçi `iscilik_override` offer create’te var |
+| **İhtiyaç** | Quote yanıtında işçilik/has; alıcı yalnız **net** görür |
+| **Uygulama** | `BuyerQuote` + `net_ozet`: `iscilik_vergisiz` (ISCILIK satır tutarı), `has_gram` (gram×katalog milyem) |
+| **Yanıt (alıcı)** | mevcut net alanlar + `iscilik_vergisiz` / `has_gram` / `net_ozet` — maliyet/marj/tedarikçi/satır listesi **yok** |
+| **Yanıt (yasak)** | `maliyet`, `marj`, `tedarikci_*`, ham `iscilik`, `kanal_marj` |
+| **Ekran** | `BuyerNetPriceCard` |
+| **Kanıt** | `fiyatlama.tests.test_faz3_6_kor_havuz_k011.Faz36KorHavuzK011Tests.test_buyer_net_ozet_iscilik_and_has` |
 
 ---
 

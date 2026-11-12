@@ -261,6 +261,35 @@ class Faz36KorHavuzK011Tests(TestCase):
         self.assertNotIn("teklif", view)
         self.assertEqual(view["urun"]["ad"], "K6 Ürün")
 
+    def test_buyer_net_ozet_iscilik_and_has(self):
+        """GAP-F3-03 — net işçilik + has; marj/maliyet/satır listesi yok."""
+        quote = get_quote_for_actor(self.buyer_a, self.quote.pk)
+        payload = present_buyer_quote(quote)
+        assert_buyer_cannot_see_internal(payload)
+
+        iscilik = PriceQuoteLine.objects.get(
+            quote=self.quote, kalem_tipi=PriceQuoteLine.KalemTipi.ISCILIK
+        )
+        self.assertEqual(payload["iscilik_vergisiz"], iscilik.tutar)
+        expected_has = (self.quote.gram * Decimal("0.585")).quantize(
+            Decimal("0.0001")
+        )
+        self.assertEqual(payload["has_gram"], expected_has)
+        self.assertEqual(payload["net_ozet"]["iscilik_vergisiz"], iscilik.tutar)
+        self.assertEqual(payload["net_ozet"]["has_gram"], expected_has)
+        self.assertEqual(
+            payload["net_ozet"]["toplam_vergisiz"], self.quote.toplam_vergisiz
+        )
+
+        blob = str(payload).lower()
+        self.assertNotIn("kanal_marj", blob)
+        self.assertNotIn("maliyet", blob)
+        self.assertNotIn("tedarikci", blob)
+        self.assertIsNone(payload["satirlar"])
+        # Ham iç anahtar `iscilik` yok; alıcı yüzeyi `iscilik_vergisiz`
+        self.assertNotIn("iscilik", payload)
+        self.assertNotIn("iscilik", payload["net_ozet"])
+
     def test_buyer_idor_other_firma_404(self):
         with self.assertRaises(BuyerQuoteNotFound):
             get_buyer_quote_view(self.buyer_b, self.quote.pk)

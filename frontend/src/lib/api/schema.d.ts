@@ -2636,8 +2636,17 @@ export interface components {
             expires_at?: string | null;
             gram?: string;
             gram_basi_vergisiz?: string;
+            has_gram?: string | null;
             hesap_zamani?: string | null;
             id: number;
+            iscilik_vergisiz?: string | null;
+            net_ozet?: {
+                gram?: string | null;
+                gram_basi_vergisiz?: string | null;
+                has_gram?: string | null;
+                iscilik_vergisiz?: string | null;
+                toplam_vergisiz?: string | null;
+            };
             para_birimi: string;
             satirlar?: unknown[] | null;
             satis_kanali_kod?: string;
