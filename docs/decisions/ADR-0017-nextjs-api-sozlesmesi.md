@@ -1,8 +1,8 @@
 # ADR-0017 — Next.js tüketici + `/api/v1/` uyumluluk sözleşmesi
 
-**Durum:** **Taslak** (ADR bütünü henüz Kabul değil — agent Kabul etmez)
+**Durum:** **Kabul (API sözleşmesi)** — NX-1…12 madde **Kabul** (Qubit, 2026-11-09); UI runtime → [ADR-0031](ADR-0031-vite-spa-portal.md) **Kabul** (dosya adı tarihsel “Next.js”; içerik Vite’ye güncellendi)
 **Bağımlılık:** ADR-0002/0003/0004 **Kabul**; PRE/F7; [ADR-0016](ADR-0016-faz9-frontend.md) **Supersede**
-**Kod:** API-B1…B7 **Kabul** (ürün sahibi Qubit, 2026-11-09); NX-1…12 **madde Kabul** (Qubit, 2026-11-09); NX-3…12 **kod UYGULANDI/KISMİ** (TECH-NX-CONTRACT-01); ADR bütünü **Taslak** kalır
+**Kod:** API-B1…B7 **Kabul**; NX-3…12 **kod UYGULANDI/KISMİ** (TECH-NX-CONTRACT-01). Agent yeni maddeyi Kabul etmez.
 
 ## Sabit ürün yönü
 

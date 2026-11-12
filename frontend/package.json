@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
+    "dev": "vite --port=3000 --host=127.0.0.1",
+    "dev:lan": "vite --port=3000 --host=0.0.0.0",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --port=3000 --host=0.0.0.0",
+    "preview": "vite preview --port=3000 --host=127.0.0.1",
+    "preview:lan": "vite preview --port=3000 --host=0.0.0.0",
     "lint": "eslint . && tsc --noEmit",
     "generate:api": "openapi-typescript ../docs/api/openapi-v1.json -o src/lib/api/schema.d.ts",
     "test": "vitest run",

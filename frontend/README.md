@@ -31,13 +31,16 @@ npm run test:e2e       # playwright (dev sunucu)
 
 ## Yerel çalıştırma
 
+Paket: **npm** (`package-lock.json`). `bun.lock` yok / commit edilmez.
+
 1. Backend: `backend/config` → `runserver` (PG).
-2. Django `.env`: `CSRF_TRUSTED_ORIGINS=http://localhost:3000`
+2. Django `.env`: `CSRF_TRUSTED_ORIGINS=http://127.0.0.1:3000`
 3. Frontend:
    ```bash
    cp .env.example .env.local   # DJANGO_ORIGIN=http://127.0.0.1:8000
    npm install
-   npm run dev                  # http://localhost:3000 → /api proxy
+   npm run dev                  # http://127.0.0.1:3000 → /api proxy
+   npm run dev:lan              # yalnız bilinçli LAN (0.0.0.0)
    ```
 
 ## PWA / cache

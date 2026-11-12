@@ -2,8 +2,8 @@
 
 **Dosya:** `docs/MASTER.md`
 **Rol:** Ürün/mimari **canlı durum** kaynağı (kısa tutulur). Karar metinleri, iş havuzu, yol haritası ve tarihçe ayrı dosyalardadır.
-**Güncelleme:** 2026-11-12 — FE FAZ 5: firmalar/tanimlar/belgeler/profil/dashboard/raporlar Query; rapor URL filtreleri; GAP-F5-01…03
-**Dal:** `adim-1-ilerleme`
+**Güncelleme:** 2026-11-12 — Faz A temizlik: docs/ADR drift, npm-only lockfile, `paa` gitignore, Vite host `127.0.0.1`, FE CI/e2e
+**Dal (aktif FE):** `side/frontend-removed` (yeniden adlandırma adayı: `fe/vite-portal`) · tarihsel: `adim-1-ilerleme`
 
 > Agent / geliştirici: önce `AGENTS.md`, sonra **bu dosya** (§2 + §12), gerekirse yalnız ilgili ADR. Kurulum: [RUNBOOK](RUNBOOK.md), kök `README.md`.
 
@@ -419,9 +419,9 @@ Domain bazlı durum/eksik tablosu, B2B capability alanları ve Prosperer gap: [R
 
 | Madde | Değer |
 |-------|--------|
-| Dal | `adim-1-ilerleme` |
-| Faz | F4–F8 **UYGULANDI** · F9 HTML **Deprecated** (ADR-0029) · **ADR-0031 Vite SPA Kabul** · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
-| ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Taslak** · **0018 Kabul** · **0019 Kabul** |
+| Dal | `side/frontend-removed` (FE aktif; rename adayı `fe/vite-portal`) |
+| Faz | F4–F8 **UYGULANDI** · F9 HTML **Deprecated** (ADR-0029) · **ADR-0031 Vite SPA** · FE FAZ 0–5 · **API-B1…B7 Kabul** · F10 **UYGULANDI** |
+| ADR | 0010–0015 **Kabul** · 0016 **Supersede** · 0017 **Kabul (API)** · 0031 **Kabul (UI)** · 0018–0030 **Kabul** |
 | Test / migration / apps | Otomatik bloklar (§2.7); yerel migrate (`fiyatlama.0019` / `tanimlar.0004` CAP-PIYASA) |
 
 ### 12.1b API-B0…B7 (ürün sahibi kesin tablo)
@@ -521,7 +521,7 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 | F11-021 | Buyer behavior | `rapor_servisi.alici_davranis_ozet`; `test_rapor_f11_010_021` **6 OK** (010+021+tenant) |
 | F11-014 | Ciro eşik anomali | `anomali_servisi.ciro_esik_tara`; `test_anomali_f11_014` **3 OK** |
 | ADR-0019 | Object-level DRF | OL-1…11 **Kabul**; `api.permissions` commerce SoD + object access; `test_object_level_adr0019` **6 OK** |
-| F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Taslak** (NX-1…12 madde Kabul) |
+| F9-001 | Frontend ADR | [ADR-0016](decisions/ADR-0016-faz9-frontend.md) **Supersede** → [ADR-0017](decisions/ADR-0017-nextjs-api-sozlesmesi.md) **Kabul (API)** + [ADR-0031](decisions/ADR-0031-vite-spa-portal.md) **Kabul (UI)** |
 | F9-010 | Buyer dashboard | HTML **Deprecated**; `GET /api/v1/me/dashboard/` + `buyer_dashboard_servisi` (ADR-0029) |
 | F9-011 | Katalog browse | HTML **Deprecated**; `GET /api/v1/catalog/` + `buyer_katalog_servisi` (ADR-0029) |
 | API-B0 | Next.js API boşluk analizi | **Tamamlandı** |
@@ -547,14 +547,24 @@ Faz bazlı tarihçe: [HISTORY](HISTORY.md); kart bazlı: [BACKLOG](BACKLOG.md) (
 
 ### 12.3 SIRADA (kodda yok — uygulama sırası)
 
-> **FRONTEND READY** + [ADR-0031](decisions/ADR-0031-vite-spa-portal.md) Vite SPA. Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md).
+> **FRONTEND READY** + Vite SPA FAZ 0–5 UYGULANDI. Boşluklar: [frontend/BACKEND_GAPS.md](../frontend/BACKEND_GAPS.md). Handoff: [FRONTEND_HANDOFF](FRONTEND_HANDOFF.md).
 
 | Öncelik | ID | Ne | Bağımlılık / not |
 |---------|-----|-----|------------------|
-| P1 | NX-BUYER / F9 portal dikey | Katalog/sepet/sipariş/RFQ/finans + MFA UI; FE harita: [BACKEND_MAP](BACKEND_MAP.md); portal kökleri `/buyer` `/supplier` `/admin` |
-| — | CAP-URUN-CRUD-HTTP | Platform ürün CRUD API | [ADR-0030](decisions/ADR-0030-platform-urun-crud-http.md) **Kabul** · UYGULANDI |
-| P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | P2 FE |
-| — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (A seçimleri → kod yok) |
+| P0 | Faz A | Docs/lockfile/`paa`/host/CI e2e | **Bu dilim** (2026-11-12) |
+| P1 | GAP-F3-03 | İşçilik/has alıcı net özeti | Küçük API; ürün farkı |
+| P1 | GAP-F3-01 | `GET /piyasa/pano/` | Model+admin var; endpoint yok |
+| P1 | GAP-F3-04 | Föy import preview→commit | CSV önce, PDF sonra |
+| P1 | GAP-F3-06+05 | RFQ↔offer + montür/taş | Birlikte tasarım; geçici `aciklama` kaldır |
+| P2 | GAP-F3-02 | Marj politikası API (ops) | Alıcıya marj kırılımı **yasak** (test) |
+| P2 | GAP-F4-* | tasiyici, QC ayar/gram, warehouse, iade, alıcı POD | Paralel küçük |
+| P2 | GAP-F5-* | `/documents/`, tanım CRUD, ops firma listesi | |
+| P2 | F6-032 | Platform uyuşmazlık ops kuyruğu UI | |
+| P3 | Soft-launch | Seed + walkthrough + kapalı pilot | Act-as; gerçek föy |
+| — | CAP-URUN-CRUD-HTTP | Platform ürün CRUD API | ADR-0030 **Kabul** · UYGULANDI |
+| — | F12-011 / DYN / I18N / AI | NOTE-PENDING **Kabul** (kod yok) | |
+
+**Ops (DOĞRULANAMADI bu ortamda):** staging Sentry event; outbox/email cron’un gerçek sunucuda çalıştığı. Kanıt: RUNBOOK §11c + ürün sahibi staging koşusu.
 
 ### 12.4 Bilinçli kapsam dışı (şimdi yok)
 
@@ -567,11 +577,11 @@ Tek giriş: **`AGENTS.md` → bu dosya (§2 + §12)** → görev ADR’si.
 **Üretilmez:** `SESSION_HANDOFF`, ayrı durum raporu, paralel yol haritası / özet dosyası.
 
 1. Oku: AGENTS.md → **§2** (gerçek durum) + **§12** → görev ADR.  
-2. **Sıradaki (ürün sahibi):** Soft-launch yol A / Next dilimleri; FRONTEND_PORTAL_BASE_URL (act-as).
+2. **Sıradaki:** GAP-F3-03 → F3-01 backend; soft-launch seed/act-as; FRONTEND_PORTAL_BASE_URL.
 3. Ops: createcachetable + cron outbox/email; secret rotasyon; yedek §7; INVITE_TTL_HOURS / EMAIL_VERIFY_REQUIRED_FOR_WRITE.
 4. Bilinçli erteli: tam suite kilidi, gerçek ödeme/kargo (yol B), K-014 PDF, MOQ.
 5. Auth: API login/MFA/reset/invite/verify; Admin login; HTML portal yok (ADR-0029).
 6. ADR-0018…0029 Kabul; FRONTEND READY (FE-SUITE **742 OK**); fake provider check E002/E003.
 7. Outbox unknown → FAILED; payment kilidi; DatabaseCache prod varsayılan.
 
-*Son güncelleme: 2026-11-11 — alıcı sevkiyat/iade FE (/buyer/logistics).*
+*Son güncelleme: 2026-11-12 — Faz A temizlik + §12.3 kuyum gap sırası.*

@@ -38,6 +38,73 @@ test.describe("portal akışları (mock API)", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
+  test("bilinmeyen yol 404 gösterir", async ({ page }) => {
+    await page.route("**/api/v1/me/", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 1,
+          username: "buyer",
+          rol: "ALICI",
+          firma: {
+            id: 2,
+            ad: "Alıcı AŞ",
+            alici_mi: true,
+            tedarikci_mi: false,
+            platform_mu: false,
+            aktif: true,
+          },
+          firma_id: 2,
+          capabilities: { can_view_catalog: true },
+          email_verified: true,
+          act_as: { active: false },
+        }),
+      });
+    });
+
+    await page.goto("/bu-yol-yok-xyz");
+    await expect(
+      page.getByRole("heading", { name: /Sayfa bulunamadı/i })
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("body")).toContainText("404");
+  });
+
+  test("oturumlu ama yetkisiz sayfa 403 gösterir", async ({ page }) => {
+    await page.route("**/api/v1/me/", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: 1,
+          username: "buyer",
+          rol: "ALICI",
+          firma: {
+            id: 2,
+            ad: "Alıcı AŞ",
+            alici_mi: true,
+            tedarikci_mi: false,
+            platform_mu: false,
+            aktif: true,
+          },
+          firma_id: 2,
+          capabilities: {
+            can_view_catalog: true,
+            can_manage_org: false,
+          },
+          email_verified: true,
+          act_as: { active: false },
+        }),
+      });
+    });
+
+    await page.goto("/firmalar");
+    await expect(page.getByRole("heading", { name: /yetkiniz yok/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.locator("body")).toContainText("403");
+  });
+
   test("katalog → quote → sepet → checkout zinciri (mock oturum)", async ({
     page,
   }) => {

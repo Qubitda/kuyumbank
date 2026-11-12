@@ -10,6 +10,12 @@ legacy_backup/
 .env.*
 !.env.example
 *.pem
+paa
+**/paa
+
+# FE alternatif lockfile (npm = tek kaynak; bun.lock yok)
+frontend/bun.lock
+frontend/bun.lockb
 
 # Django
 staticfiles/

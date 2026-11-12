@@ -9,8 +9,9 @@ Kod, refactor ve mimari kararlarda aşağıdaki maddeler **KESİN** uygulanır.
 
 ## 0. Öncelik (ürün sahibi — 2026-11-09)
 
-- **Backend first:** Django modeller / servisler / iş kuralları / API sözleşmesi oturmadan frontend, Next.js veya UI tasarımı konuşulmaz, kodlanmaz, dosya açılmaz.
-- Bu oturum ve sonraki işlerde varsayılan odak: `backend/config` domain app’leri. FE yalnız ürün sahibi açık talimatıyla.
+- **Backend first:** Django modeller / servisler / iş kuralları / API sözleşmesi oturmadan frontend veya UI tasarımı konuşulmaz, kodlanmaz, dosya açılmaz.
+- UI runtime: **Vite SPA** (`docs/decisions/ADR-0031-vite-spa-portal.md`); `next/*` import/shim **yasak**.
+- Bu oturum ve sonraki işlerde varsayılan odak: `backend/config` domain app’leri. FE yalnız ürün sahibi açık talimatıyla (portal dilimleri hariç: MASTER §12).
 
 ## 1…6 (özet aşağıda)
 

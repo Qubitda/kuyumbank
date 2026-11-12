@@ -44,6 +44,10 @@ AUTO blokları ve veri sözlüğü: `python scripts/docs_sync.py` (+ CI `--check
 - Django: **6.1.x** (pin: 6.1.2)
 - DB: PostgreSQL (`backend/config/requirements.txt`)
 - `manage.py`: `backend/config/`
+- **Frontend:** Vite + React Router + TanStack Query (`frontend/`) — [ADR-0031](docs/decisions/ADR-0031-vite-spa-portal.md) **Kabul**. Next.js App Router / `next/*` shim **yasak**.
+- FE paket yöneticisi: **npm** (`package-lock.json`); `bun.lock` commit edilmez.
+- FE boşlukları: `frontend/BACKEND_GAPS.md` (sahte endpoint yok).
+- Yerel demo kimlik: `paa` dosyası **repoya girmez** (gitignore).
 
 ## Django docs vs proje skill’leri
 
@@ -57,7 +61,7 @@ AUTO blokları ve veri sözlüğü: `python scripts/docs_sync.py` (+ CI `--check
 3. Kabul edilmiş ADR’yi yeniden tartışma; Taslak’ı kendi kendine Kabul etme.
 4. Analiz yeterliyse kodla; bitince master’ı güncelle (kod + test + docs birlikte).
 5. Odak test → (dilim kapanışında / kullanıcı isterse) suite. PG kısıtını SQLite ile “geçti” sayma.
-5b. **Vite FE dilim (ADR-0031):** `frontend` altında `npm run build` / `npm run dev` (Vite `/api` proxy → Django). Same-origin session/CSRF; Django doğrudan 200 smoke sayılmaz.
+5b. **Vite FE dilim (ADR-0031):** `frontend` altında `npm run build` / `npm run dev` (varsayılan host `127.0.0.1`; LAN için `npm run dev:lan`). Vite `/api` proxy → Django. Same-origin session/CSRF; Django doğrudan 200 smoke sayılmaz. E2E: `npm run test:e2e` (Playwright).
 6. Üretim `migrate` / secret / yıkıcı git **kullanıcı onayı olmadan yok**.
 7. Rapor: Tamamlananlar / Testler / Riskler / Sonraki faz (+ değişen dosyalar).
 
